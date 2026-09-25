@@ -9,7 +9,7 @@ from ui.save_game_menu import SaveGameMenu
 
 
 class SimulationUI:
-    REFRESCO_SEGUNDOS = 0.05
+    REFRESCO_SEGUNDOS = 0.01
 
     def __init__(self, simulation):
         self.simulation = simulation

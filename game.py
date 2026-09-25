@@ -22,16 +22,7 @@ class Game:
 
         self.universe = None
 
-        modelo_popiii = ModeloHassanPopIII()
-
-        modelo_sevn = ModeloSEVN(
-            modelo_supernova="rapid",
-        )
-
-        self.modelo_estelar = ModeloEstelarHibrido(
-            modelo_popiii=modelo_popiii,
-            modelo_sevn=modelo_sevn,
-        )
+        self.modelo_estelar = None
 
     def ejecutar(
         self,
@@ -58,10 +49,27 @@ class Game:
             elif accion == "Salir":
                 return
 
+    def _asegurar_modelo_estelar(self):
+        if self.modelo_estelar is not None:
+            return
+
+        modelo_popiii = ModeloHassanPopIII()
+
+        modelo_sevn = ModeloSEVN(
+            modelo_supernova="rapid",
+        )
+
+        self.modelo_estelar = ModeloEstelarHibrido(
+            modelo_popiii=modelo_popiii,
+            modelo_sevn=modelo_sevn,
+        )
+
     def _iniciar_nuevo_universo(
         self,
         stdscr,
     ):
+        self._asegurar_modelo_estelar()
+
         self.universe = Universe(
             modelo_estelar=(self.modelo_estelar),
         )
@@ -112,6 +120,8 @@ class Game:
             return
 
         try:
+            self._asegurar_modelo_estelar()
+
             universo = self.save_manager.cargar(
                 partida,
                 modelo_estelar=(self.modelo_estelar),
@@ -147,18 +157,20 @@ class Game:
             stdscr,
             "CONFIGURAR UNIVERSO",
             [
-                ("Formación estelar " "cosmológica activa."),
+                "Formación estelar cosmológica activa.",
                 "",
-                ("Evolución estelar: " "SEVN híbrido."),
+                "Evolución estelar: modelo híbrido.",
                 "",
-                ("Modelo principal: " "PARSEC."),
-                ("Baja masa: " "MIST v2.5."),
-                ("MIST: modelos " "no rotantes, " "[alpha/Fe]=0.0."),
+                "Z > 0:",
+                "SEVN con PARSEC como modelo principal.",
+                "MIST v2.5 complementa baja masa.",
                 "",
-                ("Población III Z=0: " "pendiente."),
-                ("Masas menores al " "dominio MIST: " "pendientes."),
+                "Z = 0:",
+                "Hassan/MESA ratesfix para 50 Msol.",
                 "",
-                ("No se extrapolan " "estrellas fuera del " "dominio científico."),
+                "Otras masas Pop III: pendientes.",
+                "",
+                ("No se extrapolan estrellas " "fuera del dominio científico."),
             ],
         )
 
@@ -177,7 +189,14 @@ class Game:
 
     def run(self):
         try:
+            try:
+                curses.set_escdelay(25)
+
+            except AttributeError:
+                pass
+
             curses.wrapper(self.ejecutar)
 
         finally:
-            self.modelo_estelar.cerrar()
+            if self.modelo_estelar is not None:
+                self.modelo_estelar.cerrar()

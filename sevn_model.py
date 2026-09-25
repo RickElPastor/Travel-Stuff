@@ -272,13 +272,15 @@ class ModeloSEVN(ModeloEvolutivoEstelar):
 
         edad_myr = edad / 1_000_000
 
-        filas_validas = trayectoria[trayectoria["Worldtime"] <= edad_myr]
+        indice = trayectoria["Worldtime"].searchsorted(
+            edad_myr,
+            side="right",
+        ) - 1
 
-        if filas_validas.empty:
-            fila = trayectoria.iloc[0]
+        if indice < 0:
+            indice = 0
 
-        else:
-            fila = filas_validas.iloc[-1]
+        fila = trayectoria.iloc[indice]
 
         fase_bse = int(round(float(fila["PhaseBSE"])))
 

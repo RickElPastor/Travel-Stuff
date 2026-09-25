@@ -2,6 +2,8 @@ import time
 
 
 class Simulation:
+    MAX_TRANS_CURRIDO_SEGUNDOS = 0.02
+
     def __init__(self, universe, reloj=None):
         self.universe = universe
 
@@ -18,6 +20,11 @@ class Simulation:
 
         if transcurrido < 0:
             transcurrido = 0
+
+        transcurrido = min(
+            transcurrido,
+            self.MAX_TRANS_CURRIDO_SEGUNDOS,
+        )
 
         anios_transcurridos = self.universe.time.avanzar(transcurrido)
 
