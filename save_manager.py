@@ -1,78 +1,130 @@
 import json
+from pathlib import Path
 
-from universe import Universe
 from events import Event
+from remnant import RemanenteEstelar
+from star import Star
+from universe import Universe
+
 
 class SaveManager:
+    VERSION_GUARDADO = 2
+
+    def __init__(self, carpeta="saves"):
+        self.carpeta = Path(carpeta)
 
     def guardar(self, universe, nombre):
-        import os
+        ruta = self._obtener_ruta(nombre)
 
-        os.makedirs("saves", exist_ok=True)
-
-        ruta = os.path.join("saves", nombre + ".json")
+        self.carpeta.mkdir(parents=True, exist_ok=True)
 
         datos = {
+            "version": (self.VERSION_GUARDADO),
             "seed": universe.seed,
-            "edad_universo": universe.time.anio,
-            "velocidad": universe.time.velocidad,
+            "random_state": (universe.random.getstate()),
+            "tiempo": {
+                "anio": (universe.time.anio),
+                "indice_velocidad": (universe.time.indice_velocidad),
+                "escala": (universe.time.escala),
+                "acumulado": (universe.time.acumulado),
+            },
+            "estrellas": [estrella.a_dict() for estrella in universe.estrellas],
+            "remanentes": [remanente.a_dict() for remanente in universe.remanentes],
             "eventos": [
-                {
-                    "tipo": evento.tipo,
-                    "año": evento.anio,
-                    "mensaje": evento.mensaje
-                }
-                for evento in universe.event_manager.eventos
-            ]
+                evento.a_dict() for evento in (universe.event_manager.obtener_eventos())
+            ],
         }
 
-        with open(ruta, "w") as archivo:
-            json.dump(datos, archivo, indent=4)
+        with ruta.open("w", encoding="utf-8") as archivo:
+            json.dump(datos, archivo, indent=4, ensure_ascii=False)
 
-    def cargar(self, nombre):
-        import os
+        return ruta
 
-        ruta = os.path.join("saves", nombre)
+    def cargar(self, nombre, modelo_estelar=None):
+        ruta = self._obtener_ruta(nombre)
 
-        with open(ruta, "r") as archivo:
+        with ruta.open("r", encoding="utf-8") as archivo:
             datos = json.load(archivo)
 
-        universe = Universe()
+        version = datos.get("version", 1)
 
-        universe.seed = datos["seed"]
-        universe.random.seed(universe.seed)
-        universe.time.anio = datos[f"edad_universo"]
-        universe.time.velocidad = datos["velocidad"]
-        for datos_evento in datos["eventos"]:
-            evento = Event(
-                datos_evento["tipo"],
-                datos_evento["año"],
-                datos_evento["mensaje"]
+        if version != self.VERSION_GUARDADO:
+            raise ValueError(
+                "El guardado pertenece a una "
+                "versión antigua. Crea un "
+                "universo nuevo con el sistema "
+                "actual."
             )
 
-            universe.event_manager.eventos.append(evento)
+        universe = Universe(seed=datos["seed"], modelo_estelar=modelo_estelar)
+
+        tiempo = datos["tiempo"]
+
+        universe.time.anio = tiempo["anio"]
+
+        universe.time.indice_velocidad = tiempo["indice_velocidad"]
+
+        universe.time.escala = tiempo["escala"]
+
+        universe.time.acumulado = tiempo.get("acumulado", 0.0)
+
+        estado_random = self._listas_a_tuplas(datos["random_state"])
+
+        universe.random.setstate(estado_random)
+
+        universe.estrellas = [
+            Star.desde_dict(datos_estrella, modelo_evolutivo=(modelo_estelar))
+            for datos_estrella in datos.get("estrellas", [])
+        ]
+
+        universe.remanentes = [
+            RemanenteEstelar.desde_dict(datos_remanente)
+            for datos_remanente in datos.get("remanentes", [])
+        ]
+
+        estrellas_por_nombre = {
+            estrella.nombre: estrella for estrella in universe.estrellas
+        }
+
+        for remanente in universe.remanentes:
+            if remanente.nombre_origen in estrellas_por_nombre:
+                remanente.origen = estrellas_por_nombre[remanente.nombre_origen]
+
+        universe.event_manager.eventos = [
+            Event.desde_dict(datos_evento) for datos_evento in datos.get("eventos", [])
+        ]
 
         return universe
 
     def listar_guardados(self):
-        import os
-
-        if not os.path.exists("saves"):
+        if not self.carpeta.exists():
             return []
 
-        archivos = os.listdir("saves")
-
-        guardados = []
-
-        for archivo in archivos:
-            if archivo.endswith(".json"):
-                guardados.append(archivo)
-
-        return guardados
+        return sorted(
+            archivo.name
+            for archivo in self.carpeta.iterdir()
+            if (archivo.is_file() and archivo.suffix == ".json")
+        )
 
     def existe_guardado(self, nombre):
-        import os
+        return self._obtener_ruta(nombre).exists()
 
-        ruta = os.path.join("saves", nombre + ".json")
+    def _obtener_ruta(self, nombre):
+        if not nombre:
+            raise ValueError("El guardado necesita " "un nombre.")
 
-        return os.path.exists(ruta)
+        nombre = Path(str(nombre)).name
+
+        if nombre.endswith(".json"):
+            nombre_archivo = nombre
+
+        else:
+            nombre_archivo = f"{nombre}.json"
+
+        return self.carpeta / nombre_archivo
+
+    def _listas_a_tuplas(self, valor):
+        if isinstance(valor, list):
+            return tuple(self._listas_a_tuplas(elemento) for elemento in valor)
+
+        return valor

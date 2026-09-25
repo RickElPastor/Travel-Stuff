@@ -1,41 +1,45 @@
-
 class Event:
-    def __init__(self, tipo, año, mensaje):
+    def __init__(self, tipo, anio, mensaje):
         self.tipo = tipo
-        self.anio = año
+        self.anio = anio
         self.mensaje = mensaje
 
     def __str__(self):
-        return f"[Año {self.anio}] {self.tipo}: {self.mensaje}"
+        anio = f"{self.anio:,.0f}".replace(",", " ")
+
+        return f"[Año {anio}] " f"{self.tipo}: {self.mensaje}"
+
+    def a_dict(self):
+        return {"tipo": self.tipo, "anio": self.anio, "mensaje": self.mensaje}
+
+    @classmethod
+    def desde_dict(cls, datos):
+        return cls(
+            tipo=datos["tipo"],
+            anio=datos.get("anio", datos.get("año", 0)),
+            mensaje=datos["mensaje"],
+        )
+
 
 class EventManager:
-    def __init__(self, random):
+    def __init__(self):
         self.eventos = []
-        self.random = random
 
-    def agregar_evento(self, tipo, año, mensaje):
-        evento = Event(tipo, año, mensaje)
+    def agregar_evento(self, tipo, anio, mensaje):
+        evento = Event(tipo, anio, mensaje)
+
         self.eventos.append(evento)
+
+        return evento
 
     def obtener_eventos(self):
         return self.eventos
 
     def obtener_recientes(self, cantidad=5):
+        if cantidad <= 0:
+            return []
+
         return self.eventos[-cantidad:]
 
-    def actualizar(self, año):
-        probabilidad = self.random.randint(1, 100)
-
-        if probabilidad <= 20:
-            self.agregar_evento(
-                "Estrella",
-                año,
-                "Una estrella ha comenzado a formarse."
-            )
-        elif probabilidad <= 30:
-            self.agregar_evento(
-                "Supernova",
-                año,
-                "Una estrella ha explotado."
-            )
-
+    def limpiar(self):
+        self.eventos.clear()
