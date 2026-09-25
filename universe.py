@@ -1,6 +1,7 @@
 import random
 
 from events import EventManager
+from stellar_systems.stellar_system import SistemaEstelar
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -34,6 +35,7 @@ class Universe:
 
         self.estrellas = []
         self.remanentes = []
+        self.sistemas_estelares = []
 
     def establecer_modelo_estelar(
         self,
@@ -43,6 +45,22 @@ class Universe:
 
         for estrella in self.estrellas:
             estrella.establecer_modelo_evolutivo(modelo)
+
+    def crear_sistema_estelar(
+        self,
+        estrella,
+    ):
+        nombre = f"Sistema de {estrella.nombre}"
+
+        sistema = SistemaEstelar(
+            nombre=nombre,
+            anio_formacion=estrella.anio_nacimiento,
+            estrellas=[estrella],
+        )
+
+        self.sistemas_estelares.append(sistema)
+
+        return sistema
 
     def crear_estrella(
         self,
@@ -92,6 +110,8 @@ class Universe:
         estrella.actualizar_estado_fisico()
 
         self.estrellas.append(estrella)
+
+        self.crear_sistema_estelar(estrella)
 
         if poblacion:
             descripcion_poblacion = f"Población {poblacion}"

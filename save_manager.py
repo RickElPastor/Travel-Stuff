@@ -2,13 +2,14 @@ import json
 from pathlib import Path
 
 from events import Event
+from stellar_systems.stellar_system import SistemaEstelar
 from remnant import RemanenteEstelar
 from star import Star
 from universe import Universe
 
 
 class SaveManager:
-    VERSION_GUARDADO = 2
+    VERSION_GUARDADO = 3
 
     def __init__(self, carpeta="saves"):
         self.carpeta = Path(carpeta)
@@ -30,6 +31,9 @@ class SaveManager:
             },
             "estrellas": [estrella.a_dict() for estrella in universe.estrellas],
             "remanentes": [remanente.a_dict() for remanente in universe.remanentes],
+            "sistemas_estelares": [
+                sistema.a_dict() for sistema in universe.sistemas_estelares
+            ],
             "eventos": [
                 evento.a_dict() for evento in (universe.event_manager.obtener_eventos())
             ],
@@ -48,12 +52,14 @@ class SaveManager:
 
         version = datos.get("version", 1)
 
-        if version != self.VERSION_GUARDADO:
+        if version not in (
+            2,
+            self.VERSION_GUARDADO,
+        ):
             raise ValueError(
                 "El guardado pertenece a una "
-                "versión antigua. Crea un "
-                "universo nuevo con el sistema "
-                "actual."
+                "versión incompatible con el "
+                "sistema actual."
             )
 
         universe = Universe(seed=datos["seed"], modelo_estelar=modelo_estelar)
@@ -81,6 +87,21 @@ class SaveManager:
             RemanenteEstelar.desde_dict(datos_remanente)
             for datos_remanente in datos.get("remanentes", [])
         ]
+
+        if version >= 3:
+            universe.sistemas_estelares = [
+                SistemaEstelar.desde_dict(datos_sistema)
+                for datos_sistema in datos.get(
+                    "sistemas_estelares",
+                    [],
+                )
+            ]
+
+        else:
+            universe.sistemas_estelares = []
+
+            for estrella in universe.estrellas:
+                universe.crear_sistema_estelar(estrella)
 
         estrellas_por_nombre = {
             estrella.nombre: estrella for estrella in universe.estrellas
