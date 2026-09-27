@@ -11,6 +11,9 @@ from planets.disk_model import (
 from planets.embryo_formation_model import (
     ModeloFormacionEmbriones,
 )
+from planets.giant_impact_model import (
+    ModeloImpactosGigantes,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -51,6 +54,8 @@ class Universe:
         self.modelo_disco = ModeloDiscoProtoplanetario()
 
         self.modelo_formacion_embriones = ModeloFormacionEmbriones()
+
+        self.modelo_impactos_gigantes = ModeloImpactosGigantes()
 
         self.modelo_entorno_disco = ModeloEntornoDisco()
 
@@ -193,6 +198,10 @@ class Universe:
         embriones = self.modelo_formacion_embriones.generar_embriones(disco)
 
         disco.establecer_embriones(embriones)
+
+        protoplanetas = self.modelo_impactos_gigantes.generar_protoplanetas(disco)
+
+        disco.establecer_protoplanetas(protoplanetas)
 
         self.discos_protoplanetarios.append(disco)
 

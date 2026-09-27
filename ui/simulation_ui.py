@@ -264,6 +264,21 @@ class SimulationUI:
             for disco in self.universe.discos_protoplanetarios
         )
 
+        cantidad_protoplanetas = sum(
+            disco.obtener_cantidad_protoplanetas()
+            for disco in self.universe.discos_protoplanetarios
+        )
+
+        masa_total_embriones = sum(
+            disco.obtener_masa_embriones_tierra()
+            for disco in self.universe.discos_protoplanetarios
+        )
+
+        masa_total_protoplanetas = sum(
+            disco.obtener_masa_protoplanetas_tierra()
+            for disco in self.universe.discos_protoplanetarios
+        )
+
         escribir_seguro(
             stdscr,
             fila,
@@ -284,6 +299,29 @@ class SimulationUI:
             fila,
             0,
             ("Embriones planetarios: " f"{cantidad_embriones}"),
+        )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            ("Protoplanetas: " f"{cantidad_protoplanetas}"),
+        )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Masa formación: "
+                f"embriones={masa_total_embriones:.3f} Mt"
+                " | "
+                f"protoplanetas={masa_total_protoplanetas:.3f} Mt"
+            ),
         )
 
         fila += 1

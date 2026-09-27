@@ -3,6 +3,9 @@ import math
 from planets.planetary_embryo import (
     EmbrionPlanetario,
 )
+from planets.protoplanet import (
+    Protoplaneta,
+)
 
 
 class DiscoProtoplanetario:
@@ -20,6 +23,7 @@ class DiscoProtoplanetario:
         gamma_perfil=1.0,
         linea_hielo_au=None,
         embriones=None,
+        protoplanetas=None,
         masa_planetesimales_tierra=None,
     ):
         if masa_polvo_tierra < 0:
@@ -66,6 +70,8 @@ class DiscoProtoplanetario:
         self.modelo = str(modelo)
 
         self.embriones = list(embriones if embriones is not None else [])
+
+        self.protoplanetas = list(protoplanetas if protoplanetas is not None else [])
 
         self.masa_planetesimales_tierra = (
             self.masa_polvo_tierra
@@ -305,6 +311,22 @@ class DiscoProtoplanetario:
     ):
         return len(self.embriones)
 
+    def establecer_protoplanetas(
+        self,
+        protoplanetas,
+    ):
+        self.protoplanetas = list(protoplanetas)
+
+    def obtener_cantidad_protoplanetas(
+        self,
+    ):
+        return len(self.protoplanetas)
+
+    def obtener_masa_protoplanetas_tierra(
+        self,
+    ):
+        return sum(protoplaneta.masa_tierra for protoplaneta in self.protoplanetas)
+
     def a_dict(self):
         return {
             "estrella_nombre": (self.estrella_nombre),
@@ -319,6 +341,9 @@ class DiscoProtoplanetario:
             "modelo": self.modelo,
             "masa_estelar_msol": (self.masa_estelar_msol),
             "embriones": [embrion.a_dict() for embrion in self.embriones],
+            "protoplanetas": [
+                protoplaneta.a_dict() for protoplaneta in self.protoplanetas
+            ],
             "masa_planetesimales_tierra": (self.masa_planetesimales_tierra),
         }
 
@@ -352,6 +377,13 @@ class DiscoProtoplanetario:
                 EmbrionPlanetario.desde_dict(datos_embrion)
                 for datos_embrion in datos.get(
                     "embriones",
+                    [],
+                )
+            ],
+            protoplanetas=[
+                Protoplaneta.desde_dict(datos_protoplaneta)
+                for datos_protoplaneta in datos.get(
+                    "protoplanetas",
                     [],
                 )
             ],
