@@ -101,7 +101,11 @@ class SaveManager:
             universe.sistemas_estelares = []
 
             for estrella in universe.estrellas:
-                universe.crear_sistema_estelar(estrella)
+                universe.crear_sistema_estelar(
+                    nombre=(f"Sistema de {estrella.nombre}"),
+                    anio_formacion=(estrella.anio_nacimiento),
+                    estrella_primaria=estrella,
+                )
 
         estrellas_por_nombre = {
             estrella.nombre: estrella for estrella in universe.estrellas

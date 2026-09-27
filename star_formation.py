@@ -1,6 +1,9 @@
 import math
 import random
 from dataclasses import dataclass
+from stellar_systems.system_formation import (
+    FormadorSistemasEstelares,
+)
 
 from cosmology import CosmologiaPlanck18
 
@@ -16,6 +19,18 @@ class NacimientoEstelar:
 
     poblacion: str
     modelo_imf: str
+
+    sistema_id: str | None = None
+
+    es_primaria: bool = True
+
+    periodo_orbital_dias: float | None = None
+
+    semieje_mayor_au: float | None = None
+    excentricidad: float | None = None
+
+    q_objetivo: float | None = None
+    q_real: float | None = None
 
 
 class FormacionEstelarCosmica:
@@ -87,6 +102,8 @@ class FormacionEstelarCosmica:
             self.POPII_MASA_MAX,
         )
 
+        self.formador_sistemas = FormadorSistemasEstelares()
+
     def generar_nacimientos(
         self,
         seed,
@@ -141,6 +158,11 @@ class FormacionEstelarCosmica:
             )
 
         nacimientos.sort(key=lambda nacimiento: (nacimiento.anio))
+
+        nacimientos = self._asignar_sistemas(
+            seed,
+            nacimientos,
+        )
 
         return nacimientos
 
@@ -417,3 +439,66 @@ class FormacionEstelarCosmica:
         ) & mascara
 
         return random.Random(semilla)
+
+    def _asignar_sistemas(
+        self,
+        seed,
+        nacimientos,
+    ):
+        if not nacimientos:
+            return []
+
+        grupos = {}
+
+        for nacimiento in nacimientos:
+            indice_bin = nacimiento.anio // self.PASO_ANIOS
+
+            clave = (
+                indice_bin,
+                nacimiento.poblacion,
+            )
+
+            if clave not in grupos:
+                grupos[clave] = []
+
+            grupos[clave].append(nacimiento)
+
+        asignaciones = {}
+
+        for clave in sorted(grupos):
+            asignaciones_grupo = self.formador_sistemas.asignar_sistemas(
+                seed=seed,
+                nacimientos=grupos[clave],
+            )
+
+            asignaciones.update(asignaciones_grupo)
+
+        resultado = []
+
+        for nacimiento in nacimientos:
+            asignacion = asignaciones.get(nacimiento.nombre)
+
+            if asignacion is None:
+                resultado.append(nacimiento)
+                continue
+
+            resultado.append(
+                NacimientoEstelar(
+                    nombre=nacimiento.nombre,
+                    anio=nacimiento.anio,
+                    redshift=nacimiento.redshift,
+                    masa_inicial=(nacimiento.masa_inicial),
+                    metalicidad_z=(nacimiento.metalicidad_z),
+                    poblacion=(nacimiento.poblacion),
+                    modelo_imf=(nacimiento.modelo_imf),
+                    sistema_id=(asignacion.sistema_id),
+                    es_primaria=(asignacion.es_primaria),
+                    periodo_orbital_dias=(asignacion.periodo_orbital_dias),
+                    q_objetivo=(asignacion.q_objetivo),
+                    q_real=(asignacion.q_real),
+                    semieje_mayor_au=(asignacion.semieje_mayor_au),
+                    excentricidad=(asignacion.excentricidad),
+                )
+            )
+
+        return resultado

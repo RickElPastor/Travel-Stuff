@@ -46,19 +46,84 @@ class Universe:
         for estrella in self.estrellas:
             estrella.establecer_modelo_evolutivo(modelo)
 
+    def buscar_sistema_estelar(
+        self,
+        nombre,
+    ):
+        for sistema in self.sistemas_estelares:
+            if sistema.nombre == nombre:
+                return sistema
+
+        return None
+
     def crear_sistema_estelar(
         self,
-        estrella,
+        nombre,
+        anio_formacion,
+        estrella_primaria=None,
+        periodo_orbital_dias=None,
+        q_objetivo=None,
+        q_real=None,
+        semieje_mayor_au=None,
+        excentricidad=None,
     ):
-        nombre = f"Sistema de {estrella.nombre}"
+        sistema = self.buscar_sistema_estelar(nombre)
 
-        sistema = SistemaEstelar(
-            nombre=nombre,
-            anio_formacion=estrella.anio_nacimiento,
-            estrellas=[estrella],
+        if sistema is None:
+            sistema = SistemaEstelar(
+                nombre=nombre,
+                anio_formacion=anio_formacion,
+                periodo_orbital_dias=(periodo_orbital_dias),
+                q_objetivo=q_objetivo,
+                q_real=q_real,
+                semieje_mayor_au=semieje_mayor_au,
+                excentricidad=excentricidad,
+            )
+
+            self.sistemas_estelares.append(sistema)
+
+        else:
+            sistema.anio_formacion = min(
+                sistema.anio_formacion,
+                int(anio_formacion),
+            )
+
+            sistema.actualizar_datos_orbitales(
+                periodo_orbital_dias=(periodo_orbital_dias),
+                q_objetivo=q_objetivo,
+                q_real=q_real,
+                semieje_mayor_au=semieje_mayor_au,
+                excentricidad=excentricidad,
+            )
+
+        if estrella_primaria is not None:
+            sistema.establecer_estrella_primaria(estrella_primaria)
+
+        return sistema
+
+    def registrar_nacimiento_en_sistema(
+        self,
+        nacimiento,
+    ):
+        nombre_sistema = nacimiento.sistema_id
+
+        if nombre_sistema is None:
+            nombre_sistema = f"Sistema de {nacimiento.nombre}"
+
+        sistema = self.crear_sistema_estelar(
+            nombre=nombre_sistema,
+            anio_formacion=nacimiento.anio,
+            periodo_orbital_dias=(nacimiento.periodo_orbital_dias),
+            q_objetivo=nacimiento.q_objetivo,
+            q_real=nacimiento.q_real,
+            semieje_mayor_au=(nacimiento.semieje_mayor_au),
+            excentricidad=(nacimiento.excentricidad),
         )
 
-        self.sistemas_estelares.append(sistema)
+        sistema.agregar_estrella(nacimiento.nombre)
+
+        if nacimiento.es_primaria:
+            sistema.establecer_estrella_primaria(nacimiento.nombre)
 
         return sistema
 
@@ -70,6 +135,13 @@ class Universe:
         anio_nacimiento=None,
         poblacion=None,
         redshift_nacimiento=None,
+        sistema_id=None,
+        es_primaria=True,
+        periodo_orbital_dias=None,
+        q_objetivo=None,
+        q_real=None,
+        semieje_mayor_au=None,
+        excentricidad=None,
     ):
         if (
             self.modelo_estelar is not None
@@ -111,7 +183,23 @@ class Universe:
 
         self.estrellas.append(estrella)
 
-        self.crear_sistema_estelar(estrella)
+        if sistema_id is None:
+            sistema_id = f"Sistema de {estrella.nombre}"
+
+        sistema = self.crear_sistema_estelar(
+            nombre=sistema_id,
+            anio_formacion=(estrella.anio_nacimiento),
+            periodo_orbital_dias=(periodo_orbital_dias),
+            semieje_mayor_au=(semieje_mayor_au),
+            excentricidad=(excentricidad),
+            q_objetivo=q_objetivo,
+            q_real=q_real,
+        )
+
+        sistema.agregar_estrella(estrella)
+
+        if es_primaria:
+            sistema.establecer_estrella_primaria(estrella)
 
         if poblacion:
             descripcion_poblacion = f"Población {poblacion}"
@@ -251,6 +339,7 @@ class Universe:
         no_modeladas = {}
 
         for nacimiento in nacimientos:
+            self.registrar_nacimiento_en_sistema(nacimiento)
             if (
                 self.modelo_estelar is not None
                 and hasattr(
@@ -282,10 +371,17 @@ class Universe:
             self.crear_estrella(
                 masa_inicial=(nacimiento.masa_inicial),
                 metalicidad_z=(nacimiento.metalicidad_z),
-                nombre=(nacimiento.nombre),
-                anio_nacimiento=(nacimiento.anio),
-                poblacion=(nacimiento.poblacion),
+                nombre=nacimiento.nombre,
+                anio_nacimiento=nacimiento.anio,
+                poblacion=nacimiento.poblacion,
                 redshift_nacimiento=(nacimiento.redshift),
+                sistema_id=(nacimiento.sistema_id),
+                es_primaria=(nacimiento.es_primaria),
+                periodo_orbital_dias=(nacimiento.periodo_orbital_dias),
+                semieje_mayor_au=(nacimiento.semieje_mayor_au),
+                excentricidad=(nacimiento.excentricidad),
+                q_objetivo=(nacimiento.q_objetivo),
+                q_real=nacimiento.q_real,
             )
 
         for motivo, cantidad in no_modeladas.items():

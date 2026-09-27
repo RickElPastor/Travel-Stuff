@@ -202,6 +202,108 @@ class SimulationUI:
 
         fila += 1
 
+        sistemas_simples = 0
+        sistemas_binarios = 0
+        sistemas_triples = 0
+        sistemas_multiples = 0
+
+        for sistema in self.universe.sistemas_estelares:
+            tipo = sistema.obtener_tipo()
+
+            if tipo == "simple":
+                sistemas_simples += 1
+
+            elif tipo == "binario":
+                sistemas_binarios += 1
+
+            elif tipo == "triple":
+                sistemas_triples += 1
+
+            elif tipo == "multiple":
+                sistemas_multiples += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Sistemas: "
+                f"{len(self.universe.sistemas_estelares)}"
+                "  |  "
+                f"Simples: {sistemas_simples}"
+                "  |  "
+                f"Binarios: {sistemas_binarios}"
+                "  |  "
+                f"Triples+: "
+                f"{sistemas_triples + sistemas_multiples}"
+            ),
+        )
+
+        fila += 1
+
+        sistema_binario = next(
+            (
+                sistema
+                for sistema in self.universe.sistemas_estelares
+                if sistema.obtener_tipo() == "binario"
+            ),
+            None,
+        )
+
+        if sistema_binario is not None:
+            periodo = self._valor(
+                sistema_binario.periodo_orbital_dias,
+                "d",
+                1,
+            )
+
+            semieje = self._valor(
+                sistema_binario.semieje_mayor_au,
+                "AU",
+                3,
+            )
+
+            excentricidad = self._valor(
+                sistema_binario.excentricidad,
+                "",
+                3,
+            )
+
+            periastro = self._valor(
+                sistema_binario.obtener_periastro_au(),
+                "AU",
+                3,
+            )
+
+            apoastro = self._valor(
+                sistema_binario.obtener_apoastro_au(),
+                "AU",
+                3,
+            )
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Órbita binaria: "
+                    f"P={periodo} | "
+                    f"a={semieje} | "
+                    f"e={excentricidad}"
+                ),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                ("Distancias: " f"periastro={periastro} | " f"apoastro={apoastro}"),
+            )
+
+        fila += 1
+
         linea_horizontal(stdscr, fila)
 
         return fila + 1
