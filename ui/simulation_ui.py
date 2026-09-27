@@ -164,8 +164,18 @@ class SimulationUI:
 
         return fila + 1
 
-    def _dibujar_universo(self, stdscr, fila):
-        escribir_seguro(stdscr, fila, 0, "UNIVERSO", curses.A_BOLD)
+    def _dibujar_universo(
+        self,
+        stdscr,
+        fila,
+    ):
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            "UNIVERSO",
+            curses.A_BOLD,
+        )
 
         fila += 1
 
@@ -179,8 +189,10 @@ class SimulationUI:
             0,
             (
                 f"Semilla: "
-                f"{self.universe.seed}  |  "
-                f"Edad: {edad} años  |  "
+                f"{self.universe.seed}"
+                "  |  "
+                f"Edad: {edad} años"
+                "  |  "
                 f"Velocidad: {velocidad}"
             ),
         )
@@ -234,8 +246,29 @@ class SimulationUI:
                 "  |  "
                 f"Binarios: {sistemas_binarios}"
                 "  |  "
-                f"Triples+: "
+                "Triples+: "
                 f"{sistemas_triples + sistemas_multiples}"
+            ),
+        )
+
+        fila += 1
+
+        discos_truncados = sum(
+            1
+            for disco in self.universe.discos_protoplanetarios
+            if disco.truncado_por_companera
+        )
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Discos de formación: "
+                f"{len(self.universe.discos_protoplanetarios)}"
+                "  |  "
+                "Truncados por binaria: "
+                f"{discos_truncados}"
             ),
         )
 
@@ -245,7 +278,7 @@ class SimulationUI:
             (
                 sistema
                 for sistema in self.universe.sistemas_estelares
-                if sistema.obtener_tipo() == "binario"
+                if (sistema.obtener_tipo() == "binario")
             ),
             None,
         )
@@ -287,8 +320,10 @@ class SimulationUI:
                 0,
                 (
                     "Órbita binaria: "
-                    f"P={periodo} | "
-                    f"a={semieje} | "
+                    f"P={periodo}"
+                    " | "
+                    f"a={semieje}"
+                    " | "
                     f"e={excentricidad}"
                 ),
             )
@@ -299,12 +334,15 @@ class SimulationUI:
                 stdscr,
                 fila,
                 0,
-                ("Distancias: " f"periastro={periastro} | " f"apoastro={apoastro}"),
+                ("Distancias: " f"periastro={periastro}" " | " f"apoastro={apoastro}"),
             )
 
-        fila += 1
+            fila += 1
 
-        linea_horizontal(stdscr, fila)
+        linea_horizontal(
+            stdscr,
+            fila,
+        )
 
         return fila + 1
 

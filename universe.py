@@ -2,6 +2,12 @@ import random
 
 from events import EventManager
 from stellar_systems.stellar_system import SistemaEstelar
+from planets.disk_environment_model import (
+    ModeloEntornoDisco,
+)
+from planets.disk_model import (
+    ModeloDiscoProtoplanetario,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -36,6 +42,12 @@ class Universe:
         self.estrellas = []
         self.remanentes = []
         self.sistemas_estelares = []
+
+        self.discos_protoplanetarios = []
+
+        self.modelo_disco = ModeloDiscoProtoplanetario()
+
+        self.modelo_entorno_disco = ModeloEntornoDisco()
 
     def establecer_modelo_estelar(
         self,
@@ -125,7 +137,57 @@ class Universe:
         if nacimiento.es_primaria:
             sistema.establecer_estrella_primaria(nacimiento.nombre)
 
+        self.crear_disco_para_nacimiento(
+            nacimiento,
+            sistema,
+        )
+
         return sistema
+
+    def buscar_disco_protoplanetario(
+        self,
+        estrella_nombre,
+    ):
+        for disco in self.discos_protoplanetarios:
+            if disco.estrella_nombre == estrella_nombre:
+                return disco
+
+        return None
+
+    def crear_disco_para_nacimiento(
+        self,
+        nacimiento,
+        sistema,
+    ):
+        existente = self.buscar_disco_protoplanetario(nacimiento.nombre)
+
+        if existente is not None:
+            return existente
+
+        if not self.modelo_disco.admite_estrella(
+            nacimiento.masa_inicial,
+            nacimiento.metalicidad_z,
+        ):
+            return None
+
+        radio_exterior_au = self.modelo_entorno_disco.obtener_radio_exterior_au(sistema)
+
+        truncado = radio_exterior_au is not None
+
+        disco = self.modelo_disco.generar_disco(
+            seed=self.seed,
+            identificador=(nacimiento.nombre),
+            estrella_nombre=(nacimiento.nombre),
+            masa_estelar=(nacimiento.masa_inicial),
+            metalicidad_z=(nacimiento.metalicidad_z),
+            sistema_nombre=(sistema.nombre),
+            radio_exterior_au=(radio_exterior_au),
+            truncado_por_companera=(truncado),
+        )
+
+        self.discos_protoplanetarios.append(disco)
+
+        return disco
 
     def crear_estrella(
         self,

@@ -17,6 +17,8 @@ class SistemaEstelar:
         self.nombres_estrellas = []
         self.nombre_estrella_primaria = None
 
+        self.nombres_planetas = []
+
         self.periodo_orbital_dias = (
             None if periodo_orbital_dias is None else float(periodo_orbital_dias)
         )
@@ -68,6 +70,43 @@ class SistemaEstelar:
         self.agregar_estrella(nombre)
 
         self.nombre_estrella_primaria = nombre
+
+    def agregar_planeta(
+        self,
+        planeta,
+    ):
+        if hasattr(
+            planeta,
+            "nombre",
+        ):
+            nombre = planeta.nombre
+
+        else:
+            nombre = str(planeta)
+
+        if nombre not in self.nombres_planetas:
+            self.nombres_planetas.append(nombre)
+
+    def quitar_planeta(
+        self,
+        planeta,
+    ):
+        if hasattr(
+            planeta,
+            "nombre",
+        ):
+            nombre = planeta.nombre
+
+        else:
+            nombre = str(planeta)
+
+        if nombre in self.nombres_planetas:
+            self.nombres_planetas.remove(nombre)
+
+    def obtener_cantidad_planetas(
+        self,
+    ):
+        return len(self.nombres_planetas)
 
     def actualizar_datos_orbitales(
         self,
@@ -153,6 +192,7 @@ class SistemaEstelar:
             "excentricidad": (self.excentricidad),
             "q_objetivo": (self.q_objetivo),
             "q_real": (self.q_real),
+            "planetas": list(self.nombres_planetas),
         }
 
     @classmethod
@@ -175,6 +215,12 @@ class SistemaEstelar:
             [],
         ):
             sistema.agregar_estrella(nombre_estrella)
+
+        for nombre_planeta in datos.get(
+            "planetas",
+            [],
+        ):
+            sistema.agregar_planeta(nombre_planeta)
 
         nombre_primaria = datos.get("estrella_primaria")
 
