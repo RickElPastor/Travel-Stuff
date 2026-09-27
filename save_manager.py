@@ -3,6 +3,7 @@ from pathlib import Path
 
 from events import Event
 from planets.protoplanetary_disk import DiscoProtoplanetario
+from planets.planet import Planet
 from remnant import RemanenteEstelar
 from star import Star
 from stellar_systems.stellar_system import SistemaEstelar
@@ -41,6 +42,7 @@ class SaveManager:
             "discos_protoplanetarios": [
                 disco.a_dict() for disco in universe.discos_protoplanetarios
             ],
+            "planetas": [planeta.a_dict() for planeta in universe.planetas],
             "eventos": [
                 evento.a_dict() for evento in universe.event_manager.obtener_eventos()
             ],
@@ -155,6 +157,14 @@ class SaveManager:
             DiscoProtoplanetario.desde_dict(datos_disco)
             for datos_disco in datos.get(
                 "discos_protoplanetarios",
+                [],
+            )
+        ]
+
+        universe.planetas = [
+            Planet.desde_dict(datos_planeta)
+            for datos_planeta in datos.get(
+                "planetas",
                 [],
             )
         ]

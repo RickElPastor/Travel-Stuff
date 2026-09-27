@@ -269,6 +269,16 @@ class SimulationUI:
             for disco in self.universe.discos_protoplanetarios
         )
 
+        cantidad_planetas = len(self.universe.planetas)
+
+        candidatos_gas = sum(
+            1 for planeta in self.universe.planetas if planeta.candidato_captura_gas
+        )
+
+        masa_total_planetas = sum(
+            planeta.masa_solida_tierra for planeta in self.universe.planetas
+        )
+
         masa_total_embriones = sum(
             disco.obtener_masa_embriones_tierra()
             for disco in self.universe.discos_protoplanetarios
@@ -317,10 +327,27 @@ class SimulationUI:
             fila,
             0,
             (
-                "Masa formación: "
-                f"embriones={masa_total_embriones:.3f} Mt"
+                "Planetas sólidos: "
+                f"{cantidad_planetas}"
                 " | "
-                f"protoplanetas={masa_total_protoplanetas:.3f} Mt"
+                "Candidatos a gas: "
+                f"{candidatos_gas}"
+            ),
+        )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Masa formación: "
+                f"E={masa_total_embriones:.3f} Mt"
+                " | "
+                f"P={masa_total_protoplanetas:.3f} Mt"
+                " | "
+                f"planetas={masa_total_planetas:.3f} Mt"
             ),
         )
 
