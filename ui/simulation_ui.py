@@ -259,6 +259,11 @@ class SimulationUI:
             if disco.truncado_por_companera
         )
 
+        cantidad_embriones = sum(
+            disco.obtener_cantidad_embriones()
+            for disco in self.universe.discos_protoplanetarios
+        )
+
         escribir_seguro(
             stdscr,
             fila,
@@ -271,6 +276,106 @@ class SimulationUI:
                 f"{discos_truncados}"
             ),
         )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            ("Embriones planetarios: " f"{cantidad_embriones}"),
+        )
+
+        fila += 1
+
+        disco_ejemplo = next(
+            iter(self.universe.discos_protoplanetarios),
+            None,
+        )
+
+        if disco_ejemplo is not None:
+            masa_polvo = self._valor(
+                disco_ejemplo.masa_polvo_tierra,
+                "Mt",
+                2,
+            )
+
+            radio_caracteristico = self._valor(
+                disco_ejemplo.radio_caracteristico_au,
+                "AU",
+                2,
+            )
+
+            linea_hielo = self._valor(
+                disco_ejemplo.linea_hielo_au,
+                "AU",
+                2,
+            )
+
+            masa_interior = self._valor(
+                disco_ejemplo.obtener_masa_polvo_interior_linea_hielo(),
+                "Mt",
+                2,
+            )
+
+            masa_exterior = self._valor(
+                disco_ejemplo.obtener_masa_polvo_exterior_linea_hielo(),
+                "Mt",
+                2,
+            )
+
+            cantidad_embriones_disco = disco_ejemplo.obtener_cantidad_embriones()
+
+            masa_embriones = self._valor(
+                disco_ejemplo.obtener_masa_embriones_tierra(),
+                "Mt",
+                3,
+            )
+
+            masa_planetesimales = self._valor(
+                disco_ejemplo.masa_planetesimales_tierra,
+                "Mt",
+                3,
+            )
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Disco ejemplo: "
+                    f"polvo={masa_polvo} | "
+                    f"Rc={radio_caracteristico} | "
+                    f"hielo={linea_hielo}"
+                ),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Sólidos: "
+                    f"interior={masa_interior} | "
+                    f"exterior={masa_exterior}"
+                ),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Formación: "
+                    f"embriones={cantidad_embriones_disco} | "
+                    f"masa embriones={masa_embriones} | "
+                    f"planetesimales={masa_planetesimales}"
+                ),
+            )
 
         fila += 1
 

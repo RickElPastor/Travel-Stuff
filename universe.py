@@ -8,6 +8,9 @@ from planets.disk_environment_model import (
 from planets.disk_model import (
     ModeloDiscoProtoplanetario,
 )
+from planets.embryo_formation_model import (
+    ModeloFormacionEmbriones,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -46,6 +49,8 @@ class Universe:
         self.discos_protoplanetarios = []
 
         self.modelo_disco = ModeloDiscoProtoplanetario()
+
+        self.modelo_formacion_embriones = ModeloFormacionEmbriones()
 
         self.modelo_entorno_disco = ModeloEntornoDisco()
 
@@ -184,6 +189,10 @@ class Universe:
             radio_exterior_au=(radio_exterior_au),
             truncado_por_companera=(truncado),
         )
+
+        embriones = self.modelo_formacion_embriones.generar_embriones(disco)
+
+        disco.establecer_embriones(embriones)
 
         self.discos_protoplanetarios.append(disco)
 

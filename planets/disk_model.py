@@ -4,6 +4,12 @@ import random
 from planets.protoplanetary_disk import (
     DiscoProtoplanetario,
 )
+from planets.disk_structure_model import (
+    ModeloEstructuraDisco,
+)
+from planets.snow_line_model import (
+    ModeloLineaHielo,
+)
 
 
 class ModeloDiscoProtoplanetario:
@@ -25,6 +31,10 @@ class ModeloDiscoProtoplanetario:
     BETA = 1.1
 
     DISPERSION_DEX = 0.8
+
+    def __init__(self):
+        self.modelo_estructura = ModeloEstructuraDisco()
+        self.modelo_linea_hielo = ModeloLineaHielo()
 
     def admite_estrella(
         self,
@@ -91,11 +101,22 @@ class ModeloDiscoProtoplanetario:
 
         masa_polvo_tierra = 10**log_masa_polvo
 
+        radio_caracteristico_au = (
+            self.modelo_estructura.calcular_radio_caracteristico_au(masa_estelar)
+        )
+
+        linea_hielo_au = self.modelo_linea_hielo.calcular_linea_hielo_au(masa_estelar)
+
         return DiscoProtoplanetario(
             estrella_nombre=(estrella_nombre),
             sistema_nombre=(sistema_nombre),
+            masa_estelar_msol=(masa_estelar),
             masa_polvo_tierra=(masa_polvo_tierra),
             radio_exterior_au=(radio_exterior_au),
             truncado_por_companera=(truncado_por_companera),
+            radio_caracteristico_au=(radio_caracteristico_au),
+            radio_interior_au=(self.modelo_estructura.RADIO_INTERIOR_AU),
+            gamma_perfil=(self.modelo_estructura.GAMMA),
+            linea_hielo_au=(linea_hielo_au),
             modelo=self.nombre,
         )
