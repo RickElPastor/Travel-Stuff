@@ -26,6 +26,9 @@ class Planet:
         radio_tierra=None,
         densidad_g_cm3=None,
         gravedad_superficial_ms2=None,
+        flujo_estelar_tierra=None,
+        irradiancia_media_w_m2=None,
+        temperatura_equilibrio_cero_albedo_k=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -115,6 +118,20 @@ class Planet:
             else float(gravedad_superficial_ms2)
         )
 
+        self.flujo_estelar_tierra = (
+            None if flujo_estelar_tierra is None else float(flujo_estelar_tierra)
+        )
+
+        self.irradiancia_media_w_m2 = (
+            None if irradiancia_media_w_m2 is None else float(irradiancia_media_w_m2)
+        )
+
+        self.temperatura_equilibrio_cero_albedo_k = (
+            None
+            if temperatura_equilibrio_cero_albedo_k is None
+            else float(temperatura_equilibrio_cero_albedo_k)
+        )
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -172,6 +189,11 @@ class Planet:
             "radio_tierra": (self.radio_tierra),
             "densidad_g_cm3": (self.densidad_g_cm3),
             "gravedad_superficial_ms2": (self.gravedad_superficial_ms2),
+            "flujo_estelar_tierra": (self.flujo_estelar_tierra),
+            "irradiancia_media_w_m2": (self.irradiancia_media_w_m2),
+            "temperatura_equilibrio_cero_albedo_k": (
+                self.temperatura_equilibrio_cero_albedo_k
+            ),
         }
 
     @classmethod
@@ -238,4 +260,9 @@ class Planet:
             radio_tierra=datos.get("radio_tierra"),
             densidad_g_cm3=datos.get("densidad_g_cm3"),
             gravedad_superficial_ms2=datos.get("gravedad_superficial_ms2"),
+            flujo_estelar_tierra=datos.get("flujo_estelar_tierra"),
+            irradiancia_media_w_m2=datos.get("irradiancia_media_w_m2"),
+            temperatura_equilibrio_cero_albedo_k=datos.get(
+                "temperatura_equilibrio_cero_albedo_k"
+            ),
         )

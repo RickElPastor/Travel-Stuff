@@ -334,6 +334,15 @@ class SimulationUI:
             default=None,
         )
 
+        planeta_irradiado = next(
+            (
+                planeta
+                for planeta in self.universe.planetas
+                if (planeta.flujo_estelar_tierra is not None)
+            ),
+            None,
+        )
+
         escribir_seguro(
             stdscr,
             fila,
@@ -455,6 +464,32 @@ class SimulationUI:
                 fila,
                 0,
                 "Todavia no hay planetas.",
+            )
+
+        fila += 1
+
+        if planeta_irradiado is not None:
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Irradiacion ejemplo: "
+                    f"S={planeta_irradiado.flujo_estelar_tierra:.3f} S-Tierra"
+                    " | "
+                    f"F={planeta_irradiado.irradiancia_media_w_m2:.1f} W/m2"
+                    " | "
+                    "Teq0="
+                    f"{planeta_irradiado.temperatura_equilibrio_cero_albedo_k:.1f} K"
+                ),
+            )
+
+        else:
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                ("Irradiacion ejemplo: " "sin estrella anfitriona activa"),
             )
 
         fila += 1

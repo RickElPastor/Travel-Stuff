@@ -17,6 +17,9 @@ from planets.giant_impact_model import (
 from planets.planet_formation_model import (
     ModeloFormacionPlanetasSolidos,
 )
+from planets.planetary_irradiation_model import (
+    ModeloIrradiacionPlanetaria,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -63,6 +66,8 @@ class Universe:
         self.modelo_formacion_planetas = ModeloFormacionPlanetasSolidos()
 
         self.modelo_entorno_disco = ModeloEntornoDisco()
+
+        self.modelo_irradiacion_planetaria = ModeloIrradiacionPlanetaria()
 
     def establecer_modelo_estelar(
         self,
@@ -218,6 +223,21 @@ class Universe:
         self.discos_protoplanetarios.append(disco)
 
         return disco
+
+    def actualizar_irradiacion_planetaria(
+        self,
+    ):
+        estrellas_por_nombre = {
+            estrella.nombre: estrella for estrella in self.estrellas
+        }
+
+        for planeta in self.planetas:
+            estrella = estrellas_por_nombre.get(planeta.estrella_anfitriona)
+
+            self.modelo_irradiacion_planetaria.actualizar(
+                planeta,
+                estrella,
+            )
 
     def crear_estrella(
         self,
@@ -475,6 +495,8 @@ class Universe:
                 q_objetivo=(nacimiento.q_objetivo),
                 q_real=nacimiento.q_real,
             )
+
+        self.actualizar_irradiacion_planetaria()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(
