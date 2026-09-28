@@ -41,6 +41,16 @@ class Planet:
         masa_material_sin_clasificar_tierra=None,
         masa_agua_inicial_tierra=None,
         fraccion_agua_inicial=None,
+        reservorio_h2o_interior_tierra=None,
+        reservorio_h2o_total_tierra=None,
+        reservorio_carbono_tierra=None,
+        reservorio_nitrogeno_tierra=None,
+        actividad_geologica_relativa=None,
+        fraccion_volatiles_desgasificada=None,
+        geologicamente_activo=False,
+        h2o_desgasificada_tierra=None,
+        carbono_desgasificado_tierra=None,
+        nitrogeno_desgasificado_tierra=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -196,6 +206,62 @@ class Planet:
             None if fraccion_agua_inicial is None else float(fraccion_agua_inicial)
         )
 
+        self.reservorio_h2o_interior_tierra = (
+            None
+            if reservorio_h2o_interior_tierra is None
+            else float(reservorio_h2o_interior_tierra)
+        )
+
+        self.reservorio_h2o_total_tierra = (
+            None
+            if reservorio_h2o_total_tierra is None
+            else float(reservorio_h2o_total_tierra)
+        )
+
+        self.reservorio_carbono_tierra = (
+            None
+            if reservorio_carbono_tierra is None
+            else float(reservorio_carbono_tierra)
+        )
+
+        self.reservorio_nitrogeno_tierra = (
+            None
+            if reservorio_nitrogeno_tierra is None
+            else float(reservorio_nitrogeno_tierra)
+        )
+
+        self.actividad_geologica_relativa = (
+            None
+            if actividad_geologica_relativa is None
+            else float(actividad_geologica_relativa)
+        )
+
+        self.fraccion_volatiles_desgasificada = (
+            None
+            if fraccion_volatiles_desgasificada is None
+            else float(fraccion_volatiles_desgasificada)
+        )
+
+        self.geologicamente_activo = bool(geologicamente_activo)
+
+        self.h2o_desgasificada_tierra = (
+            None
+            if h2o_desgasificada_tierra is None
+            else float(h2o_desgasificada_tierra)
+        )
+
+        self.carbono_desgasificado_tierra = (
+            None
+            if carbono_desgasificado_tierra is None
+            else float(carbono_desgasificado_tierra)
+        )
+
+        self.nitrogeno_desgasificado_tierra = (
+            None
+            if nitrogeno_desgasificado_tierra is None
+            else float(nitrogeno_desgasificado_tierra)
+        )
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -276,6 +342,16 @@ class Planet:
             ),
             "masa_agua_inicial_tierra": (self.masa_agua_inicial_tierra),
             "fraccion_agua_inicial": (self.fraccion_agua_inicial),
+            "reservorio_h2o_interior_tierra": (self.reservorio_h2o_interior_tierra),
+            "reservorio_h2o_total_tierra": (self.reservorio_h2o_total_tierra),
+            "reservorio_carbono_tierra": (self.reservorio_carbono_tierra),
+            "reservorio_nitrogeno_tierra": (self.reservorio_nitrogeno_tierra),
+            "actividad_geologica_relativa": (self.actividad_geologica_relativa),
+            "fraccion_volatiles_desgasificada": (self.fraccion_volatiles_desgasificada),
+            "geologicamente_activo": (self.geologicamente_activo),
+            "h2o_desgasificada_tierra": (self.h2o_desgasificada_tierra),
+            "carbono_desgasificado_tierra": (self.carbono_desgasificado_tierra),
+            "nitrogeno_desgasificado_tierra": (self.nitrogeno_desgasificado_tierra),
         }
 
     @classmethod
@@ -374,4 +450,19 @@ class Planet:
             ),
             masa_agua_inicial_tierra=datos.get("masa_agua_inicial_tierra"),
             fraccion_agua_inicial=datos.get("fraccion_agua_inicial"),
+            reservorio_h2o_interior_tierra=datos.get("reservorio_h2o_interior_tierra"),
+            reservorio_h2o_total_tierra=datos.get("reservorio_h2o_total_tierra"),
+            reservorio_carbono_tierra=datos.get("reservorio_carbono_tierra"),
+            reservorio_nitrogeno_tierra=datos.get("reservorio_nitrogeno_tierra"),
+            actividad_geologica_relativa=datos.get("actividad_geologica_relativa"),
+            fraccion_volatiles_desgasificada=datos.get(
+                "fraccion_volatiles_desgasificada"
+            ),
+            geologicamente_activo=datos.get(
+                "geologicamente_activo",
+                False,
+            ),
+            h2o_desgasificada_tierra=datos.get("h2o_desgasificada_tierra"),
+            carbono_desgasificado_tierra=datos.get("carbono_desgasificado_tierra"),
+            nitrogeno_desgasificado_tierra=datos.get("nitrogeno_desgasificado_tierra"),
         )

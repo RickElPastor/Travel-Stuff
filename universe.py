@@ -29,6 +29,9 @@ from habitability.terrestrial_candidate_model import (
 from habitability.atmospheric_retention_model import (
     ModeloRetencionAtmosferica,
 )
+from habitability.geologic_activity_model import (
+    ModeloActividadGeologica,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -83,6 +86,7 @@ class Universe:
         self.modelo_candidato_terrestre = ModeloCandidatoTerrestre()
 
         self.modelo_retencion_atmosferica = ModeloRetencionAtmosferica()
+        self.modelo_actividad_geologica = ModeloActividadGeologica()
 
     def establecer_modelo_estelar(
         self,
@@ -280,6 +284,24 @@ class Universe:
     ):
         for planeta in self.planetas:
             self.modelo_retencion_atmosferica.evaluar(planeta)
+
+    def actualizar_actividad_geologica(
+        self,
+    ):
+        estrellas_por_nombre = {
+            estrella.nombre: estrella for estrella in self.estrellas
+        }
+
+        for planeta in self.planetas:
+            estrella = estrellas_por_nombre.get(planeta.estrella_anfitriona)
+
+            if estrella is None:
+                continue
+
+            self.modelo_actividad_geologica.evaluar(
+                planeta,
+                estrella.edad,
+            )
 
     def crear_estrella(
         self,
@@ -545,6 +567,8 @@ class Universe:
         self.actualizar_candidatos_terrestres()
 
         self.actualizar_retencion_atmosferica()
+
+        self.actualizar_actividad_geologica()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(

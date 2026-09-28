@@ -359,6 +359,16 @@ class SimulationUI:
             if (planeta.candidato_terrestre_hz and planeta.retencion_atmosferica_aprox)
         )
 
+        candidatos_geologicamente_activos = sum(
+            1
+            for planeta in self.universe.planetas
+            if (
+                planeta.candidato_terrestre_hz
+                and planeta.retencion_atmosferica_aprox
+                and planeta.geologicamente_activo
+            )
+        )
+
         candidatos_con_agua_inicial = sum(
             1
             for planeta in self.universe.planetas
@@ -532,8 +542,22 @@ class SimulationUI:
                 f"Terrestres={candidatos_terrestres_hz}"
                 " | "
                 f"Ret atm={candidatos_con_retencion}"
+            ),
+        )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Interior habitable: "
+                "Geo activos="
+                f"{candidatos_geologicamente_activos}"
                 " | "
-                f"H2O inicial={candidatos_con_agua_inicial}"
+                "H2O inicial="
+                f"{candidatos_con_agua_inicial}"
             ),
         )
 

@@ -17,6 +17,9 @@ from planets.planet_physics_model import (
 from habitability.volatile_inventory_model import (
     ModeloInventarioVolatiles,
 )
+from habitability.interior_volatile_model import (
+    ModeloVolatilesInteriores,
+)
 
 
 class ModeloFormacionPlanetasSolidos:
@@ -41,6 +44,7 @@ class ModeloFormacionPlanetasSolidos:
         self.modelo_runaway_gas = ModeloRunawayGas()
         self.modelo_fisica_planetaria = ModeloFisicaPlanetaria()
         self.modelo_inventario_volatiles = ModeloInventarioVolatiles()
+        self.modelo_volatiles_interiores = ModeloVolatilesInteriores()
 
     def generar_planetas(
         self,
@@ -131,6 +135,8 @@ class ModeloFormacionPlanetasSolidos:
             self.modelo_fisica_planetaria.calcular_propiedades(planeta)
 
             self.modelo_inventario_volatiles.evaluar(planeta)
+
+            self.modelo_volatiles_interiores.evaluar(planeta)
 
         return planetas
 
