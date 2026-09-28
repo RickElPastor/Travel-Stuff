@@ -23,6 +23,9 @@ class Planet:
         masa_gas_runaway_tierra=0.0,
         tiempo_runaway_myr=None,
         entro_runaway=False,
+        radio_tierra=None,
+        densidad_g_cm3=None,
+        gravedad_superficial_ms2=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -102,6 +105,16 @@ class Planet:
 
         self.entro_runaway = bool(entro_runaway)
 
+        self.radio_tierra = None if radio_tierra is None else float(radio_tierra)
+
+        self.densidad_g_cm3 = None if densidad_g_cm3 is None else float(densidad_g_cm3)
+
+        self.gravedad_superficial_ms2 = (
+            None
+            if gravedad_superficial_ms2 is None
+            else float(gravedad_superficial_ms2)
+        )
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -156,6 +169,9 @@ class Planet:
             "masa_gas_runaway_tierra": (self.masa_gas_runaway_tierra),
             "tiempo_runaway_myr": (self.tiempo_runaway_myr),
             "entro_runaway": (self.entro_runaway),
+            "radio_tierra": (self.radio_tierra),
+            "densidad_g_cm3": (self.densidad_g_cm3),
+            "gravedad_superficial_ms2": (self.gravedad_superficial_ms2),
         }
 
     @classmethod
@@ -219,4 +235,7 @@ class Planet:
                 "entro_runaway",
                 False,
             ),
+            radio_tierra=datos.get("radio_tierra"),
+            densidad_g_cm3=datos.get("densidad_g_cm3"),
+            gravedad_superficial_ms2=datos.get("gravedad_superficial_ms2"),
         )

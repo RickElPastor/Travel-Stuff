@@ -11,6 +11,9 @@ from planets.gas_accretion_model import (
 from planets.runaway_gas_model import (
     ModeloRunawayGas,
 )
+from planets.planet_physics_model import (
+    ModeloFisicaPlanetaria,
+)
 
 
 class ModeloFormacionPlanetasSolidos:
@@ -31,10 +34,9 @@ class ModeloFormacionPlanetasSolidos:
 
     def __init__(self):
         self.modelo_crecimiento_nucleo = ModeloCrecimientoNucleo()
-
         self.modelo_acrecion_gas = ModeloAcrecionGas()
-
         self.modelo_runaway_gas = ModeloRunawayGas()
+        self.modelo_fisica_planetaria = ModeloFisicaPlanetaria()
 
     def generar_planetas(
         self,
@@ -111,6 +113,9 @@ class ModeloFormacionPlanetasSolidos:
             disco,
             planetas,
         )
+
+        for planeta in planetas:
+            self.modelo_fisica_planetaria.calcular_propiedades(planeta)
 
         return planetas
 

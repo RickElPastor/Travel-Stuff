@@ -328,9 +328,10 @@ class SimulationUI:
             for disco in self.universe.discos_protoplanetarios
         )
 
-        masa_planeta_maxima = max(
-            (planeta.masa_tierra for planeta in self.universe.planetas),
-            default=0.0,
+        planeta_mas_masivo = max(
+            self.universe.planetas,
+            key=lambda planeta: planeta.masa_tierra,
+            default=None,
         )
 
         escribir_seguro(
@@ -431,12 +432,30 @@ class SimulationUI:
 
         fila += 1
 
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            ("Planeta mas masivo: " f"{masa_planeta_maxima:.2f} Mt"),
-        )
+        if planeta_mas_masivo is not None:
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Planeta mas masivo: "
+                    f"M={planeta_mas_masivo.masa_tierra:.2f} Mt"
+                    " | "
+                    f"R={planeta_mas_masivo.radio_tierra:.2f} Rt"
+                    " | "
+                    f"rho={planeta_mas_masivo.densidad_g_cm3:.2f} g/cm3"
+                    " | "
+                    f"g={planeta_mas_masivo.gravedad_superficial_ms2:.1f} m/s2"
+                ),
+            )
+
+        else:
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                "Todavia no hay planetas.",
+            )
 
         fila += 1
 
