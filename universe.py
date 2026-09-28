@@ -20,6 +20,15 @@ from planets.planet_formation_model import (
 from planets.planetary_irradiation_model import (
     ModeloIrradiacionPlanetaria,
 )
+from habitability.habitable_zone_model import (
+    ModeloZonaHabitable,
+)
+from habitability.terrestrial_candidate_model import (
+    ModeloCandidatoTerrestre,
+)
+from habitability.atmospheric_retention_model import (
+    ModeloRetencionAtmosferica,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -68,6 +77,12 @@ class Universe:
         self.modelo_entorno_disco = ModeloEntornoDisco()
 
         self.modelo_irradiacion_planetaria = ModeloIrradiacionPlanetaria()
+
+        self.modelo_zona_habitable = ModeloZonaHabitable()
+
+        self.modelo_candidato_terrestre = ModeloCandidatoTerrestre()
+
+        self.modelo_retencion_atmosferica = ModeloRetencionAtmosferica()
 
     def establecer_modelo_estelar(
         self,
@@ -238,6 +253,33 @@ class Universe:
                 planeta,
                 estrella,
             )
+
+    def actualizar_habitabilidad_radiativa(
+        self,
+    ):
+        estrellas_por_nombre = {
+            estrella.nombre: estrella for estrella in self.estrellas
+        }
+
+        for planeta in self.planetas:
+            estrella = estrellas_por_nombre.get(planeta.estrella_anfitriona)
+
+            self.modelo_zona_habitable.evaluar(
+                planeta,
+                estrella,
+            )
+
+    def actualizar_candidatos_terrestres(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_candidato_terrestre.evaluar(planeta)
+
+    def actualizar_retencion_atmosferica(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_retencion_atmosferica.evaluar(planeta)
 
     def crear_estrella(
         self,
@@ -497,6 +539,12 @@ class Universe:
             )
 
         self.actualizar_irradiacion_planetaria()
+
+        self.actualizar_habitabilidad_radiativa()
+
+        self.actualizar_candidatos_terrestres()
+
+        self.actualizar_retencion_atmosferica()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(

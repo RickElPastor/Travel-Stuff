@@ -343,6 +343,22 @@ class SimulationUI:
             None,
         )
 
+        planetas_en_hz = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.en_zona_habitable_radiativa
+        )
+
+        candidatos_terrestres_hz = sum(
+            1 for planeta in self.universe.planetas if planeta.candidato_terrestre_hz
+        )
+
+        candidatos_con_retencion = sum(
+            1
+            for planeta in self.universe.planetas
+            if (planeta.candidato_terrestre_hz and planeta.retencion_atmosferica_aprox)
+        )
+
         escribir_seguro(
             stdscr,
             fila,
@@ -491,6 +507,22 @@ class SimulationUI:
                 0,
                 ("Irradiacion ejemplo: " "sin estrella anfitriona activa"),
             )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Habitabilidad: "
+                f"HZ={planetas_en_hz}"
+                " | "
+                f"Terrestres={candidatos_terrestres_hz}"
+                " | "
+                f"Retencion atm={candidatos_con_retencion}"
+            ),
+        )
 
         fila += 1
 

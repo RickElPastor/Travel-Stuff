@@ -29,6 +29,13 @@ class Planet:
         flujo_estelar_tierra=None,
         irradiancia_media_w_m2=None,
         temperatura_equilibrio_cero_albedo_k=None,
+        hz_flujo_interior=None,
+        hz_flujo_exterior=None,
+        en_zona_habitable_radiativa=False,
+        candidato_terrestre_hz=False,
+        velocidad_escape_kms=None,
+        shoreline_flujo_critico_tierra=None,
+        retencion_atmosferica_aprox=False,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -132,6 +139,30 @@ class Planet:
             else float(temperatura_equilibrio_cero_albedo_k)
         )
 
+        self.hz_flujo_interior = (
+            None if hz_flujo_interior is None else float(hz_flujo_interior)
+        )
+
+        self.hz_flujo_exterior = (
+            None if hz_flujo_exterior is None else float(hz_flujo_exterior)
+        )
+
+        self.en_zona_habitable_radiativa = bool(en_zona_habitable_radiativa)
+
+        self.candidato_terrestre_hz = bool(candidato_terrestre_hz)
+
+        self.velocidad_escape_kms = (
+            None if velocidad_escape_kms is None else float(velocidad_escape_kms)
+        )
+
+        self.shoreline_flujo_critico_tierra = (
+            None
+            if shoreline_flujo_critico_tierra is None
+            else float(shoreline_flujo_critico_tierra)
+        )
+
+        self.retencion_atmosferica_aprox = bool(retencion_atmosferica_aprox)
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -194,6 +225,13 @@ class Planet:
             "temperatura_equilibrio_cero_albedo_k": (
                 self.temperatura_equilibrio_cero_albedo_k
             ),
+            "hz_flujo_interior": (self.hz_flujo_interior),
+            "hz_flujo_exterior": (self.hz_flujo_exterior),
+            "en_zona_habitable_radiativa": (self.en_zona_habitable_radiativa),
+            "candidato_terrestre_hz": (self.candidato_terrestre_hz),
+            "velocidad_escape_kms": (self.velocidad_escape_kms),
+            "shoreline_flujo_critico_tierra": (self.shoreline_flujo_critico_tierra),
+            "retencion_atmosferica_aprox": (self.retencion_atmosferica_aprox),
         }
 
     @classmethod
@@ -264,5 +302,21 @@ class Planet:
             irradiancia_media_w_m2=datos.get("irradiancia_media_w_m2"),
             temperatura_equilibrio_cero_albedo_k=datos.get(
                 "temperatura_equilibrio_cero_albedo_k"
+            ),
+            hz_flujo_interior=datos.get("hz_flujo_interior"),
+            hz_flujo_exterior=datos.get("hz_flujo_exterior"),
+            en_zona_habitable_radiativa=datos.get(
+                "en_zona_habitable_radiativa",
+                False,
+            ),
+            candidato_terrestre_hz=datos.get(
+                "candidato_terrestre_hz",
+                False,
+            ),
+            velocidad_escape_kms=datos.get("velocidad_escape_kms"),
+            shoreline_flujo_critico_tierra=datos.get("shoreline_flujo_critico_tierra"),
+            retencion_atmosferica_aprox=datos.get(
+                "retencion_atmosferica_aprox",
+                False,
             ),
         )
