@@ -158,6 +158,18 @@ class ModeloImpactosGigantes:
         else:
             zona_material = "mixta"
 
+        masa_interior_hielo = (
+            cuerpo_1.masa_interior_hielo_tierra + cuerpo_2.masa_interior_hielo_tierra
+        )
+
+        masa_exterior_hielo = (
+            cuerpo_1.masa_exterior_hielo_tierra + cuerpo_2.masa_exterior_hielo_tierra
+        )
+
+        masa_sin_clasificar = (
+            cuerpo_1.masa_sin_clasificar_tierra + cuerpo_2.masa_sin_clasificar_tierra
+        )
+
         return Protoplaneta(
             nombre=(cuerpo_1.nombre),
             estrella_nombre=(cuerpo_1.estrella_nombre),
@@ -168,4 +180,7 @@ class ModeloImpactosGigantes:
             embriones_fusionados=(
                 cuerpo_1.embriones_fusionados + cuerpo_2.embriones_fusionados
             ),
+            masa_interior_hielo_tierra=(masa_interior_hielo),
+            masa_exterior_hielo_tierra=(masa_exterior_hielo),
+            masa_sin_clasificar_tierra=(masa_sin_clasificar),
         )

@@ -359,6 +359,17 @@ class SimulationUI:
             if (planeta.candidato_terrestre_hz and planeta.retencion_atmosferica_aprox)
         )
 
+        candidatos_con_agua_inicial = sum(
+            1
+            for planeta in self.universe.planetas
+            if (
+                planeta.candidato_terrestre_hz
+                and planeta.retencion_atmosferica_aprox
+                and planeta.masa_agua_inicial_tierra is not None
+                and planeta.masa_agua_inicial_tierra > 0
+            )
+        )
+
         escribir_seguro(
             stdscr,
             fila,
@@ -520,7 +531,9 @@ class SimulationUI:
                 " | "
                 f"Terrestres={candidatos_terrestres_hz}"
                 " | "
-                f"Retencion atm={candidatos_con_retencion}"
+                f"Ret atm={candidatos_con_retencion}"
+                " | "
+                f"H2O inicial={candidatos_con_agua_inicial}"
             ),
         )
 

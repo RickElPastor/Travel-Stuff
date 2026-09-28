@@ -8,6 +8,9 @@ class Protoplaneta:
         semieje_mayor_au,
         zona_material=None,
         embriones_fusionados=1,
+        masa_interior_hielo_tierra=None,
+        masa_exterior_hielo_tierra=None,
+        masa_sin_clasificar_tierra=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del protoplaneta debe ser mayor que 0.")
@@ -32,6 +35,36 @@ class Protoplaneta:
 
         self.embriones_fusionados = int(embriones_fusionados)
 
+        if (
+            masa_interior_hielo_tierra is None
+            and masa_exterior_hielo_tierra is None
+            and masa_sin_clasificar_tierra is None
+        ):
+            self.masa_interior_hielo_tierra = (
+                self.masa_tierra if self.zona_material == "interior_hielo" else 0.0
+            )
+
+            self.masa_exterior_hielo_tierra = (
+                self.masa_tierra if self.zona_material == "exterior_hielo" else 0.0
+            )
+
+            self.masa_sin_clasificar_tierra = (
+                self.masa_tierra
+                if self.zona_material
+                not in {
+                    "interior_hielo",
+                    "exterior_hielo",
+                }
+                else 0.0
+            )
+
+        else:
+            self.masa_interior_hielo_tierra = float(masa_interior_hielo_tierra or 0.0)
+
+            self.masa_exterior_hielo_tierra = float(masa_exterior_hielo_tierra or 0.0)
+
+            self.masa_sin_clasificar_tierra = float(masa_sin_clasificar_tierra or 0.0)
+
     def a_dict(self):
         return {
             "nombre": self.nombre,
@@ -41,6 +74,9 @@ class Protoplaneta:
             "semieje_mayor_au": (self.semieje_mayor_au),
             "zona_material": (self.zona_material),
             "embriones_fusionados": (self.embriones_fusionados),
+            "masa_interior_hielo_tierra": (self.masa_interior_hielo_tierra),
+            "masa_exterior_hielo_tierra": (self.masa_exterior_hielo_tierra),
+            "masa_sin_clasificar_tierra": (self.masa_sin_clasificar_tierra),
         }
 
     @classmethod
@@ -59,4 +95,7 @@ class Protoplaneta:
                 "embriones_fusionados",
                 1,
             ),
+            masa_interior_hielo_tierra=datos.get("masa_interior_hielo_tierra"),
+            masa_exterior_hielo_tierra=datos.get("masa_exterior_hielo_tierra"),
+            masa_sin_clasificar_tierra=datos.get("masa_sin_clasificar_tierra"),
         )

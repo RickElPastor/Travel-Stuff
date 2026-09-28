@@ -14,6 +14,9 @@ from planets.runaway_gas_model import (
 from planets.planet_physics_model import (
     ModeloFisicaPlanetaria,
 )
+from habitability.volatile_inventory_model import (
+    ModeloInventarioVolatiles,
+)
 
 
 class ModeloFormacionPlanetasSolidos:
@@ -37,6 +40,7 @@ class ModeloFormacionPlanetasSolidos:
         self.modelo_acrecion_gas = ModeloAcrecionGas()
         self.modelo_runaway_gas = ModeloRunawayGas()
         self.modelo_fisica_planetaria = ModeloFisicaPlanetaria()
+        self.modelo_inventario_volatiles = ModeloInventarioVolatiles()
 
     def generar_planetas(
         self,
@@ -100,6 +104,15 @@ class ModeloFormacionPlanetasSolidos:
                 embriones_fusionados=(protoplaneta.embriones_fusionados),
                 tiempo_nucleo_myr=(tiempo_nucleo_myr),
                 gas_disponible_al_formarse=(gas_disponible),
+                masa_material_interior_hielo_tierra=(
+                    protoplaneta.masa_interior_hielo_tierra
+                ),
+                masa_material_exterior_hielo_tierra=(
+                    protoplaneta.masa_exterior_hielo_tierra
+                ),
+                masa_material_sin_clasificar_tierra=(
+                    protoplaneta.masa_sin_clasificar_tierra
+                ),
             )
 
             planetas.append(planeta)
@@ -116,6 +129,8 @@ class ModeloFormacionPlanetasSolidos:
 
         for planeta in planetas:
             self.modelo_fisica_planetaria.calcular_propiedades(planeta)
+
+            self.modelo_inventario_volatiles.evaluar(planeta)
 
         return planetas
 

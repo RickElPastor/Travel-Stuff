@@ -36,6 +36,11 @@ class Planet:
         velocidad_escape_kms=None,
         shoreline_flujo_critico_tierra=None,
         retencion_atmosferica_aprox=False,
+        masa_material_interior_hielo_tierra=None,
+        masa_material_exterior_hielo_tierra=None,
+        masa_material_sin_clasificar_tierra=None,
+        masa_agua_inicial_tierra=None,
+        fraccion_agua_inicial=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -163,6 +168,34 @@ class Planet:
 
         self.retencion_atmosferica_aprox = bool(retencion_atmosferica_aprox)
 
+        self.masa_material_interior_hielo_tierra = (
+            None
+            if masa_material_interior_hielo_tierra is None
+            else float(masa_material_interior_hielo_tierra)
+        )
+
+        self.masa_material_exterior_hielo_tierra = (
+            None
+            if masa_material_exterior_hielo_tierra is None
+            else float(masa_material_exterior_hielo_tierra)
+        )
+
+        self.masa_material_sin_clasificar_tierra = (
+            None
+            if masa_material_sin_clasificar_tierra is None
+            else float(masa_material_sin_clasificar_tierra)
+        )
+
+        self.masa_agua_inicial_tierra = (
+            None
+            if masa_agua_inicial_tierra is None
+            else float(masa_agua_inicial_tierra)
+        )
+
+        self.fraccion_agua_inicial = (
+            None if fraccion_agua_inicial is None else float(fraccion_agua_inicial)
+        )
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -232,6 +265,17 @@ class Planet:
             "velocidad_escape_kms": (self.velocidad_escape_kms),
             "shoreline_flujo_critico_tierra": (self.shoreline_flujo_critico_tierra),
             "retencion_atmosferica_aprox": (self.retencion_atmosferica_aprox),
+            "masa_material_interior_hielo_tierra": (
+                self.masa_material_interior_hielo_tierra
+            ),
+            "masa_material_exterior_hielo_tierra": (
+                self.masa_material_exterior_hielo_tierra
+            ),
+            "masa_material_sin_clasificar_tierra": (
+                self.masa_material_sin_clasificar_tierra
+            ),
+            "masa_agua_inicial_tierra": (self.masa_agua_inicial_tierra),
+            "fraccion_agua_inicial": (self.fraccion_agua_inicial),
         }
 
     @classmethod
@@ -319,4 +363,15 @@ class Planet:
                 "retencion_atmosferica_aprox",
                 False,
             ),
+            masa_material_interior_hielo_tierra=datos.get(
+                "masa_material_interior_hielo_tierra"
+            ),
+            masa_material_exterior_hielo_tierra=datos.get(
+                "masa_material_exterior_hielo_tierra"
+            ),
+            masa_material_sin_clasificar_tierra=datos.get(
+                "masa_material_sin_clasificar_tierra"
+            ),
+            masa_agua_inicial_tierra=datos.get("masa_agua_inicial_tierra"),
+            fraccion_agua_inicial=datos.get("fraccion_agua_inicial"),
         )
