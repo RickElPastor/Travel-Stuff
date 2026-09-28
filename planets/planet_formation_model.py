@@ -1,15 +1,40 @@
 from planets.planet import Planet
 
+from planets.core_growth_model import (
+    ModeloCrecimientoNucleo,
+)
+
+from planets.gas_accretion_model import (
+    ModeloAcrecionGas,
+)
+
+from planets.runaway_gas_model import (
+    ModeloRunawayGas,
+)
+
 
 class ModeloFormacionPlanetasSolidos:
     """
     Convierte los protoplanetas resultantes de la
-    fase de impactos gigantes en planetas sólidos.
+    fase de impactos gigantes en planetas.
 
-    No añade gas.
+    Después calcula:
+
+    - tiempo de crecimiento del núcleo
+    - disponibilidad de gas
+    - acreción inicial de envoltura
+    - runaway gaseoso
     """
 
     MASA_NUCLEO_CANDIDATO_GAS = 10.0
+    MASA_NUCLEO_ACRECION_MAX = 20.0
+
+    def __init__(self):
+        self.modelo_crecimiento_nucleo = ModeloCrecimientoNucleo()
+
+        self.modelo_acrecion_gas = ModeloAcrecionGas()
+
+        self.modelo_runaway_gas = ModeloRunawayGas()
 
     def generar_planetas(
         self,
@@ -25,10 +50,42 @@ class ModeloFormacionPlanetasSolidos:
 
             candidato_gas = protoplaneta.masa_tierra >= self.MASA_NUCLEO_CANDIDATO_GAS
 
+            masa_nucleo_acrecion = min(
+                protoplaneta.masa_tierra,
+                self.MASA_NUCLEO_ACRECION_MAX,
+            )
+
+            tiempo_nucleo_myr = None
+            gas_disponible = False
+
+            if candidato_gas:
+                planeta_temporal = Planet(
+                    nombre="temporal",
+                    masa_tierra=(protoplaneta.masa_tierra),
+                    masa_solida_tierra=(protoplaneta.masa_tierra),
+                    masa_nucleo_acrecion_tierra=(masa_nucleo_acrecion),
+                    masa_gas_tierra=0.0,
+                    semieje_mayor_au=(protoplaneta.semieje_mayor_au),
+                )
+
+                tiempo_nucleo_myr = (
+                    self.modelo_crecimiento_nucleo.calcular_tiempo_nucleo_myr(
+                        disco,
+                        planeta_temporal,
+                    )
+                )
+
+                gas_disponible = (
+                    tiempo_nucleo_myr is not None
+                    and disco.vida_gas_myr is not None
+                    and tiempo_nucleo_myr < disco.vida_gas_myr
+                )
+
             planeta = Planet(
                 nombre=(f"Planeta-" f"{disco.estrella_nombre}-" f"{indice:03d}"),
                 masa_tierra=(protoplaneta.masa_tierra),
                 masa_solida_tierra=(protoplaneta.masa_tierra),
+                masa_nucleo_acrecion_tierra=(masa_nucleo_acrecion),
                 masa_gas_tierra=0.0,
                 semieje_mayor_au=(protoplaneta.semieje_mayor_au),
                 excentricidad=0.0,
@@ -39,9 +96,21 @@ class ModeloFormacionPlanetasSolidos:
                 candidato_captura_gas=(candidato_gas),
                 origen_protoplaneta=(protoplaneta.nombre),
                 embriones_fusionados=(protoplaneta.embriones_fusionados),
+                tiempo_nucleo_myr=(tiempo_nucleo_myr),
+                gas_disponible_al_formarse=(gas_disponible),
             )
 
             planetas.append(planeta)
+
+        self.modelo_acrecion_gas.aplicar_acrecion(
+            disco,
+            planetas,
+        )
+
+        self.modelo_runaway_gas.aplicar_runaway(
+            disco,
+            planetas,
+        )
 
         return planetas
 

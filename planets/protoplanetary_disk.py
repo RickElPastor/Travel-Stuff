@@ -25,6 +25,12 @@ class DiscoProtoplanetario:
         embriones=None,
         protoplanetas=None,
         masa_planetesimales_tierra=None,
+        masa_gas_referencia_tierra=None,
+        relacion_gas_polvo=None,
+        vida_gas_myr=None,
+        masa_gas_capturada_tierra=0.0,
+        masa_gas_no_capturada_tierra=None,
+        masa_gas_runaway_capturada_tierra=0.0,
     ):
         if masa_polvo_tierra < 0:
             raise ValueError("La masa de polvo no puede ser negativa.")
@@ -77,6 +83,30 @@ class DiscoProtoplanetario:
             self.masa_polvo_tierra
             if masa_planetesimales_tierra is None
             else float(masa_planetesimales_tierra)
+        )
+
+        self.masa_gas_referencia_tierra = (
+            None
+            if masa_gas_referencia_tierra is None
+            else float(masa_gas_referencia_tierra)
+        )
+
+        self.relacion_gas_polvo = (
+            None if relacion_gas_polvo is None else float(relacion_gas_polvo)
+        )
+
+        self.vida_gas_myr = None if vida_gas_myr is None else float(vida_gas_myr)
+
+        self.masa_gas_capturada_tierra = float(masa_gas_capturada_tierra)
+
+        self.masa_gas_no_capturada_tierra = (
+            self.masa_gas_referencia_tierra
+            if masa_gas_no_capturada_tierra is None
+            else float(masa_gas_no_capturada_tierra)
+        )
+
+        self.masa_gas_runaway_capturada_tierra = float(
+            masa_gas_runaway_capturada_tierra
         )
 
     def obtener_fraccion_polvo_entre(
@@ -345,6 +375,14 @@ class DiscoProtoplanetario:
                 protoplaneta.a_dict() for protoplaneta in self.protoplanetas
             ],
             "masa_planetesimales_tierra": (self.masa_planetesimales_tierra),
+            "masa_gas_referencia_tierra": (self.masa_gas_referencia_tierra),
+            "relacion_gas_polvo": (self.relacion_gas_polvo),
+            "vida_gas_myr": (self.vida_gas_myr),
+            "masa_gas_capturada_tierra": (self.masa_gas_capturada_tierra),
+            "masa_gas_no_capturada_tierra": (self.masa_gas_no_capturada_tierra),
+            "masa_gas_runaway_capturada_tierra": (
+                self.masa_gas_runaway_capturada_tierra
+            ),
         }
 
     @classmethod
@@ -388,4 +426,16 @@ class DiscoProtoplanetario:
                 )
             ],
             masa_planetesimales_tierra=datos.get("masa_planetesimales_tierra"),
+            masa_gas_referencia_tierra=datos.get("masa_gas_referencia_tierra"),
+            relacion_gas_polvo=datos.get("relacion_gas_polvo"),
+            vida_gas_myr=datos.get("vida_gas_myr"),
+            masa_gas_capturada_tierra=datos.get(
+                "masa_gas_capturada_tierra",
+                0.0,
+            ),
+            masa_gas_no_capturada_tierra=datos.get("masa_gas_no_capturada_tierra"),
+            masa_gas_runaway_capturada_tierra=datos.get(
+                "masa_gas_runaway_capturada_tierra",
+                0.0,
+            ),
         )

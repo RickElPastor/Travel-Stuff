@@ -275,6 +275,45 @@ class SimulationUI:
             1 for planeta in self.universe.planetas if planeta.candidato_captura_gas
         )
 
+        candidatos_con_gas = sum(
+            1
+            for planeta in self.universe.planetas
+            if (planeta.candidato_captura_gas and planeta.gas_disponible_al_formarse)
+        )
+
+        # Todos los planetas que capturaron
+        # cualquier cantidad de gas.
+        planetas_con_gas = sum(
+            1 for planeta in self.universe.planetas if planeta.masa_gas_tierra > 0
+        )
+
+        candidatos_runaway = sum(
+            1 for planeta in self.universe.planetas if planeta.candidato_runaway
+        )
+
+        gigantes_runaway = sum(
+            1 for planeta in self.universe.planetas if planeta.entro_runaway
+        )
+
+        # Estados finales de formación.
+        planetas_solidos = sum(
+            1 for planeta in self.universe.planetas if planeta.masa_gas_tierra == 0
+        )
+
+        planetas_con_envoltura = sum(
+            1
+            for planeta in self.universe.planetas
+            if (planeta.masa_gas_tierra > 0 and not planeta.entro_runaway)
+        )
+
+        masa_gas_runaway = sum(
+            planeta.masa_gas_runaway_tierra for planeta in self.universe.planetas
+        )
+
+        masa_gas_planetas = sum(
+            planeta.masa_gas_tierra for planeta in self.universe.planetas
+        )
+
         masa_total_planetas = sum(
             planeta.masa_solida_tierra for planeta in self.universe.planetas
         )
@@ -287,6 +326,11 @@ class SimulationUI:
         masa_total_protoplanetas = sum(
             disco.obtener_masa_protoplanetas_tierra()
             for disco in self.universe.discos_protoplanetarios
+        )
+
+        masa_planeta_maxima = max(
+            (planeta.masa_tierra for planeta in self.universe.planetas),
+            default=0.0,
         )
 
         escribir_seguro(
@@ -327,12 +371,71 @@ class SimulationUI:
             fila,
             0,
             (
-                "Planetas sólidos: "
+                "Planetas: "
                 f"{cantidad_planetas}"
                 " | "
-                "Candidatos a gas: "
-                f"{candidatos_gas}"
+                f"Candidatos gas: {candidatos_gas}"
+                " | "
+                f"A tiempo: {candidatos_con_gas}"
             ),
+        )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Envolturas totales: "
+                f"{planetas_con_gas}"
+                " | "
+                "Runaway candidatos: "
+                f"{candidatos_runaway}"
+                " | "
+                "Gas capturado: "
+                f"{masa_gas_planetas:.3f} Mt"
+            ),
+        )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Runaway realizado: "
+                f"{gigantes_runaway}"
+                " | "
+                "Gas runaway: "
+                f"{masa_gas_runaway:.3f} Mt"
+            ),
+        )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Estados planetarios: "
+                f"solidos={planetas_solidos}"
+                " | "
+                f"envoltura={planetas_con_envoltura}"
+                " | "
+                f"gigantes={gigantes_runaway}"
+            ),
+        )
+
+        fila += 1
+
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            ("Planeta mas masivo: " f"{masa_planeta_maxima:.2f} Mt"),
         )
 
         fila += 1
@@ -403,6 +506,18 @@ class SimulationUI:
                 3,
             )
 
+            masa_gas = self._valor(
+                disco_ejemplo.masa_gas_referencia_tierra,
+                "Mt",
+                1,
+            )
+
+            vida_gas = self._valor(
+                disco_ejemplo.vida_gas_myr,
+                "Myr",
+                2,
+            )
+
             escribir_seguro(
                 stdscr,
                 fila,
@@ -434,21 +549,32 @@ class SimulationUI:
                 stdscr,
                 fila,
                 0,
+                ("Gas de referencia: " f"{masa_gas}" " | " f"vida={vida_gas}"),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
                 (
                     "Formación: "
-                    f"embriones={cantidad_embriones_disco} | "
-                    f"masa embriones={masa_embriones} | "
+                    f"embriones={cantidad_embriones_disco}"
+                    " | "
+                    f"masa embriones={masa_embriones}"
+                    " | "
                     f"planetesimales={masa_planetesimales}"
                 ),
             )
 
-        fila += 1
+            fila += 1
 
         sistema_binario = next(
             (
                 sistema
                 for sistema in self.universe.sistemas_estelares
-                if (sistema.obtener_tipo() == "binario")
+                if sistema.obtener_tipo() == "binario"
             ),
             None,
         )

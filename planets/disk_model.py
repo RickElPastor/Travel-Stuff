@@ -10,6 +10,9 @@ from planets.disk_structure_model import (
 from planets.snow_line_model import (
     ModeloLineaHielo,
 )
+from planets.gas_disk_model import (
+    ModeloGasDisco,
+)
 
 
 class ModeloDiscoProtoplanetario:
@@ -35,6 +38,7 @@ class ModeloDiscoProtoplanetario:
     def __init__(self):
         self.modelo_estructura = ModeloEstructuraDisco()
         self.modelo_linea_hielo = ModeloLineaHielo()
+        self.modelo_gas = ModeloGasDisco()
 
     def admite_estrella(
         self,
@@ -107,6 +111,12 @@ class ModeloDiscoProtoplanetario:
 
         linea_hielo_au = self.modelo_linea_hielo.calcular_linea_hielo_au(masa_estelar)
 
+        propiedades_gas = self.modelo_gas.generar_propiedades(
+            seed=seed,
+            identificador=identificador,
+            masa_polvo_tierra=(masa_polvo_tierra),
+        )
+
         return DiscoProtoplanetario(
             estrella_nombre=(estrella_nombre),
             sistema_nombre=(sistema_nombre),
@@ -119,4 +129,7 @@ class ModeloDiscoProtoplanetario:
             gamma_perfil=(self.modelo_estructura.GAMMA),
             linea_hielo_au=(linea_hielo_au),
             modelo=self.nombre,
+            masa_gas_referencia_tierra=(propiedades_gas["masa_gas_referencia_tierra"]),
+            relacion_gas_polvo=(propiedades_gas["relacion_gas_polvo"]),
+            vida_gas_myr=(propiedades_gas["vida_gas_myr"]),
         )
