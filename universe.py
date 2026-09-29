@@ -41,6 +41,12 @@ from habitability.surface_water_model import (
 from habitability.final_habitability_model import (
     ModeloHabitabilidadFinal,
 )
+from chemistry.prebiotic_environment_model import (
+    ModeloEntornoPrebiotico,
+)
+from extraordinary.world_rules_model import (
+    ModeloReglasMundo,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -102,6 +108,10 @@ class Universe:
         self.modelo_agua_superficial = ModeloAguaSuperficial()
 
         self.modelo_habitabilidad_final = ModeloHabitabilidadFinal()
+
+        self.modelo_entorno_prebiotico = ModeloEntornoPrebiotico()
+
+        self.modelo_reglas_mundo = ModeloReglasMundo()
 
     def establecer_modelo_estelar(
         self,
@@ -506,6 +516,30 @@ class Universe:
 
         return remanente
 
+    def actualizar_quimica_prebiotica(
+        self,
+    ):
+        estrellas_por_nombre = {
+            estrella.nombre: estrella for estrella in self.estrellas
+        }
+
+        for planeta in self.planetas:
+            estrella = estrellas_por_nombre.get(planeta.estrella_anfitriona)
+
+            self.modelo_entorno_prebiotico.evaluar(
+                planeta,
+                estrella,
+            )
+
+    def actualizar_reglas_mundos(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_reglas_mundo.asignar(
+                planeta,
+                self.seed,
+            )
+
     def actualizar(
         self,
         anios_transcurridos,
@@ -602,6 +636,8 @@ class Universe:
                 q_real=nacimiento.q_real,
             )
 
+        self.actualizar_reglas_mundos()
+
         self.actualizar_irradiacion_planetaria()
 
         self.actualizar_habitabilidad_radiativa()
@@ -617,6 +653,8 @@ class Universe:
         self.actualizar_agua_superficial()
 
         self.actualizar_habitabilidad_final()
+
+        self.actualizar_quimica_prebiotica()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(

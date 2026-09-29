@@ -426,6 +426,64 @@ class SimulationUI:
             None,
         )
 
+        candidatos_prebioticos = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.candidato_quimica_prebiotica
+        )
+
+        rutas_uv = sum(
+            1 for planeta in self.universe.planetas if planeta.ruta_uv_prebiotica
+        )
+
+        rutas_geoquimicas = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.ruta_geoquimica_prebiotica
+        )
+
+        mundos_prebioticos_historicos = sum(
+            1 for planeta in self.universe.planetas if planeta.tuvo_entorno_prebiotico
+        )
+
+        mundos_uv_historicos = sum(
+            1 for planeta in self.universe.planetas if planeta.tuvo_ruta_uv_prebiotica
+        )
+
+        mundos_geoquimicos_historicos = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.tuvo_ruta_geoquimica_prebiotica
+        )
+
+        mundos_normales = sum(
+            1 for planeta in self.universe.planetas if planeta.regimen_mundo == "normal"
+        )
+
+        mundos_extraordinarios = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.regimen_mundo == "extraordinario"
+        )
+
+        mundos_arcanos = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.tipo_regla_extraordinaria == "arcano"
+        )
+
+        mundos_anomalos = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.tipo_regla_extraordinaria == "anomalia_fisica"
+        )
+
+        mundos_energia_exotica = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.tipo_regla_extraordinaria == "energia_exotica"
+        )
+
         escribir_seguro(
             stdscr,
             fila,
@@ -663,6 +721,68 @@ class SimulationUI:
                     f"temperados={candidatos_temperados}"
                     " | "
                     f"glaciados={candidatos_glaciados}"
+                ),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Quimica prebiotica actual: "
+                    f"candidatos={candidatos_prebioticos}"
+                    " | "
+                    f"UV={rutas_uv}"
+                    " | "
+                    f"geoquimica={rutas_geoquimicas}"
+                ),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Historial prebiotico: "
+                    f"mundos={mundos_prebioticos_historicos}"
+                    " | "
+                    f"UV={mundos_uv_historicos}"
+                    " | "
+                    f"geoquimica={mundos_geoquimicos_historicos}"
+                ),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Reglas de mundo: "
+                    f"normales={mundos_normales}"
+                    " | "
+                    f"extraordinarios={mundos_extraordinarios}"
+                ),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Tipos extraordinarios: "
+                    f"arcano={mundos_arcanos}"
+                    " | "
+                    f"anomalia={mundos_anomalos}"
+                    " | "
+                    f"energia exotica={mundos_energia_exotica}"
                 ),
             )
 

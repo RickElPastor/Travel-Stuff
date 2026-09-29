@@ -70,6 +70,17 @@ class Planet:
         co2_dentro_max_greenhouse=False,
         candidato_habitable_fase1=False,
         estado_habitabilidad_fase1="no_evaluado",
+        tiene_ingredientes_prebioticos=False,
+        ruta_uv_prebiotica=False,
+        ruta_geoquimica_prebiotica=False,
+        candidato_quimica_prebiotica=False,
+        estado_quimica_prebiotica="no_evaluado",
+        tuvo_entorno_prebiotico=False,
+        tuvo_ruta_uv_prebiotica=False,
+        tuvo_ruta_geoquimica_prebiotica=False,
+        regimen_mundo="sin_asignar",
+        tipo_regla_extraordinaria=None,
+        intensidad_extraordinaria=0.0,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -363,6 +374,28 @@ class Planet:
 
         self.estado_habitabilidad_fase1 = estado_habitabilidad_fase1
 
+        self.tiene_ingredientes_prebioticos = bool(tiene_ingredientes_prebioticos)
+
+        self.ruta_uv_prebiotica = bool(ruta_uv_prebiotica)
+
+        self.ruta_geoquimica_prebiotica = bool(ruta_geoquimica_prebiotica)
+
+        self.candidato_quimica_prebiotica = bool(candidato_quimica_prebiotica)
+
+        self.estado_quimica_prebiotica = estado_quimica_prebiotica
+
+        self.tuvo_entorno_prebiotico = bool(tuvo_entorno_prebiotico)
+
+        self.tuvo_ruta_uv_prebiotica = bool(tuvo_ruta_uv_prebiotica)
+
+        self.tuvo_ruta_geoquimica_prebiotica = bool(tuvo_ruta_geoquimica_prebiotica)
+
+        self.regimen_mundo = regimen_mundo
+
+        self.tipo_regla_extraordinaria = tipo_regla_extraordinaria
+
+        self.intensidad_extraordinaria = float(intensidad_extraordinaria)
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -474,6 +507,17 @@ class Planet:
             "co2_dentro_max_greenhouse": (self.co2_dentro_max_greenhouse),
             "candidato_habitable_fase1": (self.candidato_habitable_fase1),
             "estado_habitabilidad_fase1": (self.estado_habitabilidad_fase1),
+            "tiene_ingredientes_prebioticos": (self.tiene_ingredientes_prebioticos),
+            "ruta_uv_prebiotica": (self.ruta_uv_prebiotica),
+            "ruta_geoquimica_prebiotica": (self.ruta_geoquimica_prebiotica),
+            "candidato_quimica_prebiotica": (self.candidato_quimica_prebiotica),
+            "estado_quimica_prebiotica": (self.estado_quimica_prebiotica),
+            "tuvo_entorno_prebiotico": (self.tuvo_entorno_prebiotico),
+            "tuvo_ruta_uv_prebiotica": (self.tuvo_ruta_uv_prebiotica),
+            "tuvo_ruta_geoquimica_prebiotica": (self.tuvo_ruta_geoquimica_prebiotica),
+            "regimen_mundo": (self.regimen_mundo),
+            "tipo_regla_extraordinaria": (self.tipo_regla_extraordinaria),
+            "intensidad_extraordinaria": (self.intensidad_extraordinaria),
         }
 
     @classmethod
@@ -626,5 +670,46 @@ class Planet:
             estado_habitabilidad_fase1=datos.get(
                 "estado_habitabilidad_fase1",
                 "no_evaluado",
+            ),
+            tiene_ingredientes_prebioticos=datos.get(
+                "tiene_ingredientes_prebioticos",
+                False,
+            ),
+            ruta_uv_prebiotica=datos.get(
+                "ruta_uv_prebiotica",
+                False,
+            ),
+            ruta_geoquimica_prebiotica=datos.get(
+                "ruta_geoquimica_prebiotica",
+                False,
+            ),
+            candidato_quimica_prebiotica=datos.get(
+                "candidato_quimica_prebiotica",
+                False,
+            ),
+            estado_quimica_prebiotica=datos.get(
+                "estado_quimica_prebiotica",
+                "no_evaluado",
+            ),
+            tuvo_entorno_prebiotico=datos.get(
+                "tuvo_entorno_prebiotico",
+                False,
+            ),
+            tuvo_ruta_uv_prebiotica=datos.get(
+                "tuvo_ruta_uv_prebiotica",
+                False,
+            ),
+            tuvo_ruta_geoquimica_prebiotica=datos.get(
+                "tuvo_ruta_geoquimica_prebiotica",
+                False,
+            ),
+            regimen_mundo=datos.get(
+                "regimen_mundo",
+                "sin_asignar",
+            ),
+            tipo_regla_extraordinaria=datos.get("tipo_regla_extraordinaria"),
+            intensidad_extraordinaria=datos.get(
+                "intensidad_extraordinaria",
+                0.0,
             ),
         )
