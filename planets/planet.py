@@ -117,6 +117,8 @@ class Planet:
         vida_activa=False,
         alcanzo_primera_vida=False,
         anio_primera_vida=None,
+        poblacion_unicelular=0,
+        proximo_crecimiento_unicelular_anio=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -489,6 +491,11 @@ class Planet:
         self.anio_primera_vida = (
             None if anio_primera_vida is None else int(anio_primera_vida)
         )
+        self.poblacion_unicelular = int(poblacion_unicelular)
+        self.proximo_crecimiento_unicelular_anio = (
+            None if proximo_crecimiento_unicelular_anio is None
+            else int(proximo_crecimiento_unicelular_anio)
+        )
 
     def obtener_apoyo_protocelular_extraordinario(self):
         """Apoyo disponible para una protocélula histórica; no significa vida."""
@@ -557,6 +564,10 @@ class Planet:
             "vida_activa": self.vida_activa,
             "alcanzo_primera_vida": self.alcanzo_primera_vida,
             "anio_primera_vida": self.anio_primera_vida,
+            "poblacion_unicelular": self.poblacion_unicelular,
+            "proximo_crecimiento_unicelular_anio": (
+                self.proximo_crecimiento_unicelular_anio
+            ),
             "nombre": self.nombre,
             "masa_tierra": (self.masa_tierra),
             "semieje_mayor_au": (self.semieje_mayor_au),
@@ -936,4 +947,8 @@ class Planet:
             vida_activa=datos.get("vida_activa", False),
             alcanzo_primera_vida=datos.get("alcanzo_primera_vida", False),
             anio_primera_vida=datos.get("anio_primera_vida"),
+            poblacion_unicelular=datos.get("poblacion_unicelular", 0),
+            proximo_crecimiento_unicelular_anio=datos.get(
+                "proximo_crecimiento_unicelular_anio"
+            ),
         )

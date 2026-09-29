@@ -8,7 +8,7 @@ from ui.save_game_menu import SaveGameMenu
 
 class SimulationUI:
     REFRESCO_SEGUNDOS = 0.01
-    VISTAS = ("Abiogénesis", "Universo", "Condiciones")
+    VISTAS = ("Abiogénesis", "Universo", "Condiciones", "Vida")
 
     def __init__(self, simulation):
         self.simulation = simulation
@@ -59,7 +59,7 @@ class SimulationUI:
             self._procesar_mouse()
         elif tecla in (ord("s"), ord("S")):
             self._guardar(stdscr)
-        elif tecla in (ord("1"), ord("2"), ord("3")):
+        elif tecla in (ord("1"), ord("2"), ord("3"), ord("4")):
             self.vista = tecla - ord("1")
 
     def _procesar_mouse(self):
@@ -131,14 +131,16 @@ class SimulationUI:
             self._dibujar_abiogenesis(stdscr)
         elif self.vista == 1:
             self._dibujar_universo(stdscr)
-        else:
+        elif self.vista == 2:
             self._dibujar_condiciones(stdscr)
+        else:
+            self._dibujar_vida(stdscr)
 
         self._dibujar_eventos(stdscr, alto)
         self._separador(stdscr, alto - 2)
         self._texto(
             stdscr, alto - 1,
-            "1-3 Vistas · ↑↓ Vel. · S Guardar · PgUp/PgDn Eventos · Esc Menú",
+            "1-4 Vistas · ↑↓ Vel. · S Guardar · PgUp/PgDn Eventos · Esc Menú",
         )
         stdscr.refresh()
 
@@ -282,6 +284,31 @@ class SimulationUI:
         self._texto(stdscr, 13, "Los logros históricos se muestran en Abiogénesis.")
         self._texto(stdscr, 15, "Una condición puede desaparecer al cambiar la estrella")
         self._texto(stdscr, 16, "o la atmósfera; los logros históricos permanecen.")
+
+    def _dibujar_vida(self, stdscr):
+        planetas = self.universe.planetas
+        activos = [p for p in planetas if p.poblacion_unicelular > 0]
+        historicos = sum(bool(p.alcanzo_primera_vida) for p in planetas)
+        unidades = sum(p.poblacion_unicelular for p in activos)
+
+        self._encabezado(stdscr, 6, "01  VIDA UNICELULAR  ·  fase 2")
+        self._texto(stdscr, 8, f"Mundos con población activa {len(activos)}")
+        self._texto(stdscr, 9, f"Unidades simbólicas en total {unidades}",
+                    self._color(2))
+        self._texto(stdscr, 10, f"Mundos que alcanzaron primera vida {historicos}")
+        self._encabezado(stdscr, 12, "02  MUNDO OBSERVADO")
+        if activos:
+            foco = max(activos, key=lambda p: p.poblacion_unicelular)
+            capacidad = self.universe.modelo_poblacion_unicelular.CAPACIDAD_INICIAL
+            self._texto(stdscr, 13, foco.nombre)
+            self._texto(stdscr, 14,
+                        f"Población actual {foco.poblacion_unicelular} "
+                        f"de {capacidad} unidades")
+            self._texto(stdscr, 15, f"Patrón heredable {foco.patron_copia}")
+        else:
+            self._texto(stdscr, 13, "Aún no hay población activa.")
+        self._texto(stdscr, 17, "Las unidades son una escala del modelo, no individuos.",
+                    self._color(3))
 
     def _dibujar_eventos(self, stdscr, alto):
         fila = 18

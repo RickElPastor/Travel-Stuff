@@ -31,7 +31,7 @@ class PantallaFalsa:
 
 
 class PanelTests(unittest.TestCase):
-    def test_tres_vistas_y_controles_en_terminal_minima(self):
+    def test_cuatro_vistas_y_controles_en_terminal_minima(self):
         universo = Universe(seed=374852300)
         universo.time.anio = 2_780_000_000
         planeta = Planet(
@@ -41,7 +41,8 @@ class PanelTests(unittest.TestCase):
             alcanzo_replicacion_prebiotica=True,
             copias_heredables=21, variaciones_prebioticas=3,
             variantes_favorecidas=1, variantes_descartadas=2,
-            patron_copia=0,
+            patron_copia=0, vida_activa=True,
+            alcanzo_primera_vida=True, poblacion_unicelular=3,
         )
         universo.planetas = [planeta]
         interfaz = SimulationUI(Simulation(universo))
@@ -65,6 +66,12 @@ class PanelTests(unittest.TestCase):
         interfaz._dibujar(pantalla)
         self.assertIn("HABITABILIDAD", pantalla.linea(6))
         self.assertIn("Candidatos químicos", pantalla.linea(12))
+        interfaz._procesar_tecla(pantalla, ord("4"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("VIDA UNICELULAR", pantalla.linea(6))
+        self.assertIn("Mundos con población activa 1", pantalla.linea(8))
+        self.assertIn("Unidades simbólicas en total 3", pantalla.linea(9))
+        self.assertIn("Población actual 3 de 8 unidades", pantalla.linea(14))
         self.assertEqual(antes, planeta.a_dict())
 
     def test_linea_inactiva_y_primera_vida_historica_se_explican(self):
