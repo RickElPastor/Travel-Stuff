@@ -496,6 +496,22 @@ class SimulationUI:
             if planeta.alcanzo_polimerizacion_prebiotica
         )
 
+        mundos_con_red_quimica = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.alcanzo_red_quimica_primitiva
+        )
+
+        mundos_con_compartimentos = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.alcanzo_compartimentalizacion_prebiotica
+        )
+
+        mundos_con_protocelulas = sum(
+            1 for planeta in self.universe.planetas if planeta.alcanzo_protocelula
+        )
+
         concentracion_por_hielo = sum(
             1
             for planeta in self.universe.planetas
@@ -732,7 +748,7 @@ class SimulationUI:
             fila,
             0,
             (
-                "Prebiotica: "
+                "Prebio: "
                 f"hist={mundos_prebioticos_historicos}"
                 " | "
                 f"org={mundos_con_organicos_simples}"
@@ -741,7 +757,13 @@ class SimulationUI:
                 " | "
                 f"comp={mundos_con_precursores_complejos}"
                 " | "
-                f"polim={mundos_con_polimerizacion}"
+                f"pol={mundos_con_polimerizacion}"
+                " | "
+                f"red={mundos_con_red_quimica}"
+                " | "
+                f"micro={mundos_con_compartimentos}"
+                " | "
+                f"proto={mundos_con_protocelulas}"
             ),
         )
 

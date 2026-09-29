@@ -59,6 +59,15 @@ from chemistry.complex_precursors_model import (
 from chemistry.prebiotic_polymerization_model import (
     ModeloPolimerizacionPrebiotica,
 )
+from chemistry.primitive_network_model import (
+    ModeloRedQuimicaPrimitiva,
+)
+from chemistry.prebiotic_compartment_model import (
+    ModeloCompartimentalizacionPrebiotica,
+)
+from chemistry.protocell_model import (
+    ModeloProtocelula,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -132,6 +141,14 @@ class Universe:
         self.modelo_precursores_complejos = ModeloPrecursoresComplejos()
 
         self.modelo_polimerizacion_prebiotica = ModeloPolimerizacionPrebiotica()
+
+        self.modelo_red_quimica_primitiva = ModeloRedQuimicaPrimitiva()
+
+        self.modelo_compartimentalizacion_prebiotica = (
+            ModeloCompartimentalizacionPrebiotica()
+        )
+
+        self.modelo_protocelula = ModeloProtocelula()
 
     def establecer_modelo_estelar(
         self,
@@ -584,6 +601,24 @@ class Universe:
         for planeta in self.planetas:
             self.modelo_polimerizacion_prebiotica.evaluar(planeta)
 
+    def actualizar_redes_quimicas_primitivas(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_red_quimica_primitiva.evaluar(planeta)
+
+    def actualizar_compartimentalizacion_prebiotica(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_compartimentalizacion_prebiotica.evaluar(planeta)
+
+    def actualizar_protocelulas(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_protocelula.evaluar(planeta)
+
     def actualizar(
         self,
         anios_transcurridos,
@@ -707,6 +742,12 @@ class Universe:
         self.actualizar_precursores_complejos()
 
         self.actualizar_polimerizacion_prebiotica()
+
+        self.actualizar_redes_quimicas_primitivas()
+
+        self.actualizar_compartimentalizacion_prebiotica()
+
+        self.actualizar_protocelulas()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(

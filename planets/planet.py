@@ -90,6 +90,12 @@ class Planet:
         ruta_precursores_complejos=None,
         alcanzo_polimerizacion_prebiotica=False,
         mecanismo_polimerizacion_prebiotica=None,
+        alcanzo_red_quimica_primitiva=False,
+        tipo_red_quimica_primitiva=None,
+        alcanzo_compartimentalizacion_prebiotica=False,
+        tipo_compartimento_prebiotico=None,
+        alcanzo_protocelula=False,
+        tipo_protocelula=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -423,6 +429,20 @@ class Planet:
 
         self.mecanismo_polimerizacion_prebiotica = mecanismo_polimerizacion_prebiotica
 
+        self.alcanzo_red_quimica_primitiva = bool(alcanzo_red_quimica_primitiva)
+
+        self.tipo_red_quimica_primitiva = tipo_red_quimica_primitiva
+
+        self.alcanzo_compartimentalizacion_prebiotica = bool(
+            alcanzo_compartimentalizacion_prebiotica
+        )
+
+        self.tipo_compartimento_prebiotico = tipo_compartimento_prebiotico
+
+        self.alcanzo_protocelula = bool(alcanzo_protocelula)
+
+        self.tipo_protocelula = tipo_protocelula
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -560,6 +580,14 @@ class Planet:
             "mecanismo_polimerizacion_prebiotica": (
                 self.mecanismo_polimerizacion_prebiotica
             ),
+            "alcanzo_red_quimica_primitiva": (self.alcanzo_red_quimica_primitiva),
+            "tipo_red_quimica_primitiva": (self.tipo_red_quimica_primitiva),
+            "alcanzo_compartimentalizacion_prebiotica": (
+                self.alcanzo_compartimentalizacion_prebiotica
+            ),
+            "tipo_compartimento_prebiotico": (self.tipo_compartimento_prebiotico),
+            "alcanzo_protocelula": (self.alcanzo_protocelula),
+            "tipo_protocelula": (self.tipo_protocelula),
         }
 
     @classmethod
@@ -782,4 +810,19 @@ class Planet:
             mecanismo_polimerizacion_prebiotica=datos.get(
                 "mecanismo_polimerizacion_prebiotica"
             ),
+            alcanzo_red_quimica_primitiva=datos.get(
+                "alcanzo_red_quimica_primitiva",
+                False,
+            ),
+            tipo_red_quimica_primitiva=datos.get("tipo_red_quimica_primitiva"),
+            alcanzo_compartimentalizacion_prebiotica=datos.get(
+                "alcanzo_compartimentalizacion_prebiotica",
+                False,
+            ),
+            tipo_compartimento_prebiotico=datos.get("tipo_compartimento_prebiotico"),
+            alcanzo_protocelula=datos.get(
+                "alcanzo_protocelula",
+                False,
+            ),
+            tipo_protocelula=datos.get("tipo_protocelula"),
         )
