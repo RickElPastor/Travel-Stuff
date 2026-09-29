@@ -47,6 +47,18 @@ from chemistry.prebiotic_environment_model import (
 from extraordinary.world_rules_model import (
     ModeloReglasMundo,
 )
+from chemistry.simple_organics_model import (
+    ModeloOrganicosSimples,
+)
+from chemistry.prebiotic_concentration_model import (
+    ModeloConcentracionPrebiotica,
+)
+from chemistry.complex_precursors_model import (
+    ModeloPrecursoresComplejos,
+)
+from chemistry.prebiotic_polymerization_model import (
+    ModeloPolimerizacionPrebiotica,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -112,6 +124,14 @@ class Universe:
         self.modelo_entorno_prebiotico = ModeloEntornoPrebiotico()
 
         self.modelo_reglas_mundo = ModeloReglasMundo()
+
+        self.modelo_organicos_simples = ModeloOrganicosSimples()
+
+        self.modelo_concentracion_prebiotica = ModeloConcentracionPrebiotica()
+
+        self.modelo_precursores_complejos = ModeloPrecursoresComplejos()
+
+        self.modelo_polimerizacion_prebiotica = ModeloPolimerizacionPrebiotica()
 
     def establecer_modelo_estelar(
         self,
@@ -540,6 +560,30 @@ class Universe:
                 self.seed,
             )
 
+    def actualizar_organicos_simples(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_organicos_simples.evaluar(planeta)
+
+    def actualizar_concentracion_prebiotica(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_concentracion_prebiotica.evaluar(planeta)
+
+    def actualizar_precursores_complejos(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_precursores_complejos.evaluar(planeta)
+
+    def actualizar_polimerizacion_prebiotica(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_polimerizacion_prebiotica.evaluar(planeta)
+
     def actualizar(
         self,
         anios_transcurridos,
@@ -655,6 +699,14 @@ class Universe:
         self.actualizar_habitabilidad_final()
 
         self.actualizar_quimica_prebiotica()
+
+        self.actualizar_organicos_simples()
+
+        self.actualizar_concentracion_prebiotica()
+
+        self.actualizar_precursores_complejos()
+
+        self.actualizar_polimerizacion_prebiotica()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(

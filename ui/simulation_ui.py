@@ -456,6 +456,64 @@ class SimulationUI:
             if planeta.tuvo_ruta_geoquimica_prebiotica
         )
 
+        mundos_con_organicos_simples = sum(
+            1 for planeta in self.universe.planetas if planeta.alcanzo_organicos_simples
+        )
+
+        organicos_ruta_uv = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.ruta_organicos_simples == "uv"
+        )
+
+        organicos_ruta_geoquimica = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.ruta_organicos_simples == "geoquimica"
+        )
+
+        organicos_ruta_mixta = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.ruta_organicos_simples == "uv_y_geoquimica"
+        )
+
+        mundos_con_concentracion_prebiotica = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.alcanzo_concentracion_prebiotica
+        )
+
+        mundos_con_precursores_complejos = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.alcanzo_precursores_complejos
+        )
+
+        mundos_con_polimerizacion = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.alcanzo_polimerizacion_prebiotica
+        )
+
+        concentracion_por_hielo = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.mecanismo_concentracion_prebiotica == "concentracion_por_hielo"
+        )
+
+        concentracion_geoquimica = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.mecanismo_concentracion_prebiotica == "gradientes_geoquimicos"
+        )
+
+        concentracion_mixta = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.mecanismo_concentracion_prebiotica == "hielo_y_geoquimica"
+        )
+
         mundos_normales = sum(
             1 for planeta in self.universe.planetas if planeta.regimen_mundo == "normal"
         )
@@ -643,9 +701,11 @@ class SimulationUI:
                 "Habitabilidad: "
                 f"HZ={planetas_en_hz}"
                 " | "
-                f"Terrestres={candidatos_terrestres_hz}"
+                f"Ter={candidatos_terrestres_hz}"
                 " | "
-                f"Ret atm={candidatos_con_retencion}"
+                f"Ret={candidatos_con_retencion}"
+                " | "
+                f"Hab={candidatos_habitables_fase1}"
             ),
         )
 
@@ -656,135 +716,54 @@ class SimulationUI:
             fila,
             0,
             (
-                "Interior habitable: "
-                "Geo activos="
-                f"{candidatos_geologicamente_activos}"
+                "Planeta activo: "
+                f"Geo={candidatos_geologicamente_activos}"
                 " | "
-                "H2O inicial="
-                f"{candidatos_con_agua_inicial}"
+                f"Atm={candidatos_con_atmosfera}"
+                " | "
+                f"H2Ocond={candidatos_con_agua_condensada}"
             ),
         )
 
         fila += 1
 
-        if planeta_atmosfera_ejemplo is not None:
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Atmosferas secundarias: "
-                    f"{candidatos_con_atmosfera}"
-                    " | "
-                    "P bruta ejemplo="
-                    f"{planeta_atmosfera_ejemplo.presion_atmosferica_bruta_bar:.2f} bar"
-                ),
-            )
-
-        else:
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                "Atmosferas secundarias: 0",
-            )
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Prebiotica: "
+                f"hist={mundos_prebioticos_historicos}"
+                " | "
+                f"org={mundos_con_organicos_simples}"
+                " | "
+                f"conc={mundos_con_concentracion_prebiotica}"
+                " | "
+                f"comp={mundos_con_precursores_complejos}"
+                " | "
+                f"polim={mundos_con_polimerizacion}"
+            ),
+        )
 
         fila += 1
 
-        if planeta_agua_ejemplo is not None:
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Preclima: "
-                    f"agua condensada={candidatos_con_agua_condensada}"
-                    " | "
-                    "estado="
-                    f"{planeta_agua_ejemplo.estado_agua_preclima}"
-                    " | "
-                    "P="
-                    f"{planeta_agua_ejemplo.presion_atmosferica_preclima_bar:.2f} bar"
-                ),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Habitables Fase 1: "
-                    f"{candidatos_habitables_fase1}"
-                    " | "
-                    f"temperados={candidatos_temperados}"
-                    " | "
-                    f"glaciados={candidatos_glaciados}"
-                ),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Quimica prebiotica actual: "
-                    f"candidatos={candidatos_prebioticos}"
-                    " | "
-                    f"UV={rutas_uv}"
-                    " | "
-                    f"geoquimica={rutas_geoquimicas}"
-                ),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Historial prebiotico: "
-                    f"mundos={mundos_prebioticos_historicos}"
-                    " | "
-                    f"UV={mundos_uv_historicos}"
-                    " | "
-                    f"geoquimica={mundos_geoquimicos_historicos}"
-                ),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Reglas de mundo: "
-                    f"normales={mundos_normales}"
-                    " | "
-                    f"extraordinarios={mundos_extraordinarios}"
-                ),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Tipos extraordinarios: "
-                    f"arcano={mundos_arcanos}"
-                    " | "
-                    f"anomalia={mundos_anomalos}"
-                    " | "
-                    f"energia exotica={mundos_energia_exotica}"
-                ),
-            )
+        escribir_seguro(
+            stdscr,
+            fila,
+            0,
+            (
+                "Mundos: "
+                f"normal={mundos_normales}"
+                " | "
+                f"extra={mundos_extraordinarios}"
+                " | "
+                f"arc={mundos_arcanos}"
+                " | "
+                f"anom={mundos_anomalos}"
+                " | "
+                f"exo={mundos_energia_exotica}"
+            ),
+        )
 
         fila += 1
 

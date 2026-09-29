@@ -81,6 +81,15 @@ class Planet:
         regimen_mundo="sin_asignar",
         tipo_regla_extraordinaria=None,
         intensidad_extraordinaria=0.0,
+        alcanzo_organicos_simples=False,
+        ruta_organicos_simples=None,
+        etapa_quimica_historica="sin_progreso",
+        alcanzo_concentracion_prebiotica=False,
+        mecanismo_concentracion_prebiotica=None,
+        alcanzo_precursores_complejos=False,
+        ruta_precursores_complejos=None,
+        alcanzo_polimerizacion_prebiotica=False,
+        mecanismo_polimerizacion_prebiotica=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -396,6 +405,24 @@ class Planet:
 
         self.intensidad_extraordinaria = float(intensidad_extraordinaria)
 
+        self.alcanzo_organicos_simples = bool(alcanzo_organicos_simples)
+
+        self.ruta_organicos_simples = ruta_organicos_simples
+
+        self.etapa_quimica_historica = etapa_quimica_historica
+
+        self.alcanzo_concentracion_prebiotica = bool(alcanzo_concentracion_prebiotica)
+
+        self.mecanismo_concentracion_prebiotica = mecanismo_concentracion_prebiotica
+
+        self.alcanzo_precursores_complejos = bool(alcanzo_precursores_complejos)
+
+        self.ruta_precursores_complejos = ruta_precursores_complejos
+
+        self.alcanzo_polimerizacion_prebiotica = bool(alcanzo_polimerizacion_prebiotica)
+
+        self.mecanismo_polimerizacion_prebiotica = mecanismo_polimerizacion_prebiotica
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -518,6 +545,21 @@ class Planet:
             "regimen_mundo": (self.regimen_mundo),
             "tipo_regla_extraordinaria": (self.tipo_regla_extraordinaria),
             "intensidad_extraordinaria": (self.intensidad_extraordinaria),
+            "alcanzo_organicos_simples": (self.alcanzo_organicos_simples),
+            "ruta_organicos_simples": (self.ruta_organicos_simples),
+            "etapa_quimica_historica": (self.etapa_quimica_historica),
+            "alcanzo_concentracion_prebiotica": (self.alcanzo_concentracion_prebiotica),
+            "mecanismo_concentracion_prebiotica": (
+                self.mecanismo_concentracion_prebiotica
+            ),
+            "alcanzo_precursores_complejos": (self.alcanzo_precursores_complejos),
+            "ruta_precursores_complejos": (self.ruta_precursores_complejos),
+            "alcanzo_polimerizacion_prebiotica": (
+                self.alcanzo_polimerizacion_prebiotica
+            ),
+            "mecanismo_polimerizacion_prebiotica": (
+                self.mecanismo_polimerizacion_prebiotica
+            ),
         }
 
     @classmethod
@@ -711,5 +753,33 @@ class Planet:
             intensidad_extraordinaria=datos.get(
                 "intensidad_extraordinaria",
                 0.0,
+            ),
+            alcanzo_organicos_simples=datos.get(
+                "alcanzo_organicos_simples",
+                False,
+            ),
+            ruta_organicos_simples=datos.get("ruta_organicos_simples"),
+            etapa_quimica_historica=datos.get(
+                "etapa_quimica_historica",
+                "sin_progreso",
+            ),
+            alcanzo_concentracion_prebiotica=datos.get(
+                "alcanzo_concentracion_prebiotica",
+                False,
+            ),
+            mecanismo_concentracion_prebiotica=datos.get(
+                "mecanismo_concentracion_prebiotica"
+            ),
+            alcanzo_precursores_complejos=datos.get(
+                "alcanzo_precursores_complejos",
+                False,
+            ),
+            ruta_precursores_complejos=datos.get("ruta_precursores_complejos"),
+            alcanzo_polimerizacion_prebiotica=datos.get(
+                "alcanzo_polimerizacion_prebiotica",
+                False,
+            ),
+            mecanismo_polimerizacion_prebiotica=datos.get(
+                "mecanismo_polimerizacion_prebiotica"
             ),
         )
