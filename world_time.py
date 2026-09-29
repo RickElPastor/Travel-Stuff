@@ -82,4 +82,5 @@ class Time:
 
         valor = f"{velocidad:,}".replace(",", " ")
 
-        return f"{valor} años/s"
+        unidad = "año/s" if velocidad == 1 else "años/s"
+        return f"{valor} {unidad}"

@@ -2,1103 +2,297 @@ import curses
 import time
 
 from save_manager import SaveManager
-
-from ui.console_utils import centrar, escribir_seguro, linea_horizontal
-
+from ui.console_utils import centrar, escribir_seguro
 from ui.save_game_menu import SaveGameMenu
 
 
 class SimulationUI:
     REFRESCO_SEGUNDOS = 0.01
+    VISTAS = ("Abiogénesis", "Universo", "Condiciones")
 
     def __init__(self, simulation):
         self.simulation = simulation
-
         self.universe = simulation.universe
-
         self.scroll_eventos = 0
-
+        self.vista = 0
         self.save_manager = SaveManager()
-
         self.save_game_menu = SaveGameMenu()
 
     def ejecutar(self, stdscr):
         stdscr.nodelay(True)
         stdscr.keypad(True)
-
         try:
             curses.curs_set(0)
-
         except curses.error:
             pass
-
+        try:
+            if curses.has_colors():
+                curses.start_color()
+                curses.use_default_colors()
+                curses.init_pair(1, curses.COLOR_CYAN, -1)
+                curses.init_pair(2, curses.COLOR_GREEN, -1)
+                curses.init_pair(3, curses.COLOR_YELLOW, -1)
+        except curses.error:
+            pass
         curses.mousemask(curses.ALL_MOUSE_EVENTS)
 
         while True:
             tecla = stdscr.getch()
-
             if tecla == 27:
                 stdscr.nodelay(False)
                 return
-
             self._procesar_tecla(stdscr, tecla)
-
             self.simulation.actualizar()
-
             self._dibujar(stdscr)
-
             time.sleep(self.REFRESCO_SEGUNDOS)
 
     def _procesar_tecla(self, stdscr, tecla):
         if tecla == curses.KEY_UP:
             self.simulation.subir_velocidad()
-
         elif tecla == curses.KEY_DOWN:
             self.simulation.bajar_velocidad()
-
         elif tecla == curses.KEY_PPAGE:
             self._subir_eventos()
-
         elif tecla == curses.KEY_NPAGE:
             self._bajar_eventos()
-
         elif tecla == curses.KEY_MOUSE:
             self._procesar_mouse()
-
         elif tecla in (ord("s"), ord("S")):
             self._guardar(stdscr)
+        elif tecla in (ord("1"), ord("2"), ord("3")):
+            self.vista = tecla - ord("1")
 
     def _procesar_mouse(self):
         try:
-            evento_mouse = curses.getmouse()
-
+            estado = curses.getmouse()[4]
         except curses.error:
             return
-
-        estado = evento_mouse[4]
-
         if estado & curses.BUTTON4_PRESSED:
             self._subir_eventos()
-
         elif estado & curses.BUTTON5_PRESSED:
             self._bajar_eventos()
 
     def _subir_eventos(self):
         eventos = self.universe.event_manager.obtener_eventos()
-
-        max_scroll = max(0, len(eventos) - 1)
-
-        self.scroll_eventos = min(self.scroll_eventos + 1, max_scroll)
+        self.scroll_eventos = min(self.scroll_eventos + 1, max(0, len(eventos) - 1))
 
     def _bajar_eventos(self):
         self.scroll_eventos = max(0, self.scroll_eventos - 1)
 
     def _guardar(self, stdscr):
         stdscr.nodelay(False)
-
         nombre = self.save_game_menu.guardar_partida(stdscr, self.save_manager)
-
         if nombre:
             self.save_manager.guardar(self.universe, nombre)
-
         self.simulation.reiniciar_reloj()
-
         stdscr.nodelay(True)
+
+    def _color(self, numero):
+        try:
+            return curses.color_pair(numero) if curses.has_colors() else 0
+        except curses.error:
+            return 0
+
+    def _separador(self, stdscr, fila):
+        _, ancho = stdscr.getmaxyx()
+        escribir_seguro(stdscr, fila, 0, "─" * (ancho - 1), self._color(1))
+
+    def _texto(self, stdscr, fila, texto, atributo=0):
+        escribir_seguro(stdscr, fila, 2, texto, atributo)
 
     def _dibujar(self, stdscr):
         stdscr.erase()
-
         alto, ancho = stdscr.getmaxyx()
-
         if alto < 24 or ancho < 72:
             centrar(stdscr, 2, "TRAVEL STUFF")
-
-            centrar(stdscr, 4, ("La terminal es " "demasiado pequeña."))
-
-            centrar(stdscr, 5, ("Usa al menos " "72 columnas x 24 filas."))
-
+            centrar(stdscr, 4, "Amplía la terminal a 72 columnas x 24 filas.")
             stdscr.refresh()
             return
 
-        fila = 0
-
-        fila = self._dibujar_cabecera(stdscr, fila)
-
-        fila = self._dibujar_universo(stdscr, fila)
-
-        fila = self._dibujar_estrellas(stdscr, fila)
-
-        fila = self._dibujar_remanentes(stdscr, fila)
-
-        self._dibujar_eventos(stdscr, fila, alto)
-
-        controles = (
-            "ESC Menu | " "S Guardar | " "UP/DOWN Velocidad | " "PgUp/PgDn Eventos"
+        self._separador(stdscr, 0)
+        self._texto(stdscr, 1, "TRAVEL STUFF  /  SIMULADOR DE UNIVERSOS",
+                    curses.A_BOLD | self._color(1))
+        edad = f"{self.universe.time.anio:,}".replace(",", " ")
+        self._texto(
+            stdscr, 2,
+            f"Año {edad}   ·   Semilla {self.universe.seed}   ·   "
+            f"{self.universe.time.obtener_descripcion_velocidad()}",
         )
+        self._separador(stdscr, 3)
+        x = 2
+        for indice, nombre in enumerate(self.VISTAS):
+            etiqueta = f" {indice + 1} {nombre} "
+            atributo = (curses.A_BOLD | self._color(1)) if indice == self.vista else 0
+            escribir_seguro(stdscr, 4, x, etiqueta, atributo)
+            x += len(etiqueta) + 2
+        self._separador(stdscr, 5)
 
-        linea_horizontal(stdscr, alto - 2)
+        if self.vista == 0:
+            self._dibujar_abiogenesis(stdscr)
+        elif self.vista == 1:
+            self._dibujar_universo(stdscr)
+        else:
+            self._dibujar_condiciones(stdscr)
 
-        escribir_seguro(stdscr, alto - 1, 0, controles)
-
+        self._dibujar_eventos(stdscr, alto)
+        self._separador(stdscr, alto - 2)
+        self._texto(
+            stdscr, alto - 1,
+            "1-3 Vistas · ↑↓ Vel. · S Guardar · PgUp/PgDn Eventos · Esc Menú",
+        )
         stdscr.refresh()
 
-    def _dibujar_cabecera(self, stdscr, fila):
-        centrar(stdscr, fila, (".       *        .        " "+        ."))
+    def _encabezado(self, stdscr, fila, texto):
+        self._texto(stdscr, fila, texto, curses.A_BOLD | self._color(1))
 
-        fila += 1
-
-        centrar(
-            stdscr,
-            fila,
-            ("*       TRAVEL STUFF - " "SIMULACION       *"),
-            curses.A_BOLD,
-        )
-
-        fila += 1
-
-        centrar(stdscr, fila, (".    +       .        " "*        ."))
-
-        fila += 1
-
-        linea_horizontal(stdscr, fila)
-
-        return fila + 1
-
-    def _dibujar_universo(
-        self,
-        stdscr,
-        fila,
-    ):
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            "UNIVERSO",
-            curses.A_BOLD,
-        )
-
-        fila += 1
-
-        edad = self._numero_entero(self.universe.time.anio)
-
-        velocidad = self.universe.time.obtener_descripcion_velocidad()
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                f"Semilla: "
-                f"{self.universe.seed}"
-                "  |  "
-                f"Edad: {edad} años"
-                "  |  "
-                f"Velocidad: {velocidad}"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Estrellas activas: "
-                f"{len(self.universe.estrellas)}"
-                "  |  "
-                "Remanentes: "
-                f"{len(self.universe.remanentes)}"
-            ),
-        )
-
-        fila += 1
-
-        sistemas_simples = 0
-        sistemas_binarios = 0
-        sistemas_triples = 0
-        sistemas_multiples = 0
-
-        for sistema in self.universe.sistemas_estelares:
-            tipo = sistema.obtener_tipo()
-
-            if tipo == "simple":
-                sistemas_simples += 1
-
-            elif tipo == "binario":
-                sistemas_binarios += 1
-
-            elif tipo == "triple":
-                sistemas_triples += 1
-
-            elif tipo == "multiple":
-                sistemas_multiples += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Sistemas: "
-                f"{len(self.universe.sistemas_estelares)}"
-                "  |  "
-                f"Simples: {sistemas_simples}"
-                "  |  "
-                f"Binarios: {sistemas_binarios}"
-                "  |  "
-                "Triples+: "
-                f"{sistemas_triples + sistemas_multiples}"
-            ),
-        )
-
-        fila += 1
-
-        discos_truncados = sum(
-            1
-            for disco in self.universe.discos_protoplanetarios
-            if disco.truncado_por_companera
-        )
-
-        cantidad_embriones = sum(
-            disco.obtener_cantidad_embriones()
-            for disco in self.universe.discos_protoplanetarios
-        )
-
-        cantidad_protoplanetas = sum(
-            disco.obtener_cantidad_protoplanetas()
-            for disco in self.universe.discos_protoplanetarios
-        )
-
-        cantidad_planetas = len(self.universe.planetas)
-
-        candidatos_gas = sum(
-            1 for planeta in self.universe.planetas if planeta.candidato_captura_gas
-        )
-
-        candidatos_con_gas = sum(
-            1
-            for planeta in self.universe.planetas
-            if (planeta.candidato_captura_gas and planeta.gas_disponible_al_formarse)
-        )
-
-        # Todos los planetas que capturaron
-        # cualquier cantidad de gas.
-        planetas_con_gas = sum(
-            1 for planeta in self.universe.planetas if planeta.masa_gas_tierra > 0
-        )
-
-        candidatos_runaway = sum(
-            1 for planeta in self.universe.planetas if planeta.candidato_runaway
-        )
-
-        gigantes_runaway = sum(
-            1 for planeta in self.universe.planetas if planeta.entro_runaway
-        )
-
-        # Estados finales de formación.
-        planetas_solidos = sum(
-            1 for planeta in self.universe.planetas if planeta.masa_gas_tierra == 0
-        )
-
-        planetas_con_envoltura = sum(
-            1
-            for planeta in self.universe.planetas
-            if (planeta.masa_gas_tierra > 0 and not planeta.entro_runaway)
-        )
-
-        masa_gas_runaway = sum(
-            planeta.masa_gas_runaway_tierra for planeta in self.universe.planetas
-        )
-
-        masa_gas_planetas = sum(
-            planeta.masa_gas_tierra for planeta in self.universe.planetas
-        )
-
-        masa_total_planetas = sum(
-            planeta.masa_solida_tierra for planeta in self.universe.planetas
-        )
-
-        masa_total_embriones = sum(
-            disco.obtener_masa_embriones_tierra()
-            for disco in self.universe.discos_protoplanetarios
-        )
-
-        masa_total_protoplanetas = sum(
-            disco.obtener_masa_protoplanetas_tierra()
-            for disco in self.universe.discos_protoplanetarios
-        )
-
-        planeta_mas_masivo = max(
-            self.universe.planetas,
-            key=lambda planeta: planeta.masa_tierra,
-            default=None,
-        )
-
-        planeta_irradiado = next(
-            (
-                planeta
-                for planeta in self.universe.planetas
-                if (planeta.flujo_estelar_tierra is not None)
-            ),
-            None,
-        )
-
-        planetas_en_hz = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.en_zona_habitable_radiativa
-        )
-
-        candidatos_terrestres_hz = sum(
-            1 for planeta in self.universe.planetas if planeta.candidato_terrestre_hz
-        )
-
-        candidatos_con_retencion = sum(
-            1
-            for planeta in self.universe.planetas
-            if (planeta.candidato_terrestre_hz and planeta.retencion_atmosferica_aprox)
-        )
-
-        candidatos_geologicamente_activos = sum(
-            1
-            for planeta in self.universe.planetas
-            if (
-                planeta.candidato_terrestre_hz
-                and planeta.retencion_atmosferica_aprox
-                and planeta.geologicamente_activo
+    def _dibujar_abiogenesis(self, stdscr):
+        conteos = {
+            "entorno": 0, "organicos": 0, "concentracion": 0,
+            "precursores": 0, "polimeros": 0, "redes": 0,
+            "compartimentos": 0, "protocelulas": 0,
+            "normal": 0, "extra": 0, "rep_hist": 0, "rep_activa": 0,
+            "herencia": 0, "variacion": 0, "seleccion": 0,
+            "favorecidas": 0, "descartadas": 0,
+            "vida_activa": 0, "vida_historica": 0,
+        }
+        foco = None
+        for planeta in self.universe.planetas:
+            conteos["entorno"] += bool(planeta.tuvo_entorno_prebiotico)
+            conteos["organicos"] += bool(planeta.alcanzo_organicos_simples)
+            conteos["concentracion"] += bool(planeta.alcanzo_concentracion_prebiotica)
+            conteos["precursores"] += bool(planeta.alcanzo_precursores_complejos)
+            conteos["polimeros"] += bool(planeta.alcanzo_polimerizacion_prebiotica)
+            conteos["redes"] += bool(planeta.alcanzo_red_quimica_primitiva)
+            conteos["compartimentos"] += bool(planeta.alcanzo_compartimentalizacion_prebiotica)
+            conteos["protocelulas"] += bool(planeta.alcanzo_protocelula)
+            conteos["normal"] += bool(planeta.protocelula_viable_normal)
+            conteos["extra"] += bool(
+                planeta.protocelula_viable and not planeta.protocelula_viable_normal
             )
-        )
-
-        candidatos_con_agua_inicial = sum(
-            1
-            for planeta in self.universe.planetas
-            if (
-                planeta.candidato_terrestre_hz
-                and planeta.retencion_atmosferica_aprox
-                and planeta.masa_agua_inicial_tierra is not None
-                and planeta.masa_agua_inicial_tierra > 0
+            conteos["rep_hist"] += bool(planeta.alcanzo_replicacion_prebiotica)
+            conteos["rep_activa"] += bool(planeta.replicacion_prebiotica_activa)
+            conteos["herencia"] += planeta.copias_heredables > 0
+            conteos["variacion"] += planeta.variaciones_prebioticas > 0
+            conteos["seleccion"] += (
+                planeta.variantes_favorecidas + planeta.variantes_descartadas > 0
             )
-        )
+            conteos["favorecidas"] += planeta.variantes_favorecidas
+            conteos["descartadas"] += planeta.variantes_descartadas
+            conteos["vida_activa"] += bool(planeta.vida_activa)
+            conteos["vida_historica"] += bool(planeta.alcanzo_primera_vida)
+            if planeta.alcanzo_protocelula and (
+                foco is None
+                or (planeta.vida_activa,
+                    planeta.replicacion_prebiotica_activa,
+                    planeta.copias_heredables)
+                > (foco.vida_activa,
+                   foco.replicacion_prebiotica_activa,
+                   foco.copias_heredables)
+            ):
+                foco = planeta
 
-        candidatos_con_agua_condensada = sum(
-            1
-            for planeta in self.universe.planetas
-            if (planeta.candidato_terrestre_hz and planeta.tiene_agua_condensada)
-        )
-
-        candidatos_con_atmosfera = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.tiene_atmosfera_secundaria
-        )
-
-        candidatos_habitables_fase1 = sum(
-            1 for planeta in self.universe.planetas if planeta.candidato_habitable_fase1
-        )
-
-        candidatos_temperados = sum(
-            1
-            for planeta in self.universe.planetas
-            if (planeta.estado_habitabilidad_fase1 == "candidato_temperado")
-        )
-
-        candidatos_glaciados = sum(
-            1
-            for planeta in self.universe.planetas
-            if (planeta.estado_habitabilidad_fase1 == "candidato_glaciado")
-        )
-
-        planeta_atmosfera_ejemplo = next(
-            (
-                planeta
-                for planeta in self.universe.planetas
-                if planeta.tiene_atmosfera_secundaria
-            ),
-            None,
-        )
-
-        planeta_agua_ejemplo = next(
-            (
-                planeta
-                for planeta in self.universe.planetas
-                if (planeta.presion_atmosferica_preclima_bar is not None)
-            ),
-            None,
-        )
-
-        candidatos_prebioticos = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.candidato_quimica_prebiotica
-        )
-
-        rutas_uv = sum(
-            1 for planeta in self.universe.planetas if planeta.ruta_uv_prebiotica
-        )
-
-        rutas_geoquimicas = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.ruta_geoquimica_prebiotica
-        )
-
-        mundos_prebioticos_historicos = sum(
-            1 for planeta in self.universe.planetas if planeta.tuvo_entorno_prebiotico
-        )
-
-        mundos_uv_historicos = sum(
-            1 for planeta in self.universe.planetas if planeta.tuvo_ruta_uv_prebiotica
-        )
-
-        mundos_geoquimicos_historicos = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.tuvo_ruta_geoquimica_prebiotica
-        )
-
-        mundos_con_organicos_simples = sum(
-            1 for planeta in self.universe.planetas if planeta.alcanzo_organicos_simples
-        )
-
-        organicos_ruta_uv = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.ruta_organicos_simples == "uv"
-        )
-
-        organicos_ruta_geoquimica = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.ruta_organicos_simples == "geoquimica"
-        )
-
-        organicos_ruta_mixta = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.ruta_organicos_simples == "uv_y_geoquimica"
-        )
-
-        mundos_con_concentracion_prebiotica = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.alcanzo_concentracion_prebiotica
-        )
-
-        mundos_con_precursores_complejos = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.alcanzo_precursores_complejos
-        )
-
-        mundos_con_polimerizacion = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.alcanzo_polimerizacion_prebiotica
-        )
-
-        mundos_con_red_quimica = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.alcanzo_red_quimica_primitiva
-        )
-
-        mundos_con_compartimentos = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.alcanzo_compartimentalizacion_prebiotica
-        )
-
-        mundos_con_protocelulas = sum(
-            1 for planeta in self.universe.planetas if planeta.alcanzo_protocelula
-        )
-
-        concentracion_por_hielo = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.mecanismo_concentracion_prebiotica == "concentracion_por_hielo"
-        )
-
-        concentracion_geoquimica = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.mecanismo_concentracion_prebiotica == "gradientes_geoquimicos"
-        )
-
-        concentracion_mixta = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.mecanismo_concentracion_prebiotica == "hielo_y_geoquimica"
-        )
-
-        mundos_normales = sum(
-            1 for planeta in self.universe.planetas if planeta.regimen_mundo == "normal"
-        )
-
-        mundos_extraordinarios = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.regimen_mundo == "extraordinario"
-        )
-
-        mundos_arcanos = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.tipo_regla_extraordinaria == "arcano"
-        )
-
-        mundos_anomalos = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.tipo_regla_extraordinaria == "anomalia_fisica"
-        )
-
-        mundos_energia_exotica = sum(
-            1
-            for planeta in self.universe.planetas
-            if planeta.tipo_regla_extraordinaria == "energia_exotica"
-        )
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Discos de formación: "
-                f"{len(self.universe.discos_protoplanetarios)}"
-                "  |  "
-                "Truncados por binaria: "
-                f"{discos_truncados}"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            ("Embriones planetarios: " f"{cantidad_embriones}"),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            ("Protoplanetas: " f"{cantidad_protoplanetas}"),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Planetas: "
-                f"{cantidad_planetas}"
-                " | "
-                f"Candidatos gas: {candidatos_gas}"
-                " | "
-                f"A tiempo: {candidatos_con_gas}"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Envolturas totales: "
-                f"{planetas_con_gas}"
-                " | "
-                "Runaway candidatos: "
-                f"{candidatos_runaway}"
-                " | "
-                "Gas capturado: "
-                f"{masa_gas_planetas:.3f} Mt"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Runaway realizado: "
-                f"{gigantes_runaway}"
-                " | "
-                "Gas runaway: "
-                f"{masa_gas_runaway:.3f} Mt"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Estados planetarios: "
-                f"solidos={planetas_solidos}"
-                " | "
-                f"envoltura={planetas_con_envoltura}"
-                " | "
-                f"gigantes={gigantes_runaway}"
-            ),
-        )
-
-        fila += 1
-
-        if planeta_mas_masivo is not None:
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Planeta mas masivo: "
-                    f"M={planeta_mas_masivo.masa_tierra:.2f} Mt"
-                    " | "
-                    f"R={planeta_mas_masivo.radio_tierra:.2f} Rt"
-                    " | "
-                    f"rho={planeta_mas_masivo.densidad_g_cm3:.2f} g/cm3"
-                    " | "
-                    f"g={planeta_mas_masivo.gravedad_superficial_ms2:.1f} m/s2"
-                ),
-            )
-
+        c = conteos
+        self._encabezado(stdscr, 6, "01  QUÍMICA PREBIÓTICA  ·  logros históricos")
+        self._texto(stdscr, 7, f"Entorno {c['entorno']}   →   Orgánicos {c['organicos']}"
+                    f"   →   Concentración {c['concentracion']}")
+        self._texto(stdscr, 8, f"Precursores {c['precursores']}   →   "
+                    f"Polímeros {c['polimeros']}   →   Redes {c['redes']}")
+        self._texto(stdscr, 9, f"Compartimentos {c['compartimentos']}   →   "
+                    f"Protocélulas {c['protocelulas']}")
+        self._encabezado(stdscr, 11, "02  ABIOGÉNESIS  ·  condiciones actuales e historia")
+        self._texto(stdscr, 12, f"Viabilidad ahora   normal {c['normal']}   "
+                    f"extraordinaria {c['extra']}", self._color(2))
+        self._texto(stdscr, 13, f"Replicación        activa {c['rep_activa']}   "
+                    f"histórica {c['rep_hist']}")
+        self._texto(stdscr, 14, f"Mundos con herencia {c['herencia']}   ·   "
+                    f"con variación {c['variacion']}")
+        self._texto(stdscr, 15, f"Mundos con selección {c['seleccion']}   ·   "
+                    f"favorecidas {c['favorecidas']}   descartadas {c['descartadas']}")
+        self._texto(stdscr, 16,
+                    f"PRIMERA VIDA   activa {c['vida_activa']}   "
+                    f"histórica {c['vida_historica']}",
+                    curses.A_BOLD | self._color(2))
+        if foco is None:
+            self._texto(stdscr, 17, "Línea actual: aún sin protocélulas.",
+                        self._color(3))
+        elif foco.patron_copia is None:
+            self._texto(stdscr, 17,
+                        f"Línea inactiva · {foco.copias_heredables} copias "
+                        f"históricas · {foco.nombre}", self._color(3))
         else:
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                "Todavia no hay planetas.",
-            )
-
-        fila += 1
-
-        if planeta_irradiado is not None:
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Irradiacion ejemplo: "
-                    f"S={planeta_irradiado.flujo_estelar_tierra:.3f} S-Tierra"
-                    " | "
-                    f"F={planeta_irradiado.irradiancia_media_w_m2:.1f} W/m2"
-                    " | "
-                    "Teq0="
-                    f"{planeta_irradiado.temperatura_equilibrio_cero_albedo_k:.1f} K"
-                ),
-            )
-
-        else:
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                ("Irradiacion ejemplo: " "sin estrella anfitriona activa"),
-            )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Habitabilidad: "
-                f"HZ={planetas_en_hz}"
-                " | "
-                f"Ter={candidatos_terrestres_hz}"
-                " | "
-                f"Ret={candidatos_con_retencion}"
-                " | "
-                f"Hab={candidatos_habitables_fase1}"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Planeta activo: "
-                f"Geo={candidatos_geologicamente_activos}"
-                " | "
-                f"Atm={candidatos_con_atmosfera}"
-                " | "
-                f"H2Ocond={candidatos_con_agua_condensada}"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Prebio: "
-                f"hist={mundos_prebioticos_historicos}"
-                " | "
-                f"org={mundos_con_organicos_simples}"
-                " | "
-                f"conc={mundos_con_concentracion_prebiotica}"
-                " | "
-                f"comp={mundos_con_precursores_complejos}"
-                " | "
-                f"pol={mundos_con_polimerizacion}"
-                " | "
-                f"red={mundos_con_red_quimica}"
-                " | "
-                f"micro={mundos_con_compartimentos}"
-                " | "
-                f"proto={mundos_con_protocelulas}"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Mundos: "
-                f"normal={mundos_normales}"
-                " | "
-                f"extra={mundos_extraordinarios}"
-                " | "
-                f"arc={mundos_arcanos}"
-                " | "
-                f"anom={mundos_anomalos}"
-                " | "
-                f"exo={mundos_energia_exotica}"
-            ),
-        )
-
-        fila += 1
-
-        escribir_seguro(
-            stdscr,
-            fila,
-            0,
-            (
-                "Masa formación: "
-                f"E={masa_total_embriones:.3f} Mt"
-                " | "
-                f"P={masa_total_protoplanetas:.3f} Mt"
-                " | "
-                f"planetas={masa_total_planetas:.3f} Mt"
-            ),
-        )
-
-        fila += 1
-
-        disco_ejemplo = next(
-            iter(self.universe.discos_protoplanetarios),
-            None,
-        )
-
-        if disco_ejemplo is not None:
-            masa_polvo = self._valor(
-                disco_ejemplo.masa_polvo_tierra,
-                "Mt",
-                2,
-            )
-
-            radio_caracteristico = self._valor(
-                disco_ejemplo.radio_caracteristico_au,
-                "AU",
-                2,
-            )
-
-            linea_hielo = self._valor(
-                disco_ejemplo.linea_hielo_au,
-                "AU",
-                2,
-            )
-
-            masa_interior = self._valor(
-                disco_ejemplo.obtener_masa_polvo_interior_linea_hielo(),
-                "Mt",
-                2,
-            )
-
-            masa_exterior = self._valor(
-                disco_ejemplo.obtener_masa_polvo_exterior_linea_hielo(),
-                "Mt",
-                2,
-            )
-
-            cantidad_embriones_disco = disco_ejemplo.obtener_cantidad_embriones()
-
-            masa_embriones = self._valor(
-                disco_ejemplo.obtener_masa_embriones_tierra(),
-                "Mt",
-                3,
-            )
-
-            masa_planetesimales = self._valor(
-                disco_ejemplo.masa_planetesimales_tierra,
-                "Mt",
-                3,
-            )
-
-            masa_gas = self._valor(
-                disco_ejemplo.masa_gas_referencia_tierra,
-                "Mt",
-                1,
-            )
-
-            vida_gas = self._valor(
-                disco_ejemplo.vida_gas_myr,
-                "Myr",
-                2,
-            )
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Disco ejemplo: "
-                    f"polvo={masa_polvo} | "
-                    f"Rc={radio_caracteristico} | "
-                    f"hielo={linea_hielo}"
-                ),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Sólidos: "
-                    f"interior={masa_interior} | "
-                    f"exterior={masa_exterior}"
-                ),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                ("Gas de referencia: " f"{masa_gas}" " | " f"vida={vida_gas}"),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Formación: "
-                    f"embriones={cantidad_embriones_disco}"
-                    " | "
-                    f"masa embriones={masa_embriones}"
-                    " | "
-                    f"planetesimales={masa_planetesimales}"
-                ),
-            )
-
-            fila += 1
-
-        sistema_binario = next(
-            (
-                sistema
-                for sistema in self.universe.sistemas_estelares
-                if sistema.obtener_tipo() == "binario"
-            ),
-            None,
-        )
-
-        if sistema_binario is not None:
-            periodo = self._valor(
-                sistema_binario.periodo_orbital_dias,
-                "d",
-                1,
-            )
-
-            semieje = self._valor(
-                sistema_binario.semieje_mayor_au,
-                "AU",
-                3,
-            )
-
-            excentricidad = self._valor(
-                sistema_binario.excentricidad,
-                "",
-                3,
-            )
-
-            periastro = self._valor(
-                sistema_binario.obtener_periastro_au(),
-                "AU",
-                3,
-            )
-
-            apoastro = self._valor(
-                sistema_binario.obtener_apoastro_au(),
-                "AU",
-                3,
-            )
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                (
-                    "Órbita binaria: "
-                    f"P={periodo}"
-                    " | "
-                    f"a={semieje}"
-                    " | "
-                    f"e={excentricidad}"
-                ),
-            )
-
-            fila += 1
-
-            escribir_seguro(
-                stdscr,
-                fila,
-                0,
-                ("Distancias: " f"periastro={periastro}" " | " f"apoastro={apoastro}"),
-            )
-
-            fila += 1
-
-        linea_horizontal(
-            stdscr,
-            fila,
-        )
-
-        return fila + 1
-
-    def _dibujar_estrellas(self, stdscr, fila):
-        escribir_seguro(stdscr, fila, 0, "ESTRELLAS", curses.A_BOLD)
-
-        fila += 1
-
-        if not self.universe.estrellas:
-            escribir_seguro(stdscr, fila, 2, "No hay estrellas activas.")
-
-            fila += 1
-
-        else:
-            for estrella in self.universe.estrellas[:4]:
-                temperatura = self._valor(estrella.temperatura_efectiva, "K", 0)
-
-                masa = self._valor(estrella.masa_actual, "Msol", 3)
-
-                escribir_seguro(
-                    stdscr,
-                    fila,
-                    2,
-                    (
-                        f"* {estrella.nombre} | "
-                        f"{estrella.obtener_etapa_visible()} | "
-                        f"{masa} | "
-                        f"{temperatura}"
-                    ),
-                )
-
-                fila += 1
-
-            restantes = len(self.universe.estrellas) - 4
-
-            if restantes > 0:
-                escribir_seguro(
-                    stdscr, fila, 4, (f"... y {restantes} " "estrellas mas.")
-                )
-
-                fila += 1
-
-        linea_horizontal(stdscr, fila)
-
-        return fila + 1
-
-    def _dibujar_remanentes(self, stdscr, fila):
-        escribir_seguro(stdscr, fila, 0, "REMANENTES", curses.A_BOLD)
-
-        fila += 1
-
-        if not self.universe.remanentes:
-            escribir_seguro(stdscr, fila, 2, ("No hay remanentes " "estelares."))
-
-            fila += 1
-
-        else:
-            for remanente in self.universe.remanentes[-3:]:
-                escribir_seguro(
-                    stdscr,
-                    fila,
-                    2,
-                    (
-                        f"+ {remanente.nombre} | "
-                        f"{remanente.obtener_tipo_visible()} | "
-                        f"{remanente.masa:.3f} "
-                        "Msol"
-                    ),
-                )
-
-                fila += 1
-
-        linea_horizontal(stdscr, fila)
-
-        return fila + 1
-
-    def _dibujar_eventos(self, stdscr, fila, alto):
-        escribir_seguro(stdscr, fila, 0, "EVENTOS", curses.A_BOLD)
-
-        fila += 1
-
-        espacio = max(1, alto - fila - 3)
-
+            self._texto(stdscr, 17,
+                        f"Línea activa · patrón {foco.patron_copia} · "
+                        f"{foco.copias_linea} copias · {foco.nombre}",
+                        self._color(3))
+
+    def _dibujar_universo(self, stdscr):
+        sistemas = self.universe.sistemas_estelares
+        discos = self.universe.discos_protoplanetarios
+        planetas = self.universe.planetas
+        tipos = {"normal": 0, "arcano": 0, "anomalia_fisica": 0,
+                 "energia_exotica": 0}
+        gigantes = 0
+        for planeta in planetas:
+            if planeta.regimen_mundo == "normal":
+                tipos["normal"] += 1
+            elif planeta.tipo_regla_extraordinaria in tipos:
+                tipos[planeta.tipo_regla_extraordinaria] += 1
+            gigantes += bool(planeta.entro_runaway)
+
+        self._encabezado(stdscr, 6, "01  ESTRUCTURA DEL UNIVERSO")
+        self._texto(stdscr, 7, f"Estrellas activas {len(self.universe.estrellas)}   "
+                    f"Remanentes {len(self.universe.remanentes)}")
+        self._texto(stdscr, 8, f"Sistemas estelares {len(sistemas)}   "
+                    f"Discos {len(discos)}")
+        self._encabezado(stdscr, 10, "02  FORMACIÓN PLANETARIA")
+        self._texto(stdscr, 11, f"Embriones {sum(d.obtener_cantidad_embriones() for d in discos)}"
+                    f"   Protoplanetas {sum(d.obtener_cantidad_protoplanetas() for d in discos)}")
+        self._texto(stdscr, 12, f"Planetas {len(planetas)}   Gigantes runaway {gigantes}")
+        self._encabezado(stdscr, 14, "03  REGLAS DE LOS MUNDOS")
+        self._texto(stdscr, 15, f"Normales {tipos['normal']}   "
+                    f"Extraordinarios {sum(tipos.values()) - tipos['normal']}")
+        self._texto(stdscr, 16, f"Arcanos {tipos['arcano']}   "
+                    f"Anomalías {tipos['anomalia_fisica']}   "
+                    f"Energía exótica {tipos['energia_exotica']}")
+
+    def _dibujar_condiciones(self, stdscr):
+        planetas = self.universe.planetas
+        hz = ter = ret = atm = agua = hab = quim = 0
+        temperados = glaciados = 0
+        for p in planetas:
+            hz += bool(p.en_zona_habitable_radiativa)
+            ter += bool(p.candidato_terrestre_hz)
+            ret += bool(p.retencion_atmosferica_aprox)
+            atm += bool(p.tiene_atmosfera_secundaria)
+            agua += bool(p.tiene_agua_condensada)
+            hab += bool(p.candidato_habitable_fase1)
+            quim += bool(p.candidato_quimica_prebiotica)
+            temperados += p.estado_habitabilidad_fase1 == "candidato_temperado"
+            glaciados += p.estado_habitabilidad_fase1 == "candidato_glaciado"
+
+        self._encabezado(stdscr, 6, "01  HABITABILIDAD  ·  condiciones actuales")
+        self._texto(stdscr, 7, f"Zona habitable {hz}   →   Terrestres {ter}"
+                    f"   →   Retención {ret}")
+        self._texto(stdscr, 8, f"Atmósfera secundaria {atm}   Agua condensada {agua}")
+        self._texto(stdscr, 9, f"Habitables ahora {hab}   "
+                    f"(templados {temperados}, glaciados {glaciados})",
+                    self._color(2))
+        self._encabezado(stdscr, 11, "02  ENTORNO QUÍMICO ACTUAL")
+        self._texto(stdscr, 12, f"Candidatos químicos {quim}")
+        self._texto(stdscr, 13, "Los logros históricos se muestran en Abiogénesis.")
+        self._texto(stdscr, 15, "Una condición puede desaparecer al cambiar la estrella")
+        self._texto(stdscr, 16, "o la atmósfera; los logros históricos permanecen.")
+
+    def _dibujar_eventos(self, stdscr, alto):
+        fila = 18
+        self._separador(stdscr, fila)
+        self._encabezado(stdscr, fila + 1, "EVENTOS RECIENTES  ·  PgUp/PgDn")
         eventos = self.universe.event_manager.obtener_eventos()
-
+        espacio = alto - fila - 4
         fin = max(0, len(eventos) - self.scroll_eventos)
-
-        inicio = max(0, fin - espacio)
-
-        visibles = eventos[inicio:fin]
-
+        visibles = eventos[max(0, fin - espacio):fin]
         if not visibles:
-            escribir_seguro(stdscr, fila, 2, "Todavia no hay eventos.")
-
-            return
-
-        for evento in visibles:
-            escribir_seguro(stdscr, fila, 2, f"- {evento}")
-
-            fila += 1
-
-    def _numero_entero(self, valor):
-        return f"{valor:,.0f}".replace(",", " ")
-
-    def _valor(self, valor, unidad="", decimales=2):
-        if valor is None:
-            return "sin datos"
-
-        texto = f"{valor:.{decimales}f}"
-
-        if unidad:
-            texto += f" {unidad}"
-
-        return texto
+            self._texto(stdscr, fila + 2, "Aún no hay eventos.")
+        else:
+            for desplazamiento, evento in enumerate(visibles):
+                self._texto(stdscr, fila + 2 + desplazamiento, f"• {evento}")

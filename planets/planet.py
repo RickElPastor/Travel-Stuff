@@ -96,6 +96,27 @@ class Planet:
         tipo_compartimento_prebiotico=None,
         alcanzo_protocelula=False,
         tipo_protocelula=None,
+        catalisis_arcana=0.0,
+        confinamiento_anomalo=0.0,
+        energia_quimica_exotica=0.0,
+        protocelula_viable_normal=False,
+        protocelula_viable=False,
+        estado_viabilidad_protocelular="no_evaluado",
+        alcanzo_replicacion_prebiotica=False,
+        replicacion_prebiotica_activa=False,
+        mecanismo_replicacion_prebiotica=None,
+        patron_copia=None,
+        copias_heredables=0,
+        variaciones_prebioticas=0,
+        proxima_copia_anio=None,
+        variantes_favorecidas=0,
+        variantes_descartadas=0,
+        copias_linea=0,
+        variaciones_linea=0,
+        comparaciones_linea=0,
+        vida_activa=False,
+        alcanzo_primera_vida=False,
+        anio_primera_vida=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -443,6 +464,46 @@ class Planet:
 
         self.tipo_protocelula = tipo_protocelula
 
+        self.catalisis_arcana = float(catalisis_arcana)
+        self.confinamiento_anomalo = float(confinamiento_anomalo)
+        self.energia_quimica_exotica = float(energia_quimica_exotica)
+        self.protocelula_viable_normal = bool(protocelula_viable_normal)
+        self.protocelula_viable = bool(protocelula_viable)
+        self.estado_viabilidad_protocelular = estado_viabilidad_protocelular
+        self.alcanzo_replicacion_prebiotica = bool(alcanzo_replicacion_prebiotica)
+        self.replicacion_prebiotica_activa = bool(replicacion_prebiotica_activa)
+        self.mecanismo_replicacion_prebiotica = mecanismo_replicacion_prebiotica
+        self.patron_copia = None if patron_copia is None else int(patron_copia)
+        self.copias_heredables = int(copias_heredables)
+        self.variaciones_prebioticas = int(variaciones_prebioticas)
+        self.proxima_copia_anio = (
+            None if proxima_copia_anio is None else int(proxima_copia_anio)
+        )
+        self.variantes_favorecidas = int(variantes_favorecidas)
+        self.variantes_descartadas = int(variantes_descartadas)
+        self.copias_linea = int(copias_linea)
+        self.variaciones_linea = int(variaciones_linea)
+        self.comparaciones_linea = int(comparaciones_linea)
+        self.vida_activa = bool(vida_activa)
+        self.alcanzo_primera_vida = bool(alcanzo_primera_vida)
+        self.anio_primera_vida = (
+            None if anio_primera_vida is None else int(anio_primera_vida)
+        )
+
+    def obtener_apoyo_protocelular_extraordinario(self):
+        """Apoyo disponible para una protocélula histórica; no significa vida."""
+        if not self.alcanzo_protocelula:
+            return 0.0
+        return max(
+            self.catalisis_arcana,
+            self.confinamiento_anomalo,
+            self.energia_quimica_exotica,
+        )
+
+    def es_candidato_abiogenesis(self):
+        """La viabilidad actual permite estudiar replicación; aún no es vida."""
+        return self.protocelula_viable
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -475,6 +536,27 @@ class Planet:
 
     def a_dict(self):
         return {
+            "catalisis_arcana": self.catalisis_arcana,
+            "confinamiento_anomalo": self.confinamiento_anomalo,
+            "energia_quimica_exotica": self.energia_quimica_exotica,
+            "protocelula_viable_normal": self.protocelula_viable_normal,
+            "protocelula_viable": self.protocelula_viable,
+            "estado_viabilidad_protocelular": self.estado_viabilidad_protocelular,
+            "alcanzo_replicacion_prebiotica": self.alcanzo_replicacion_prebiotica,
+            "replicacion_prebiotica_activa": self.replicacion_prebiotica_activa,
+            "mecanismo_replicacion_prebiotica": self.mecanismo_replicacion_prebiotica,
+            "patron_copia": self.patron_copia,
+            "copias_heredables": self.copias_heredables,
+            "variaciones_prebioticas": self.variaciones_prebioticas,
+            "proxima_copia_anio": self.proxima_copia_anio,
+            "variantes_favorecidas": self.variantes_favorecidas,
+            "variantes_descartadas": self.variantes_descartadas,
+            "copias_linea": self.copias_linea,
+            "variaciones_linea": self.variaciones_linea,
+            "comparaciones_linea": self.comparaciones_linea,
+            "vida_activa": self.vida_activa,
+            "alcanzo_primera_vida": self.alcanzo_primera_vida,
+            "anio_primera_vida": self.anio_primera_vida,
             "nombre": self.nombre,
             "masa_tierra": (self.masa_tierra),
             "semieje_mayor_au": (self.semieje_mayor_au),
@@ -825,4 +907,33 @@ class Planet:
                 False,
             ),
             tipo_protocelula=datos.get("tipo_protocelula"),
+            catalisis_arcana=datos.get("catalisis_arcana", 0.0),
+            confinamiento_anomalo=datos.get("confinamiento_anomalo", 0.0),
+            energia_quimica_exotica=datos.get("energia_quimica_exotica", 0.0),
+            protocelula_viable_normal=datos.get("protocelula_viable_normal", False),
+            protocelula_viable=datos.get("protocelula_viable", False),
+            estado_viabilidad_protocelular=datos.get(
+                "estado_viabilidad_protocelular", "no_evaluado"
+            ),
+            alcanzo_replicacion_prebiotica=datos.get(
+                "alcanzo_replicacion_prebiotica", False
+            ),
+            replicacion_prebiotica_activa=datos.get(
+                "replicacion_prebiotica_activa", False
+            ),
+            mecanismo_replicacion_prebiotica=datos.get(
+                "mecanismo_replicacion_prebiotica"
+            ),
+            patron_copia=datos.get("patron_copia"),
+            copias_heredables=datos.get("copias_heredables", 0),
+            variaciones_prebioticas=datos.get("variaciones_prebioticas", 0),
+            proxima_copia_anio=datos.get("proxima_copia_anio"),
+            variantes_favorecidas=datos.get("variantes_favorecidas", 0),
+            variantes_descartadas=datos.get("variantes_descartadas", 0),
+            copias_linea=datos.get("copias_linea", 0),
+            variaciones_linea=datos.get("variaciones_linea", 0),
+            comparaciones_linea=datos.get("comparaciones_linea", 0),
+            vida_activa=datos.get("vida_activa", False),
+            alcanzo_primera_vida=datos.get("alcanzo_primera_vida", False),
+            anio_primera_vida=datos.get("anio_primera_vida"),
         )

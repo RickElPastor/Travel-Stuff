@@ -1,5 +1,15 @@
 import random
 
+from abiogenesis.first_life_model import ModeloPrimeraVida
+
+from abiogenesis.inheritance_variation_model import ModeloHerenciaVariacion
+
+from abiogenesis.replication_model import ModeloReplicacionPrebiotica
+
+from chemistry.protocell_viability_model import ModeloViabilidadProtocelular
+
+from extraordinary.chemistry_support_model import ModeloApoyoQuimicoExtraordinario
+
 from events import EventManager
 from stellar_systems.stellar_system import SistemaEstelar
 from planets.disk_environment_model import (
@@ -149,6 +159,11 @@ class Universe:
         )
 
         self.modelo_protocelula = ModeloProtocelula()
+        self.modelo_viabilidad_protocelular = ModeloViabilidadProtocelular()
+        self.modelo_replicacion_prebiotica = ModeloReplicacionPrebiotica()
+        self.modelo_herencia_variacion = ModeloHerenciaVariacion()
+        self.modelo_primera_vida = ModeloPrimeraVida()
+        self.modelo_apoyo_extraordinario = ModeloApoyoQuimicoExtraordinario()
 
     def establecer_modelo_estelar(
         self,
@@ -613,6 +628,28 @@ class Universe:
         for planeta in self.planetas:
             self.modelo_compartimentalizacion_prebiotica.evaluar(planeta)
 
+    def actualizar_primera_vida(self):
+        for planeta in self.planetas:
+            self.modelo_primera_vida.evaluar(planeta, self.time.anio)
+
+    def actualizar_herencia_variacion(self):
+        for planeta in self.planetas:
+            self.modelo_herencia_variacion.evaluar(
+                planeta, self.seed, self.time.anio
+            )
+
+    def actualizar_replicacion_prebiotica(self):
+        for planeta in self.planetas:
+            self.modelo_replicacion_prebiotica.evaluar(planeta)
+
+    def actualizar_viabilidad_protocelular(self):
+        for planeta in self.planetas:
+            self.modelo_viabilidad_protocelular.evaluar(planeta)
+
+    def actualizar_apoyos_extraordinarios(self):
+        for planeta in self.planetas:
+            self.modelo_apoyo_extraordinario.evaluar(planeta)
+
     def actualizar_protocelulas(
         self,
     ):
@@ -748,6 +785,16 @@ class Universe:
         self.actualizar_compartimentalizacion_prebiotica()
 
         self.actualizar_protocelulas()
+
+        self.actualizar_apoyos_extraordinarios()
+
+        self.actualizar_viabilidad_protocelular()
+
+        self.actualizar_replicacion_prebiotica()
+
+        self.actualizar_herencia_variacion()
+
+        self.actualizar_primera_vida()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(
