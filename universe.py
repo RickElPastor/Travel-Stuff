@@ -32,6 +32,15 @@ from habitability.atmospheric_retention_model import (
 from habitability.geologic_activity_model import (
     ModeloActividadGeologica,
 )
+from habitability.secondary_atmosphere_model import (
+    ModeloAtmosferaSecundaria,
+)
+from habitability.surface_water_model import (
+    ModeloAguaSuperficial,
+)
+from habitability.final_habitability_model import (
+    ModeloHabitabilidadFinal,
+)
 from remnant import RemanenteEstelar
 from star import Star
 from star_formation import FormacionEstelarCosmica
@@ -87,6 +96,12 @@ class Universe:
 
         self.modelo_retencion_atmosferica = ModeloRetencionAtmosferica()
         self.modelo_actividad_geologica = ModeloActividadGeologica()
+
+        self.modelo_atmosfera_secundaria = ModeloAtmosferaSecundaria()
+
+        self.modelo_agua_superficial = ModeloAguaSuperficial()
+
+        self.modelo_habitabilidad_final = ModeloHabitabilidadFinal()
 
     def establecer_modelo_estelar(
         self,
@@ -301,6 +316,33 @@ class Universe:
             self.modelo_actividad_geologica.evaluar(
                 planeta,
                 estrella.edad,
+            )
+
+    def actualizar_atmosferas_secundarias(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_atmosfera_secundaria.evaluar(planeta)
+
+    def actualizar_agua_superficial(
+        self,
+    ):
+        for planeta in self.planetas:
+            self.modelo_agua_superficial.evaluar(planeta)
+
+    def actualizar_habitabilidad_final(
+        self,
+    ):
+        estrellas_por_nombre = {
+            estrella.nombre: estrella for estrella in self.estrellas
+        }
+
+        for planeta in self.planetas:
+            estrella = estrellas_por_nombre.get(planeta.estrella_anfitriona)
+
+            self.modelo_habitabilidad_final.evaluar(
+                planeta,
+                estrella,
             )
 
     def crear_estrella(
@@ -569,6 +611,12 @@ class Universe:
         self.actualizar_retencion_atmosferica()
 
         self.actualizar_actividad_geologica()
+
+        self.actualizar_atmosferas_secundarias()
+
+        self.actualizar_agua_superficial()
+
+        self.actualizar_habitabilidad_final()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(

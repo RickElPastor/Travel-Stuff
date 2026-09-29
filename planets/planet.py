@@ -51,6 +51,25 @@ class Planet:
         h2o_desgasificada_tierra=None,
         carbono_desgasificado_tierra=None,
         nitrogeno_desgasificado_tierra=None,
+        tiene_atmosfera_secundaria=False,
+        masa_atmosfera_secundaria_tierra=None,
+        presion_atmosferica_bruta_bar=None,
+        fraccion_molar_h2o_bruta=None,
+        fraccion_molar_co2_bruta=None,
+        fraccion_molar_n2_bruta=None,
+        masa_agua_superficial_total_tierra=None,
+        masa_h2o_vapor_tierra=None,
+        masa_h2o_condensada_tierra=None,
+        presion_h2o_preclima_bar=None,
+        presion_co2_preclima_bar=None,
+        presion_n2_preclima_bar=None,
+        presion_atmosferica_preclima_bar=None,
+        tiene_agua_condensada=False,
+        estado_agua_preclima=None,
+        pco2_max_greenhouse_bar=None,
+        co2_dentro_max_greenhouse=False,
+        candidato_habitable_fase1=False,
+        estado_habitabilidad_fase1="no_evaluado",
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -262,6 +281,88 @@ class Planet:
             else float(nitrogeno_desgasificado_tierra)
         )
 
+        self.tiene_atmosfera_secundaria = bool(tiene_atmosfera_secundaria)
+
+        self.masa_atmosfera_secundaria_tierra = (
+            None
+            if masa_atmosfera_secundaria_tierra is None
+            else float(masa_atmosfera_secundaria_tierra)
+        )
+
+        self.presion_atmosferica_bruta_bar = (
+            None
+            if presion_atmosferica_bruta_bar is None
+            else float(presion_atmosferica_bruta_bar)
+        )
+
+        self.fraccion_molar_h2o_bruta = (
+            None
+            if fraccion_molar_h2o_bruta is None
+            else float(fraccion_molar_h2o_bruta)
+        )
+
+        self.fraccion_molar_co2_bruta = (
+            None
+            if fraccion_molar_co2_bruta is None
+            else float(fraccion_molar_co2_bruta)
+        )
+
+        self.fraccion_molar_n2_bruta = (
+            None if fraccion_molar_n2_bruta is None else float(fraccion_molar_n2_bruta)
+        )
+
+        self.masa_agua_superficial_total_tierra = (
+            None
+            if masa_agua_superficial_total_tierra is None
+            else float(masa_agua_superficial_total_tierra)
+        )
+
+        self.masa_h2o_vapor_tierra = (
+            None if masa_h2o_vapor_tierra is None else float(masa_h2o_vapor_tierra)
+        )
+
+        self.masa_h2o_condensada_tierra = (
+            None
+            if masa_h2o_condensada_tierra is None
+            else float(masa_h2o_condensada_tierra)
+        )
+
+        self.presion_h2o_preclima_bar = (
+            None
+            if presion_h2o_preclima_bar is None
+            else float(presion_h2o_preclima_bar)
+        )
+
+        self.presion_co2_preclima_bar = (
+            None
+            if presion_co2_preclima_bar is None
+            else float(presion_co2_preclima_bar)
+        )
+
+        self.presion_n2_preclima_bar = (
+            None if presion_n2_preclima_bar is None else float(presion_n2_preclima_bar)
+        )
+
+        self.presion_atmosferica_preclima_bar = (
+            None
+            if presion_atmosferica_preclima_bar is None
+            else float(presion_atmosferica_preclima_bar)
+        )
+
+        self.tiene_agua_condensada = bool(tiene_agua_condensada)
+
+        self.estado_agua_preclima = estado_agua_preclima
+
+        self.pco2_max_greenhouse_bar = (
+            None if pco2_max_greenhouse_bar is None else float(pco2_max_greenhouse_bar)
+        )
+
+        self.co2_dentro_max_greenhouse = bool(co2_dentro_max_greenhouse)
+
+        self.candidato_habitable_fase1 = bool(candidato_habitable_fase1)
+
+        self.estado_habitabilidad_fase1 = estado_habitabilidad_fase1
+
     def obtener_periastro_au(self):
         return self.semieje_mayor_au * (1.0 - self.excentricidad)
 
@@ -352,6 +453,27 @@ class Planet:
             "h2o_desgasificada_tierra": (self.h2o_desgasificada_tierra),
             "carbono_desgasificado_tierra": (self.carbono_desgasificado_tierra),
             "nitrogeno_desgasificado_tierra": (self.nitrogeno_desgasificado_tierra),
+            "tiene_atmosfera_secundaria": (self.tiene_atmosfera_secundaria),
+            "masa_atmosfera_secundaria_tierra": (self.masa_atmosfera_secundaria_tierra),
+            "presion_atmosferica_bruta_bar": (self.presion_atmosferica_bruta_bar),
+            "fraccion_molar_h2o_bruta": (self.fraccion_molar_h2o_bruta),
+            "fraccion_molar_co2_bruta": (self.fraccion_molar_co2_bruta),
+            "fraccion_molar_n2_bruta": (self.fraccion_molar_n2_bruta),
+            "masa_agua_superficial_total_tierra": (
+                self.masa_agua_superficial_total_tierra
+            ),
+            "masa_h2o_vapor_tierra": (self.masa_h2o_vapor_tierra),
+            "masa_h2o_condensada_tierra": (self.masa_h2o_condensada_tierra),
+            "presion_h2o_preclima_bar": (self.presion_h2o_preclima_bar),
+            "presion_co2_preclima_bar": (self.presion_co2_preclima_bar),
+            "presion_n2_preclima_bar": (self.presion_n2_preclima_bar),
+            "presion_atmosferica_preclima_bar": (self.presion_atmosferica_preclima_bar),
+            "tiene_agua_condensada": (self.tiene_agua_condensada),
+            "estado_agua_preclima": (self.estado_agua_preclima),
+            "pco2_max_greenhouse_bar": (self.pco2_max_greenhouse_bar),
+            "co2_dentro_max_greenhouse": (self.co2_dentro_max_greenhouse),
+            "candidato_habitable_fase1": (self.candidato_habitable_fase1),
+            "estado_habitabilidad_fase1": (self.estado_habitabilidad_fase1),
         }
 
     @classmethod
@@ -465,4 +587,44 @@ class Planet:
             h2o_desgasificada_tierra=datos.get("h2o_desgasificada_tierra"),
             carbono_desgasificado_tierra=datos.get("carbono_desgasificado_tierra"),
             nitrogeno_desgasificado_tierra=datos.get("nitrogeno_desgasificado_tierra"),
+            tiene_atmosfera_secundaria=datos.get(
+                "tiene_atmosfera_secundaria",
+                False,
+            ),
+            masa_atmosfera_secundaria_tierra=datos.get(
+                "masa_atmosfera_secundaria_tierra"
+            ),
+            presion_atmosferica_bruta_bar=datos.get("presion_atmosferica_bruta_bar"),
+            fraccion_molar_h2o_bruta=datos.get("fraccion_molar_h2o_bruta"),
+            fraccion_molar_co2_bruta=datos.get("fraccion_molar_co2_bruta"),
+            fraccion_molar_n2_bruta=datos.get("fraccion_molar_n2_bruta"),
+            masa_agua_superficial_total_tierra=datos.get(
+                "masa_agua_superficial_total_tierra"
+            ),
+            masa_h2o_vapor_tierra=datos.get("masa_h2o_vapor_tierra"),
+            masa_h2o_condensada_tierra=datos.get("masa_h2o_condensada_tierra"),
+            presion_h2o_preclima_bar=datos.get("presion_h2o_preclima_bar"),
+            presion_co2_preclima_bar=datos.get("presion_co2_preclima_bar"),
+            presion_n2_preclima_bar=datos.get("presion_n2_preclima_bar"),
+            presion_atmosferica_preclima_bar=datos.get(
+                "presion_atmosferica_preclima_bar"
+            ),
+            tiene_agua_condensada=datos.get(
+                "tiene_agua_condensada",
+                False,
+            ),
+            estado_agua_preclima=datos.get("estado_agua_preclima"),
+            pco2_max_greenhouse_bar=datos.get("pco2_max_greenhouse_bar"),
+            co2_dentro_max_greenhouse=datos.get(
+                "co2_dentro_max_greenhouse",
+                False,
+            ),
+            candidato_habitable_fase1=datos.get(
+                "candidato_habitable_fase1",
+                False,
+            ),
+            estado_habitabilidad_fase1=datos.get(
+                "estado_habitabilidad_fase1",
+                "no_evaluado",
+            ),
         )

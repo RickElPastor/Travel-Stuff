@@ -380,6 +380,52 @@ class SimulationUI:
             )
         )
 
+        candidatos_con_agua_condensada = sum(
+            1
+            for planeta in self.universe.planetas
+            if (planeta.candidato_terrestre_hz and planeta.tiene_agua_condensada)
+        )
+
+        candidatos_con_atmosfera = sum(
+            1
+            for planeta in self.universe.planetas
+            if planeta.tiene_atmosfera_secundaria
+        )
+
+        candidatos_habitables_fase1 = sum(
+            1 for planeta in self.universe.planetas if planeta.candidato_habitable_fase1
+        )
+
+        candidatos_temperados = sum(
+            1
+            for planeta in self.universe.planetas
+            if (planeta.estado_habitabilidad_fase1 == "candidato_temperado")
+        )
+
+        candidatos_glaciados = sum(
+            1
+            for planeta in self.universe.planetas
+            if (planeta.estado_habitabilidad_fase1 == "candidato_glaciado")
+        )
+
+        planeta_atmosfera_ejemplo = next(
+            (
+                planeta
+                for planeta in self.universe.planetas
+                if planeta.tiene_atmosfera_secundaria
+            ),
+            None,
+        )
+
+        planeta_agua_ejemplo = next(
+            (
+                planeta
+                for planeta in self.universe.planetas
+                if (planeta.presion_atmosferica_preclima_bar is not None)
+            ),
+            None,
+        )
+
         escribir_seguro(
             stdscr,
             fila,
@@ -560,6 +606,65 @@ class SimulationUI:
                 f"{candidatos_con_agua_inicial}"
             ),
         )
+
+        fila += 1
+
+        if planeta_atmosfera_ejemplo is not None:
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Atmosferas secundarias: "
+                    f"{candidatos_con_atmosfera}"
+                    " | "
+                    "P bruta ejemplo="
+                    f"{planeta_atmosfera_ejemplo.presion_atmosferica_bruta_bar:.2f} bar"
+                ),
+            )
+
+        else:
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                "Atmosferas secundarias: 0",
+            )
+
+        fila += 1
+
+        if planeta_agua_ejemplo is not None:
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Preclima: "
+                    f"agua condensada={candidatos_con_agua_condensada}"
+                    " | "
+                    "estado="
+                    f"{planeta_agua_ejemplo.estado_agua_preclima}"
+                    " | "
+                    "P="
+                    f"{planeta_agua_ejemplo.presion_atmosferica_preclima_bar:.2f} bar"
+                ),
+            )
+
+            fila += 1
+
+            escribir_seguro(
+                stdscr,
+                fila,
+                0,
+                (
+                    "Habitables Fase 1: "
+                    f"{candidatos_habitables_fase1}"
+                    " | "
+                    f"temperados={candidatos_temperados}"
+                    " | "
+                    f"glaciados={candidatos_glaciados}"
+                ),
+            )
 
         fila += 1
 
