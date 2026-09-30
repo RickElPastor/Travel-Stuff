@@ -12,6 +12,14 @@ from ui.simulation_ui import SimulationUI
 from universe import Universe
 
 
+def crear_modelo_estelar():
+    """Misma configuración estelar para el juego y sus corridas de revisión."""
+    return ModeloEstelarHibrido(
+        modelo_popiii=ModeloHassanPopIII(),
+        modelo_sevn=ModeloSEVN(modelo_supernova="rapid"),
+    )
+
+
 class Game:
     def __init__(self):
         self.menu = Menu()
@@ -53,16 +61,7 @@ class Game:
         if self.modelo_estelar is not None:
             return
 
-        modelo_popiii = ModeloHassanPopIII()
-
-        modelo_sevn = ModeloSEVN(
-            modelo_supernova="rapid",
-        )
-
-        self.modelo_estelar = ModeloEstelarHibrido(
-            modelo_popiii=modelo_popiii,
-            modelo_sevn=modelo_sevn,
-        )
+        self.modelo_estelar = crear_modelo_estelar()
 
     def _iniciar_nuevo_universo(
         self,

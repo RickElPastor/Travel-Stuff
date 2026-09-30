@@ -1,3 +1,6 @@
+from biology.species_model import ModeloEspeciesUnicelulares
+
+
 class Planet:
     def __init__(
         self,
@@ -119,6 +122,18 @@ class Planet:
         anio_primera_vida=None,
         poblacion_unicelular=0,
         proximo_crecimiento_unicelular_anio=None,
+        nacimientos_unicelulares=0,
+        muertes_unicelulares=0,
+        rasgo_linea_unicelular=None,
+        variaciones_unicelulares=0,
+        nacimientos_biologicos_procesados=0,
+        variantes_biologicas_favorecidas=0,
+        variantes_biologicas_descartadas=0,
+        rasgos_unicelulares_vivos=None,
+        linajes_unicelulares_vivos=None,
+        linaje_observado_id=None,
+        historial_linajes_unicelulares=None,
+        clasificacion_especies_unicelulares=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -496,6 +511,65 @@ class Planet:
             None if proximo_crecimiento_unicelular_anio is None
             else int(proximo_crecimiento_unicelular_anio)
         )
+        self.nacimientos_unicelulares = int(nacimientos_unicelulares)
+        self.muertes_unicelulares = int(muertes_unicelulares)
+        self.rasgo_linea_unicelular = (
+            None if rasgo_linea_unicelular is None
+            else int(rasgo_linea_unicelular)
+        )
+        self.variaciones_unicelulares = int(variaciones_unicelulares)
+        self.nacimientos_biologicos_procesados = int(
+            nacimientos_biologicos_procesados
+        )
+        self.variantes_biologicas_favorecidas = int(
+            variantes_biologicas_favorecidas
+        )
+        self.variantes_biologicas_descartadas = int(
+            variantes_biologicas_descartadas
+        )
+        if rasgos_unicelulares_vivos is None:
+            # Un guardado anterior no conoce la diversidad de sus unidades.
+            rasgo = self.rasgo_linea_unicelular
+            if rasgo is None:
+                rasgo = 1
+            self.rasgos_unicelulares_vivos = [rasgo] * self.poblacion_unicelular
+        else:
+            self.rasgos_unicelulares_vivos = list(rasgos_unicelulares_vivos)
+        if linajes_unicelulares_vivos is None:
+            # Identidades provisionales por rasgo; no conocemos su ascendencia.
+            # Son negativas para no coincidir con futuros números de nacimiento.
+            self.linajes_unicelulares_vivos = [
+                -(rasgo + 1) for rasgo in self.rasgos_unicelulares_vivos
+            ]
+        else:
+            self.linajes_unicelulares_vivos = list(linajes_unicelulares_vivos)
+        self.linaje_observado_id = (
+            None if linaje_observado_id is None else int(linaje_observado_id)
+        )
+        if self.linaje_observado_id is None and self.linajes_unicelulares_vivos:
+            rasgo = self.rasgo_linea_unicelular
+            indice = -1
+            if rasgo in self.rasgos_unicelulares_vivos:
+                indice = self.rasgos_unicelulares_vivos.index(rasgo)
+            self.linaje_observado_id = self.linajes_unicelulares_vivos[indice]
+        self.historial_linajes_unicelulares = {
+            int(linaje): dict(registro)
+            for linaje, registro in (historial_linajes_unicelulares or {}).items()
+        }
+        # En guardados anteriores conocemos los vivos, pero no sus antepasados.
+        for linaje, rasgo in zip(
+                self.linajes_unicelulares_vivos, self.rasgos_unicelulares_vivos):
+            self.historial_linajes_unicelulares.setdefault(linaje, {
+                "progenitor_id": None,
+                "rasgo": rasgo,
+                "origen": "desconocido",
+            })
+        self.clasificacion_especies_unicelulares = {
+            int(linaje): dict(registro)
+            for linaje, registro in (clasificacion_especies_unicelulares or {}).items()
+        }
+        # Al cargar, clasifica solo lo que falte usando el parentesco conocido.
+        ModeloEspeciesUnicelulares().completar_clasificacion(self)
 
     def obtener_apoyo_protocelular_extraordinario(self):
         """Apoyo disponible para una protocélula histórica; no significa vida."""
@@ -568,6 +642,30 @@ class Planet:
             "proximo_crecimiento_unicelular_anio": (
                 self.proximo_crecimiento_unicelular_anio
             ),
+            "nacimientos_unicelulares": self.nacimientos_unicelulares,
+            "muertes_unicelulares": self.muertes_unicelulares,
+            "rasgo_linea_unicelular": self.rasgo_linea_unicelular,
+            "variaciones_unicelulares": self.variaciones_unicelulares,
+            "nacimientos_biologicos_procesados": (
+                self.nacimientos_biologicos_procesados
+            ),
+            "variantes_biologicas_favorecidas": (
+                self.variantes_biologicas_favorecidas
+            ),
+            "variantes_biologicas_descartadas": (
+                self.variantes_biologicas_descartadas
+            ),
+            "rasgos_unicelulares_vivos": list(self.rasgos_unicelulares_vivos),
+            "linajes_unicelulares_vivos": list(self.linajes_unicelulares_vivos),
+            "linaje_observado_id": self.linaje_observado_id,
+            "historial_linajes_unicelulares": {
+                str(linaje): dict(registro)
+                for linaje, registro in self.historial_linajes_unicelulares.items()
+            },
+            "clasificacion_especies_unicelulares": {
+                str(linaje): dict(registro)
+                for linaje, registro in self.clasificacion_especies_unicelulares.items()
+            },
             "nombre": self.nombre,
             "masa_tierra": (self.masa_tierra),
             "semieje_mayor_au": (self.semieje_mayor_au),
@@ -950,5 +1048,26 @@ class Planet:
             poblacion_unicelular=datos.get("poblacion_unicelular", 0),
             proximo_crecimiento_unicelular_anio=datos.get(
                 "proximo_crecimiento_unicelular_anio"
+            ),
+            nacimientos_unicelulares=datos.get("nacimientos_unicelulares", 0),
+            muertes_unicelulares=datos.get("muertes_unicelulares", 0),
+            rasgo_linea_unicelular=datos.get("rasgo_linea_unicelular"),
+            variaciones_unicelulares=datos.get("variaciones_unicelulares", 0),
+            nacimientos_biologicos_procesados=datos.get(
+                "nacimientos_biologicos_procesados",
+                datos.get("nacimientos_unicelulares", 0),
+            ),
+            variantes_biologicas_favorecidas=datos.get(
+                "variantes_biologicas_favorecidas", 0
+            ),
+            variantes_biologicas_descartadas=datos.get(
+                "variantes_biologicas_descartadas", 0
+            ),
+            rasgos_unicelulares_vivos=datos.get("rasgos_unicelulares_vivos"),
+            linajes_unicelulares_vivos=datos.get("linajes_unicelulares_vivos"),
+            linaje_observado_id=datos.get("linaje_observado_id"),
+            historial_linajes_unicelulares=datos.get("historial_linajes_unicelulares"),
+            clasificacion_especies_unicelulares=datos.get(
+                "clasificacion_especies_unicelulares"
             ),
         )

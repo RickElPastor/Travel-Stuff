@@ -8,7 +8,7 @@ from ui.save_game_menu import SaveGameMenu
 
 class SimulationUI:
     REFRESCO_SEGUNDOS = 0.01
-    VISTAS = ("Abiogénesis", "Universo", "Condiciones", "Vida")
+    VISTAS = ("Origen", "Universo", "Condiciones", "Vida", "Especies")
 
     def __init__(self, simulation):
         self.simulation = simulation
@@ -59,7 +59,7 @@ class SimulationUI:
             self._procesar_mouse()
         elif tecla in (ord("s"), ord("S")):
             self._guardar(stdscr)
-        elif tecla in (ord("1"), ord("2"), ord("3"), ord("4")):
+        elif tecla in (ord("1"), ord("2"), ord("3"), ord("4"), ord("5")):
             self.vista = tecla - ord("1")
 
     def _procesar_mouse(self):
@@ -133,14 +133,16 @@ class SimulationUI:
             self._dibujar_universo(stdscr)
         elif self.vista == 2:
             self._dibujar_condiciones(stdscr)
-        else:
+        elif self.vista == 3:
             self._dibujar_vida(stdscr)
+        else:
+            self._dibujar_especies(stdscr)
 
         self._dibujar_eventos(stdscr, alto)
         self._separador(stdscr, alto - 2)
         self._texto(
             stdscr, alto - 1,
-            "1-4 Vistas · ↑↓ Vel. · S Guardar · PgUp/PgDn Eventos · Esc Menú",
+            "1-5 Vistas · ↑↓ Vel. · S Guardar · PgUp/PgDn Eventos · Esc Menú",
         )
         stdscr.refresh()
 
@@ -290,25 +292,147 @@ class SimulationUI:
         activos = [p for p in planetas if p.poblacion_unicelular > 0]
         historicos = sum(bool(p.alcanzo_primera_vida) for p in planetas)
         unidades = sum(p.poblacion_unicelular for p in activos)
+        nacimientos = sum(p.nacimientos_unicelulares for p in planetas)
+        muertes = sum(p.muertes_unicelulares for p in planetas)
+        con_historia = [p for p in planetas if p.nacimientos_unicelulares > 0]
+        especies = self.universe.modelo_especies_unicelulares
+        especies_vivas = sum(len(especies.especies_vivas(p)) for p in planetas)
+        especies_registradas = sum(len(especies.especies_registradas(p)) for p in planetas)
+        especies_extintas = especies_registradas - especies_vivas
+        foco = (max(con_historia,
+                    key=lambda p: (p.poblacion_unicelular,
+                                   p.nacimientos_unicelulares))
+                if con_historia else None)
 
         self._encabezado(stdscr, 6, "01  VIDA UNICELULAR  ·  fase 2")
-        self._texto(stdscr, 8, f"Mundos con población activa {len(activos)}")
-        self._texto(stdscr, 9, f"Unidades simbólicas en total {unidades}",
+        if foco is None:
+            resumen_rasgos = "Rasgos vivos: aún no hay población."
+        else:
+            rasgos = foco.rasgos_unicelulares_vivos
+            grupos = len(set(rasgos))
+            linajes = len(set(foco.linajes_unicelulares_vivos))
+            resumen_rasgos = (
+                f"Rasgos vivos {grupos} · linajes {linajes} · 0:{rasgos.count(0)} "
+                f"1:{rasgos.count(1)} 2:{rasgos.count(2)} "
+                "· unidades simbólicas"
+            )
+        self._texto(stdscr, 7, resumen_rasgos, self._color(3))
+        self._texto(stdscr, 8, f"Mundos con población activa {len(activos)} · "
+                    f"Especies vivas {especies_vivas}")
+        self._texto(stdscr, 9, f"Unidades simbólicas en total {unidades} · "
+                    f"Especies extintas {especies_extintas}",
                     self._color(2))
-        self._texto(stdscr, 10, f"Mundos que alcanzaron primera vida {historicos}")
-        self._encabezado(stdscr, 12, "02  MUNDO OBSERVADO")
-        if activos:
-            foco = max(activos, key=lambda p: p.poblacion_unicelular)
+        self._texto(stdscr, 10, f"Mundos que alcanzaron primera vida {historicos} · "
+                    f"Especies reg. {especies_registradas}")
+        self._texto(stdscr, 11,
+                    f"Historial: nacimientos {nacimientos}   muertes {muertes}")
+        titulo_mundo = "02  MUNDO OBSERVADO"
+        if foco is not None:
+            registrados = len(foco.historial_linajes_unicelulares)
+            titulo_mundo += f" · linajes registrados {registrados}"
+        self._encabezado(stdscr, 12, titulo_mundo)
+        if foco is not None:
             capacidad = self.universe.modelo_poblacion_unicelular.CAPACIDAD_INICIAL
+            ajustada = self.universe.modelo_seleccion_unicelular.esta_ajustada(foco)
+            ajuste = "sí" if ajustada else "no"
             self._texto(stdscr, 13, foco.nombre)
             self._texto(stdscr, 14,
                         f"Población actual {foco.poblacion_unicelular} "
-                        f"de {capacidad} unidades")
-            self._texto(stdscr, 15, f"Patrón heredable {foco.patron_copia}")
+                        f"de {capacidad} unidades   ·   ajuste agua {ajuste}")
+            seleccion = self.universe.modelo_seleccion_unicelular
+            if seleccion.rasgo_favorecido(foco) is None:
+                comparacion = "sin regla"
+            else:
+                ajustados = len(seleccion.linajes_ajustados(foco))
+                comparacion = f"{ajustados}/{linajes}"
+            self._texto(stdscr, 15,
+                        f"Nacimientos {foco.nacimientos_unicelulares}   "
+                        f"Muertes {foco.muertes_unicelulares} · "
+                        f"Linajes ajustados {comparacion}")
+            rasgo = ("inactivo" if foco.rasgo_linea_unicelular is None
+                     else str(foco.rasgo_linea_unicelular))
+            linaje = ("—" if foco.linaje_observado_id is None
+                      else str(foco.linaje_observado_id))
+            registro = foco.historial_linajes_unicelulares.get(foco.linaje_observado_id)
+            origen = "—"
+            if registro is not None:
+                if registro["origen"] == "fundacion":
+                    origen = "fundador"
+                elif registro["origen"] == "variacion":
+                    origen = str(registro["progenitor_id"])
+                else:
+                    origen = "desconocido"
+            self._texto(stdscr, 16,
+                        f"Rasgo {rasgo} · Linaje {linaje} · Origen {origen} · "
+                        f"Variaciones {foco.variaciones_unicelulares}")
+            clasificacion = foco.clasificacion_especies_unicelulares.get(
+                foco.linaje_observado_id
+            )
+            especie = "—" if clasificacion is None else clasificacion["especie_id"]
+            self._texto(stdscr, 17,
+                        f"Selección: favorecidas "
+                        f"{foco.variantes_biologicas_favorecidas}   "
+                        f"descartadas {foco.variantes_biologicas_descartadas} · "
+                        f"Especie {especie}")
         else:
-            self._texto(stdscr, 13, "Aún no hay población activa.")
-        self._texto(stdscr, 17, "Las unidades son una escala del modelo, no individuos.",
-                    self._color(3))
+            self._texto(stdscr, 13, "Aún no hay población registrada.")
+
+    def _dibujar_especies(self, stdscr):
+        planetas = self.universe.planetas
+        modelo = self.universe.modelo_especies_unicelulares
+        vivas = sum(len(modelo.especies_vivas(p)) for p in planetas)
+        registradas = sum(len(modelo.especies_registradas(p)) for p in planetas)
+        coexistencia = sum(len(modelo.especies_vivas(p)) >= 2 for p in planetas)
+        unidades = sum(p.poblacion_unicelular for p in planetas)
+        linajes = sum(len(set(p.linajes_unicelulares_vivos)) for p in planetas)
+        con_historia = [p for p in planetas if p.historial_linajes_unicelulares]
+
+        self._encabezado(stdscr, 6, "01  DIVERSIFICACIÓN  ·  especies simbólicas")
+        self._texto(stdscr, 7, f"Especies vivas {vivas} · extintas "
+                    f"{registradas - vivas} · registradas {registradas}")
+        self._texto(stdscr, 8, f"Mundos con dos o más especies vivas {coexistencia}")
+        self._texto(stdscr, 9, f"Unidades vivas {unidades} · linajes vivos {linajes}")
+        self._texto(stdscr, 10,
+                    "Una especie puede vivir sin su linaje fundador.")
+        self._encabezado(stdscr, 12, "02  MUNDO OBSERVADO")
+        if not con_historia:
+            self._texto(stdscr, 13, "Aún no hay especies registradas.")
+            return
+
+        foco = max(con_historia, key=lambda p: (
+            len(modelo.especies_vivas(p)), p.poblacion_unicelular,
+            len(modelo.especies_registradas(p)), p.nacimientos_unicelulares,
+        ))
+        abundancia = modelo.abundancia_por_especie(foco)
+        especies_registradas = modelo.especies_registradas(foco)
+        self._texto(stdscr, 13, foco.nombre)
+        self._texto(stdscr, 14,
+                    f"Especies vivas {len(abundancia)} · "
+                    f"extintas {len(especies_registradas) - len(abundancia)}")
+        if abundancia:
+            grupos = [f"{especie}:{abundancia[especie]}"
+                      for especie in sorted(abundancia)]
+            self._texto(stdscr, 15,
+                        "Unidades por especie: " + "  ".join(grupos[:4]))
+            if len(grupos) > 4:
+                self._texto(stdscr, 16, "Otras especies: " + "  ".join(grupos[4:]))
+            else:
+                self._texto(stdscr, 16, "Cada número identifica una especie local.")
+        else:
+            self._texto(stdscr, 15, "Sin unidades vivas; la historia permanece.")
+
+        linaje = foco.linaje_observado_id
+        if linaje is None:
+            self._texto(stdscr, 17, "Rama observada: ninguna activa.")
+            return
+        especie = foco.clasificacion_especies_unicelulares[linaje]["especie_id"]
+        progenitora = modelo.especie_progenitora(foco, especie)
+        if progenitora is None:
+            progenitora = "desconocida o fundadora"
+        hijas = len(modelo.especies_hijas(foco, especie))
+        self._texto(stdscr, 17,
+                    f"Especie observada {especie} · origen {progenitora} · "
+                    f"hijas {hijas}")
 
     def _dibujar_eventos(self, stdscr, alto):
         fila = 18

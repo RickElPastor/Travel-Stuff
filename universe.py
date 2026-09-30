@@ -6,6 +6,7 @@ from abiogenesis.inheritance_variation_model import ModeloHerenciaVariacion
 
 from abiogenesis.replication_model import ModeloReplicacionPrebiotica
 from biology.unicellular_population_model import ModeloPoblacionUnicelular
+from biology.inheritance_variation_model import ModeloHerenciaVariacionUnicelular
 
 from chemistry.protocell_viability_model import ModeloViabilidadProtocelular
 
@@ -165,6 +166,9 @@ class Universe:
         self.modelo_herencia_variacion = ModeloHerenciaVariacion()
         self.modelo_primera_vida = ModeloPrimeraVida()
         self.modelo_poblacion_unicelular = ModeloPoblacionUnicelular()
+        self.modelo_herencia_unicelular = ModeloHerenciaVariacionUnicelular()
+        self.modelo_seleccion_unicelular = self.modelo_herencia_unicelular.seleccion
+        self.modelo_especies_unicelulares = self.modelo_herencia_unicelular.especies
         self.modelo_apoyo_extraordinario = ModeloApoyoQuimicoExtraordinario()
 
     def establecer_modelo_estelar(
@@ -638,6 +642,10 @@ class Universe:
         for planeta in self.planetas:
             self.modelo_poblacion_unicelular.evaluar(planeta, self.time.anio)
 
+    def actualizar_herencia_unicelular(self):
+        for planeta in self.planetas:
+            self.modelo_herencia_unicelular.evaluar(planeta, self.seed)
+
     def actualizar_herencia_variacion(self):
         for planeta in self.planetas:
             self.modelo_herencia_variacion.evaluar(
@@ -803,6 +811,8 @@ class Universe:
         self.actualizar_primera_vida()
 
         self.actualizar_poblacion_unicelular()
+
+        self.actualizar_herencia_unicelular()
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(
