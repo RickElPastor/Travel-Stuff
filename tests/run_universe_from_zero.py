@@ -35,6 +35,38 @@ def resumen(universo):
         ),
         "protocelulas_historicas": sum(p.alcanzo_protocelula for p in planetas),
         "primera_vida_historica": sum(p.alcanzo_primera_vida for p in planetas),
+        "metabolismos_historicos": sum(
+            p.alcanzo_metabolismo_inicial for p in planetas
+        ),
+        "fotosintesis_historicas": sum(
+            p.alcanzo_fotosintesis for p in planetas
+        ),
+        "productores_activos": sum(
+            p.unidades_productoras_activas for p in planetas
+        ),
+        "capacidad_descomponedora_historica": sum(
+            p.alcanzo_capacidad_descomponedora for p in planetas
+        ),
+        "descomponedores_activos": sum(
+            p.unidades_descomponedoras_activas for p in planetas
+        ),
+        "restos_pendientes": sum(p.restos_organicos_unidades for p in planetas),
+        "nutrientes_pendientes": sum(
+            p.nutrientes_reciclados_unidades for p in planetas
+        ),
+        "material_reciclado": sum(p.total_unidades_recicladas for p in planetas),
+        "nutrientes_aprovechados": sum(
+            p.total_nutrientes_aprovechados for p in planetas
+        ),
+        "atmosferas_con_aporte_biologico": sum(
+            p.aporte_o2_biologico_bar is not None
+            and p.aporte_o2_biologico_bar > 0
+            for p in planetas
+        ),
+        "bases_ecologicas_activas": sum(
+            p.estado_ecosistema == "microbiano_organicos_ambientales"
+            for p in planetas
+        ),
         "mundos_con_vida_activa": sum(p.vida_activa for p in planetas),
         "unidades_vivas": sum(p.poblacion_unicelular for p in planetas),
         "especies_vivas": vivas,
@@ -65,6 +97,10 @@ def ejecutar_con_modelo(modelo_estelar):
         for nombre, clave in (
             ("protocélulas", "protocelulas_historicas"),
             ("primera vida", "primera_vida_historica"),
+            ("metabolismo inicial", "metabolismos_historicos"),
+            ("fotosíntesis", "fotosintesis_historicas"),
+            ("capacidad descomponedora", "capacidad_descomponedora_historica"),
+            ("base ecológica", "bases_ecologicas_activas"),
             ("especies coexistentes", "mundos_con_especies_coexistentes"),
         ):
             if datos[clave] and nombre not in primeros:
@@ -74,7 +110,8 @@ def ejecutar_con_modelo(modelo_estelar):
         if universo.time.anio in hitos:
             print(f"Año {universo.time.anio:,}: {datos}", flush=True)
 
-    for nombre in ("protocélulas", "primera vida", "especies coexistentes"):
+    for nombre in ("protocélulas", "primera vida", "metabolismo inicial",
+                   "base ecológica", "especies coexistentes"):
         assert nombre in primeros, f"No apareció el hito esperado: {nombre}"
     assert datos["especies_extintas"] > 0
     eventos = universo.event_manager.obtener_eventos()
@@ -85,6 +122,7 @@ def ejecutar_con_modelo(modelo_estelar):
     assert all(conteos.values()), f"Faltan eventos por ámbito: {conteos}"
     assert any(e.tipo == "Protocélulas" for e in eventos)
     assert any(e.tipo == "Primera vida" for e in eventos)
+    assert any(e.tipo == "Metabolismo inicial" for e in eventos)
     assert all(p.anio_formacion is not None and p.periodo_orbital_dias > 0
                for p in universo.planetas)
     print(f"Eventos por ámbito: {conteos}; protocélulas y primera vida registrados.",

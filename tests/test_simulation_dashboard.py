@@ -228,6 +228,72 @@ class ExploradorTests(unittest.TestCase):
             simulacion.actualizar()
         self.assertEqual(universo.time.anio, 2)
 
+    def test_biosfera_muestra_fuente_ruta_y_ecosistema(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.candidato_quimica_prebiotica = True
+        planeta.alcanzo_organicos_simples = True
+        universo.actualizar_metabolismo_inicial()
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", planeta)
+        interfaz._dibujar(pantalla)
+        self.assertIn("Metabolismo: consumo organicos", pantalla.linea(11))
+        self.assertIn("M Biosfera", pantalla.linea(23))
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("BIOSFERA", pantalla.linea(6))
+        self.assertIn("organicos ambientales", pantalla.linea(11))
+        self.assertIn("consumo organicos", pantalla.linea(13))
+        self.assertIn("microbiano organicos ambientales", pantalla.linea(14))
+        interfaz._procesar_tecla(pantalla, 27)
+        self.assertEqual(interfaz._actual()["tipo"], "planeta")
+        self.assertEqual(universo.time.escala, "planeta")
+
+    def test_biosfera_muestra_productores_del_linaje_activo(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.irradiancia_media_w_m2 = 1000
+        planeta.presion_co2_preclima_bar = 0.1
+        planeta.candidato_quimica_prebiotica = True
+        planeta.alcanzo_organicos_simples = True
+        planeta.linajes_fotosinteticos = {1}
+        universo.actualizar_metabolismo_inicial()
+        universo.actualizar_atmosfera_biologica()
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("productor y consumidor", pantalla.linea(14))
+        self.assertIn("Productores fotosintéticos: 1", pantalla.linea(15))
+        self.assertIn("Luz → productores", pantalla.linea(16))
+        self.assertIn("CO₂ físico 0.1 → con vida 0.099 bar", pantalla.linea(19))
+        self.assertIn("Aporte de O₂: 0.001 bar", pantalla.linea(20))
+        interfaz._procesar_tecla(pantalla, ord("v"))
+        self.assertEqual(interfaz._actual()["tipo"], "eventos")
+
+    def test_biosfera_muestra_reciclaje_con_restos_recientes(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.candidato_quimica_prebiotica = True
+        planeta.alcanzo_organicos_simples = True
+        planeta.linajes_descomponedores = {1}
+        planeta.alcanzo_capacidad_descomponedora = True
+        universo.actualizar_metabolismo_inicial()
+        universo.actualizar_descomposicion({planeta: 1})
+        planeta.restos_organicos_unidades = 2
+        planeta.nutrientes_reciclados_unidades = 1
+        planeta.total_nutrientes_aprovechados = 3
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("con reciclaje", pantalla.linea(14))
+        self.assertIn("descomponedores: 1 activos", pantalla.linea(17))
+        self.assertIn("restos 2 · nutrientes 1 · usados 3", pantalla.linea(10))
+
     def test_eventos_filtrados_y_guardados(self):
         universo = self.crear_universo()
         gestor = universo.event_manager

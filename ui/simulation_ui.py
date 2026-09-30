@@ -91,12 +91,13 @@ class SimulationUI:
         pagina = self._actual()
         tipo = pagina["tipo"]
         if tecla in (ord("v"), ord("V")) and tipo in (
-            "universo", "estrella", "sistema", "planeta"
+            "universo", "estrella", "sistema", "planeta", "biosfera"
         ):
             if tipo == "universo":
                 contexto = None
             else:
-                contexto = (tipo, self._nombre(pagina["objeto"]))
+                ambito = "planeta" if tipo == "biosfera" else tipo
+                contexto = (ambito, self._nombre(pagina["objeto"]))
             self._abrir("eventos", contexto)
             return False
         if tipo in ("estrellas", "sistemas", "planetas", "eventos"):
@@ -134,6 +135,8 @@ class SimulationUI:
                 self._abrir("planetas", pagina["objeto"])
             elif tecla in (ord("e"), ord("E")):
                 self._abrir("estrellas", pagina["objeto"])
+        elif tipo == "planeta" and tecla in (ord("m"), ord("M")):
+            self._abrir("biosfera", pagina["objeto"])
         return False
 
     def _buscar(self, stdscr):
@@ -264,6 +267,8 @@ class SimulationUI:
             self._dibujar_sistema(stdscr, pagina["objeto"])
         elif tipo == "evento":
             self._dibujar_evento(stdscr, pagina["objeto"])
+        elif tipo == "biosfera":
+            self._dibujar_biosfera(stdscr, pagina["objeto"])
         else:
             self._dibujar_planeta(stdscr, pagina["objeto"])
         self._separador(stdscr, alto - 2)
@@ -271,8 +276,10 @@ class SimulationUI:
                      if tipo == "universo" else
                      "↑↓/PgUp/PgDn Mover · / Buscar · Enter Abrir · Esc Volver"
                      if tipo in ("estrellas", "sistemas", "planetas", "eventos") else
-                     "V Eventos · S Guardar · +/- Tiempo · Esc Volver"
+                     "M Biosfera · V Eventos · S Guardar · +/- Tiempo · Esc Volver"
                      if tipo == "planeta" else
+                     "V Eventos · S Guardar · +/- Tiempo · Esc Volver"
+                     if tipo == "biosfera" else
                      "Enter Sistema · V Eventos · S Guardar · +/- · Esc Volver"
                      if tipo == "estrella" else
                      "Enter Planetas · E Estrellas · V Eventos · S Guardar · Esc"
@@ -408,6 +415,8 @@ class SimulationUI:
         self._texto(stdscr, 9, f"Masa {planeta.masa_tierra:.2f} M⊕ · "
                     f"órbita {planeta.semieje_mayor_au:.2f} AU")
         self._texto(stdscr, 10, "Regla: " + planeta.regimen_mundo.replace("_", " "))
+        ruta = planeta.ruta_metabolica_inicial or "sin ruta"
+        self._texto(stdscr, 11, "Metabolismo: " + ruta.replace("_", " "))
         self._texto(stdscr, 12, "CONDICIONES ACTUALES", curses.A_BOLD)
         self._texto(stdscr, 13, "Habitabilidad: " +
                     planeta.estado_habitabilidad_fase1.replace("_", " "))
@@ -448,3 +457,49 @@ class SimulationUI:
             self._texto(stdscr, 20, f"Año {anio:,} · mes {mes} · día {dia}".replace(",", " "))
             self._texto(stdscr, 21, f"Hora {hora:02d}:{minuto:02d}:{segundo:02d}"
                         " · meses = 1/12 del año orbital")
+
+    def _dibujar_biosfera(self, stdscr, planeta):
+        self._texto(stdscr, 6, "BIOSFERA  ·  inicio microbiano", curses.A_BOLD)
+        self._texto(stdscr, 8, planeta.nombre)
+        self._texto(stdscr, 9, f"Vida: {'activa' if planeta.vida_activa else 'inactiva'}"
+                    f" · población {planeta.poblacion_unicelular}")
+        self._texto(stdscr, 10, "Ciclo: restos "
+                    f"{planeta.restos_organicos_unidades} · nutrientes "
+                    f"{planeta.nutrientes_reciclados_unidades} · usados "
+                    f"{planeta.total_nutrientes_aprovechados}")
+        fuentes = ", ".join(planeta.fuentes_energia_potenciales) or "ninguna modelada"
+        self._texto(stdscr, 11, "Fuentes ambientales: " + fuentes.replace("_", " "))
+        ruta = planeta.ruta_metabolica_inicial or "ninguna"
+        self._texto(stdscr, 13, "Ruta metabólica: " + ruta.replace("_", " "))
+        self._texto(stdscr, 14, "Estado: " + planeta.estado_ecosistema.replace("_", " "))
+        self._texto(stdscr, 15, f"Productores fotosintéticos: "
+                    f"{planeta.unidades_productoras_activas}"
+                    f" · históricos {'sí' if planeta.alcanzo_fotosintesis else 'no'}")
+        if planeta.unidades_productoras_activas and "organicos_ambientales" in (
+                planeta.fuentes_energia_potenciales):
+            self._texto(stdscr, 16, "Luz → productores · orgánicos → consumidores")
+        elif planeta.unidades_productoras_activas:
+            self._texto(stdscr, 16, "Enlace: luz → productores microbianos")
+        elif planeta.ruta_metabolica_inicial == "consumo_organicos":
+            self._texto(stdscr, 16, "Enlace: orgánicos ambientales → microbios")
+        else:
+            self._texto(stdscr, 16, "Aún no hay un enlace ecológico modelado.")
+        self._texto(stdscr, 17,
+                    f"Restos → descomponedores: "
+                    f"{planeta.unidades_descomponedoras_activas} activos"
+                    f" · capacidad histórica "
+                    f"{'sí' if planeta.alcanzo_capacidad_descomponedora else 'no'}")
+        self._texto(stdscr, 18, "ATMÓSFERA · proyección biológica", curses.A_BOLD)
+        co2_fisico = planeta.presion_co2_preclima_bar
+        co2_vida = planeta.presion_co2_con_vida_bar
+        if co2_fisico is None or co2_vida is None:
+            self._texto(stdscr, 19, "CO₂: sin datos atmosféricos")
+        else:
+            self._texto(stdscr, 19,
+                        f"CO₂ físico {co2_fisico:.3g} → con vida {co2_vida:.3g} bar")
+        oxigeno = planeta.aporte_o2_biologico_bar
+        if oxigeno is None:
+            self._texto(stdscr, 20, "Aporte de O₂: sin datos")
+        else:
+            self._texto(stdscr, 20, f"Aporte de O₂: {oxigeno:.3g} bar (diseño)")
+        self._texto(stdscr, 21, "Sin efecto aún sobre clima, vida o crecimiento")

@@ -13,6 +13,20 @@ su sistema si la relación sigue registrada. Desde un sistema, `Enter` o `P`
 abren **sus** planetas y `E` abre **sus** estrellas. Cada ficha planetaria
 resume masa, órbita, habitabilidad, agua, química y vida.
 
+Desde un planeta, `M` abre **Biosfera**. Muestra fuentes ambientales
+potenciales, la primera ruta metabólica simbólica si existe y el estado
+ecológico microbiano. La luz y la geoquímica no crean rutas biológicas por sí
+solas. Una variante capaz puede abrir la ruta fotosintética cuando también hay
+agua líquida y CO₂; se muestran sus unidades productoras activas y el hito
+histórico. Debajo aparece una proyección del CO₂ con vida y del aporte de O₂
+actual, separados del CO₂ físico. No modifica todavía el clima ni la
+habitabilidad. Si un linaje descomponedor vivo coincide con muertes del paso,
+la vista enseña el enlace de restos a descomponedores. La línea **Ciclo**
+muestra unidades simbólicas
+de restos y nutrientes pendientes, más el total histórico aprovechado por
+microbios consumidores. `Esc`
+vuelve al planeta sin cambiar la velocidad ni el reloj compartido.
+
 `V` abre el historial de eventos desde Universo, una estrella, un sistema o
 un planeta. El resumen universal muestra los últimos eventos; las fichas de
 estrella y sistema muestran sus eventos recientes. El historial universal

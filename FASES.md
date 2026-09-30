@@ -67,7 +67,7 @@ La selección prebiótica de `abiogenesis/` es otra capa.
 | 2. Abiogénesis | Separar protocélula de vida; replicación, herencia, variación y selección prebióticas sin probabilidad científica inventada. | Hecho en `fase-1` |
 | 3. Primera vida | Criterio operativo para reconocer una línea viva simple, sin asumir que toda protocélula lo logra. | Hecho en `fase-1` |
 | 4. Evolución biológica | Reproducción, herencia, mutación, selección, adaptación, linajes, especies, extinción y diversificación. La vida puede permanecer microbiana. | Base simbólica terminada en `fase-2`; modelos biológicos más profundos quedan para etapas posteriores |
-| 5. Metabolismos y biosfera | Fuentes de energía, rutas metabólicas, posible fotosíntesis, efectos sobre la atmósfera, productores, consumidores, descomponedores y ecosistemas. | Siguiente: `fase-3` |
+| 5. Metabolismos y biosfera | Fuentes de energía, rutas metabólicas, posible fotosíntesis, efectos sobre la atmósfera, productores, consumidores, descomponedores y ecosistemas. | Base simbólica terminada y validada en `fase-3` |
 | 6. Vida compleja | Multicelularidad, nichos, depredación, redes tróficas, extinciones masivas y radiaciones evolutivas, sin fecha obligatoria. | Pendiente |
 | 7. Inteligencia | Inteligencia no garantizada, herramientas, aprendizaje social, comunicación, cultura, lenguaje y tecnología inicial. | Pendiente |
 | 8. Civilizaciones | Asentamientos, culturas, territorios, gobiernos, recursos, comercio y tecnologías. Ninguna civilización es obligatoria. | Pendiente |
@@ -109,14 +109,75 @@ estrellas y planetas. Todavía no existe un modelo de galaxias; la navegación
 parte del universo directamente a los sistemas o las estrellas. Esta
 preparación de estructura e interfaz no cuenta como metabolismo implementado.
 
-La rama `change_ui`, creada desde `fase-3`, prepara eventos universales y eventos
+La rama `change_ui`, incorporada al recrear `fase-3`, prepara eventos universales y eventos
 filtrados de sistemas, estrellas y planetas. El reloj universal sigue siendo
 único; la vista planetaria entra en x1 y deriva una fecha numérica local del
 periodo orbital al formarse cada planeta. Meses y días son convenciones de
 visualización provisionales, no cultura ni rotación planetaria simulada.
 Los calendarios que una civilización pudiera crear pertenecen a pasos
-posteriores. Esta mejora de observación tampoco cuenta como metabolismo y
-queda pendiente integrarla en `fase-3` cuando se retome ese trabajo.
+posteriores. Esta mejora de observación tampoco cuenta como metabolismo.
+
+Primer bloque de metabolismo: las condiciones actuales distinguen luz,
+geoquímica y orgánicos ambientales como fuentes potenciales. Una población
+con primera vida y orgánicos disponibles recibe por ahora una ruta simbólica
+de consumo. Esto permite mostrar una **base ecológica microbiana**: vínculo
+entre compuestos del ambiente y la población. No asigna fotosíntesis ni
+quimiosíntesis a partir de la mera presencia de luz o energía geoquímica.
+Tampoco cambia aún crecimiento, extinción o atmósfera, ni constituye una red
+trófica completa. Es una regla inicial de diseño, no una tasa medida.
+
+Segundo bloque: una variante de un linaje vivo puede adquirir una capacidad
+fotosintética simbólica si en ese nacimiento hay luz, agua líquida y CO₂. La
+decisión usa un parámetro de diseño y azar local por nacimiento; descendientes
+del linaje capaz la heredan. La ruta solo está activa mientras convivan esos
+recursos y unidades capaces. La vista Biosfera distingue productores activos,
+consumidores de orgánicos ambientales y la historia de la capacidad. Esto no
+produce todavía materia orgánica, no aumenta población y no cambia atmósfera.
+Un planeta iluminado sin variante capaz continúa sin fotosíntesis.
+
+Tercer bloque: los productores activos generan una **proyección atmosférica
+biológica actual** separada del CO₂ físico calculado antes de la vida. La
+regla simbólica transforma un 1 % de ese CO₂ por unidad productora, con un
+límite total del 5 %, y muestra un aporte equivalente de O₂ en bar. Son
+parámetros de diseño, no una tasa real ni una acumulación geológica. Cuando
+cesa la producción, la proyección vuelve al valor físico; guardar/cargar
+conserva ambos valores. Todavía no retroalimenta clima, habitabilidad,
+reproducción ni evolución, y no modela sumideros de oxígeno.
+
+Cuarto bloque: una variante puede adquirir y transmitir capacidad
+descomponedora en un entorno con orgánicos. El enlace ecológico de restos de
+unidades muertas a descomponedores se muestra solo cuando hay muertes nuevas
+en el paso y linajes capaces vivos. Las muertes históricas no quedan como
+recurso actual perpetuo. La relación es cualitativa: todavía no hay reserva
+de nutrientes, consumo de esa reserva ni beneficio para productores o
+consumidores. No afecta los cálculos físicos, el clima o la población.
+
+Quinto bloque: cada muerte nueva añade una unidad simbólica de restos. Los
+descomponedores activos transforman los restos disponibles en nutrientes; la
+ruta que consume orgánicos puede aprovecharlos. Las reservas y los totales
+históricos se guardan. Una partida anterior no crea restos por muertes pasadas
+al cargarse. Esta regla de diseño no mide materia real ni cambia todavía
+crecimiento, extinción, clima o atmósfera. Un paso largo no reconstruye los
+cambios ambientales intermedios, igual que otras reglas biológicas actuales.
+
+### Cierre de la base de Fase 3
+
+- [x] Fuentes potenciales y consumo inicial de orgánicos ambientales.
+- [x] Capacidad fotosintética heredable y productores condicionados al entorno.
+- [x] Proyección atmosférica biológica separada de la física normal.
+- [x] Capacidad descomponedora heredable y ciclo de restos y nutrientes.
+- [x] Revisión integral: 109 pruebas, caso combinado de las tres capas,
+  guardado/carga, pantalla y universo nuevo desde el año 0.
+
+La revisión encontró que procesar todos los restos al final de un salto largo
+omitía descomponedores que habían aparecido y desaparecido dentro de él. Ahora
+el ciclo sigue cada intervalo biológico reconstruido. En 200 semillas
+controladas con entorno fijo, los estados finales coincidieron con pasos
+cortos y largos. Un cambio ambiental no observado dentro de un salto sigue
+fuera de la resolución temporal del simulador. La base de Fase 3 queda
+terminada; aún no incluye crecimiento dependiente de nutrientes, depósitos
+geoquímicos realistas ni vida compleja. El paso 6 empieza en la siguiente
+fase, después de publicar el cierre de `fase-3`.
 
 Explicar primero al usuario el alcance y trabajar por bloques pequeños:
 fuentes de energía y metabolismo simbólico; rutas metabólicas como posible

@@ -136,6 +136,24 @@ class Planet:
         clasificacion_especies_unicelulares=None,
         anio_formacion=None,
         periodo_orbital_dias=None,
+        fuentes_energia_potenciales=None,
+        ruta_metabolica_inicial=None,
+        estado_ecosistema="sin_vida",
+        alcanzo_metabolismo_inicial=False,
+        anio_metabolismo_inicial=None,
+        linajes_fotosinteticos=None,
+        unidades_productoras_activas=0,
+        alcanzo_fotosintesis=False,
+        presion_co2_con_vida_bar=None,
+        aporte_o2_biologico_bar=None,
+        linajes_descomponedores=None,
+        unidades_descomponedoras_activas=0,
+        alcanzo_capacidad_descomponedora=False,
+        restos_organicos_unidades=0,
+        nutrientes_reciclados_unidades=0,
+        muertes_contabilizadas_ciclo=None,
+        total_unidades_recicladas=0,
+        total_nutrientes_aprovechados=0,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -516,12 +534,44 @@ class Planet:
             None if anio_primera_vida is None else int(anio_primera_vida)
         )
         self.poblacion_unicelular = int(poblacion_unicelular)
+        self.fuentes_energia_potenciales = list(fuentes_energia_potenciales or [])
+        self.ruta_metabolica_inicial = ruta_metabolica_inicial
+        self.estado_ecosistema = estado_ecosistema
+        self.alcanzo_metabolismo_inicial = bool(alcanzo_metabolismo_inicial)
+        self.anio_metabolismo_inicial = (
+            None if anio_metabolismo_inicial is None
+            else int(anio_metabolismo_inicial)
+        )
+        self.linajes_fotosinteticos = set(linajes_fotosinteticos or [])
+        self.unidades_productoras_activas = int(unidades_productoras_activas)
+        self.alcanzo_fotosintesis = bool(alcanzo_fotosintesis)
+        self.presion_co2_con_vida_bar = (
+            None if presion_co2_con_vida_bar is None
+            else float(presion_co2_con_vida_bar)
+        )
+        self.aporte_o2_biologico_bar = (
+            None if aporte_o2_biologico_bar is None
+            else float(aporte_o2_biologico_bar)
+        )
+        self.linajes_descomponedores = set(linajes_descomponedores or [])
+        self.unidades_descomponedoras_activas = int(unidades_descomponedoras_activas)
+        self.alcanzo_capacidad_descomponedora = bool(
+            alcanzo_capacidad_descomponedora
+        )
         self.proximo_crecimiento_unicelular_anio = (
             None if proximo_crecimiento_unicelular_anio is None
             else int(proximo_crecimiento_unicelular_anio)
         )
         self.nacimientos_unicelulares = int(nacimientos_unicelulares)
         self.muertes_unicelulares = int(muertes_unicelulares)
+        self.restos_organicos_unidades = int(restos_organicos_unidades)
+        self.nutrientes_reciclados_unidades = int(nutrientes_reciclados_unidades)
+        self.muertes_contabilizadas_ciclo = (
+            self.muertes_unicelulares if muertes_contabilizadas_ciclo is None
+            else int(muertes_contabilizadas_ciclo)
+        )
+        self.total_unidades_recicladas = int(total_unidades_recicladas)
+        self.total_nutrientes_aprovechados = int(total_nutrientes_aprovechados)
         self.rasgo_linea_unicelular = (
             None if rasgo_linea_unicelular is None
             else int(rasgo_linea_unicelular)
@@ -648,6 +698,24 @@ class Planet:
             "alcanzo_primera_vida": self.alcanzo_primera_vida,
             "anio_primera_vida": self.anio_primera_vida,
             "poblacion_unicelular": self.poblacion_unicelular,
+            "fuentes_energia_potenciales": list(self.fuentes_energia_potenciales),
+            "ruta_metabolica_inicial": self.ruta_metabolica_inicial,
+            "estado_ecosistema": self.estado_ecosistema,
+            "alcanzo_metabolismo_inicial": self.alcanzo_metabolismo_inicial,
+            "anio_metabolismo_inicial": self.anio_metabolismo_inicial,
+            "linajes_fotosinteticos": sorted(self.linajes_fotosinteticos),
+            "unidades_productoras_activas": self.unidades_productoras_activas,
+            "alcanzo_fotosintesis": self.alcanzo_fotosintesis,
+            "presion_co2_con_vida_bar": self.presion_co2_con_vida_bar,
+            "aporte_o2_biologico_bar": self.aporte_o2_biologico_bar,
+            "linajes_descomponedores": sorted(self.linajes_descomponedores),
+            "unidades_descomponedoras_activas": self.unidades_descomponedoras_activas,
+            "alcanzo_capacidad_descomponedora": self.alcanzo_capacidad_descomponedora,
+            "restos_organicos_unidades": self.restos_organicos_unidades,
+            "nutrientes_reciclados_unidades": self.nutrientes_reciclados_unidades,
+            "muertes_contabilizadas_ciclo": self.muertes_contabilizadas_ciclo,
+            "total_unidades_recicladas": self.total_unidades_recicladas,
+            "total_nutrientes_aprovechados": self.total_nutrientes_aprovechados,
             "proximo_crecimiento_unicelular_anio": (
                 self.proximo_crecimiento_unicelular_anio
             ),
@@ -1059,6 +1127,32 @@ class Planet:
             alcanzo_primera_vida=datos.get("alcanzo_primera_vida", False),
             anio_primera_vida=datos.get("anio_primera_vida"),
             poblacion_unicelular=datos.get("poblacion_unicelular", 0),
+            fuentes_energia_potenciales=datos.get("fuentes_energia_potenciales"),
+            ruta_metabolica_inicial=datos.get("ruta_metabolica_inicial"),
+            estado_ecosistema=datos.get("estado_ecosistema", "sin_vida"),
+            alcanzo_metabolismo_inicial=datos.get("alcanzo_metabolismo_inicial", False),
+            anio_metabolismo_inicial=datos.get("anio_metabolismo_inicial"),
+            linajes_fotosinteticos=datos.get("linajes_fotosinteticos"),
+            unidades_productoras_activas=datos.get("unidades_productoras_activas", 0),
+            alcanzo_fotosintesis=datos.get("alcanzo_fotosintesis", False),
+            presion_co2_con_vida_bar=datos.get("presion_co2_con_vida_bar"),
+            aporte_o2_biologico_bar=datos.get("aporte_o2_biologico_bar"),
+            linajes_descomponedores=datos.get("linajes_descomponedores"),
+            unidades_descomponedoras_activas=datos.get(
+                "unidades_descomponedoras_activas", 0
+            ),
+            alcanzo_capacidad_descomponedora=datos.get(
+                "alcanzo_capacidad_descomponedora", False
+            ),
+            restos_organicos_unidades=datos.get("restos_organicos_unidades", 0),
+            nutrientes_reciclados_unidades=datos.get(
+                "nutrientes_reciclados_unidades", 0
+            ),
+            muertes_contabilizadas_ciclo=datos.get("muertes_contabilizadas_ciclo"),
+            total_unidades_recicladas=datos.get("total_unidades_recicladas", 0),
+            total_nutrientes_aprovechados=datos.get(
+                "total_nutrientes_aprovechados", 0
+            ),
             proximo_crecimiento_unicelular_anio=datos.get(
                 "proximo_crecimiento_unicelular_anio"
             ),

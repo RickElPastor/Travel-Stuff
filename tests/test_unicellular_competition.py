@@ -86,6 +86,7 @@ class CompetenciaUnicelularTests(unittest.TestCase):
             "nacimientos_biologicos_procesados", "rasgo_linea_unicelular",
             "rasgos_unicelulares_vivos", "linaje_observado_id",
             "linajes_unicelulares_vivos",
+            "restos_organicos_unidades", "muertes_contabilizadas_ciclo",
         }
         despues = planeta.a_dict()
         for campo, valor in antes.items():

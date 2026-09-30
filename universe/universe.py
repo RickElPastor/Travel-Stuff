@@ -7,6 +7,10 @@ from abiogenesis.inheritance_variation_model import ModeloHerenciaVariacion
 from abiogenesis.replication_model import ModeloReplicacionPrebiotica
 from biology.unicellular_population_model import ModeloPoblacionUnicelular
 from biology.inheritance_variation_model import ModeloHerenciaVariacionUnicelular
+from biology.metabolism_model import ModeloMetabolismoInicial
+from biology.decomposition_model import ModeloDescomposicionMicrobiana
+from biology.material_cycle_model import ModeloCicloOrganico
+from biology.atmospheric_impact_model import ModeloAporteAtmosfericoBiologico
 
 from chemistry.protocell_viability_model import ModeloViabilidadProtocelular
 
@@ -172,6 +176,10 @@ class Universe:
         self.modelo_primera_vida = ModeloPrimeraVida()
         self.modelo_poblacion_unicelular = ModeloPoblacionUnicelular()
         self.modelo_herencia_unicelular = ModeloHerenciaVariacionUnicelular()
+        self.modelo_metabolismo_inicial = ModeloMetabolismoInicial()
+        self.modelo_descomposicion_microbiana = ModeloDescomposicionMicrobiana()
+        self.modelo_ciclo_organico = ModeloCicloOrganico()
+        self.modelo_aporte_atmosferico_biologico = ModeloAporteAtmosfericoBiologico()
         self.modelo_seleccion_unicelular = self.modelo_herencia_unicelular.seleccion
         self.modelo_especies_unicelulares = self.modelo_herencia_unicelular.especies
         self.modelo_apoyo_extraordinario = ModeloApoyoQuimicoExtraordinario()
@@ -659,12 +667,34 @@ class Universe:
             self.modelo_primera_vida.evaluar(planeta, self.time.anio)
 
     def actualizar_poblacion_unicelular(self):
+        muertes_recientes = {}
         for planeta in self.planetas:
+            anteriores = planeta.muertes_unicelulares
             self.modelo_poblacion_unicelular.evaluar(planeta, self.time.anio)
+            muertes_recientes[planeta] = planeta.muertes_unicelulares - anteriores
+        return muertes_recientes
 
     def actualizar_herencia_unicelular(self):
         for planeta in self.planetas:
             self.modelo_herencia_unicelular.evaluar(planeta, self.seed)
+
+    def actualizar_metabolismo_inicial(self):
+        for planeta in self.planetas:
+            self.modelo_metabolismo_inicial.evaluar(planeta, self.time.anio)
+
+    def actualizar_descomposicion(self, muertes_recientes):
+        for planeta in self.planetas:
+            self.modelo_descomposicion_microbiana.evaluar(
+                planeta, muertes_recientes.get(planeta, 0)
+            )
+
+    def actualizar_ciclo_organico(self):
+        for planeta in self.planetas:
+            self.modelo_ciclo_organico.evaluar(planeta)
+
+    def actualizar_atmosfera_biologica(self):
+        for planeta in self.planetas:
+            self.modelo_aporte_atmosferico_biologico.evaluar(planeta)
 
     def actualizar_herencia_variacion(self):
         for planeta in self.planetas:
@@ -804,6 +834,9 @@ class Universe:
             ("Protocélulas", "alcanzo_protocelula"),
             ("Replicación prebiótica", "alcanzo_replicacion_prebiotica"),
             ("Primera vida", "alcanzo_primera_vida"),
+            ("Metabolismo inicial", "alcanzo_metabolismo_inicial"),
+            ("Fotosíntesis microbiana", "alcanzo_fotosintesis"),
+            ("Capacidad descomponedora", "alcanzo_capacidad_descomponedora"),
         )
         hitos_anteriores = {
             planeta.nombre: (
@@ -857,9 +890,17 @@ class Universe:
 
         self.actualizar_primera_vida()
 
-        self.actualizar_poblacion_unicelular()
+        muertes_recientes = self.actualizar_poblacion_unicelular()
 
         self.actualizar_herencia_unicelular()
+
+        self.actualizar_metabolismo_inicial()
+
+        self.actualizar_descomposicion(muertes_recientes)
+
+        self.actualizar_ciclo_organico()
+
+        self.actualizar_atmosfera_biologica()
 
         for planeta in self.planetas:
             anteriores, vida_anterior = hitos_anteriores[planeta.nombre]

@@ -2,6 +2,9 @@ import random
 
 from biology.selection_model import ModeloSeleccionUnicelular
 from biology.species_model import ModeloEspeciesUnicelulares
+from biology.metabolism_model import ModeloMetabolismoInicial
+from biology.decomposition_model import ModeloDescomposicionMicrobiana
+from biology.material_cycle_model import ModeloCicloOrganico
 
 
 class ModeloHerenciaVariacionUnicelular:
@@ -13,6 +16,9 @@ class ModeloHerenciaVariacionUnicelular:
     def __init__(self):
         self.seleccion = ModeloSeleccionUnicelular()
         self.especies = ModeloEspeciesUnicelulares()
+        self.metabolismo = ModeloMetabolismoInicial()
+        self.descomposicion = ModeloDescomposicionMicrobiana()
+        self.ciclo_organico = ModeloCicloOrganico()
 
     def evaluar(self, planeta, seed):
         nacimientos = planeta.nacimientos_unicelulares
@@ -62,6 +68,10 @@ class ModeloHerenciaVariacionUnicelular:
                 planeta.linajes_unicelulares_vivos[-cantidad_final:]
             )
             self._mantener_linea_viva(planeta)
+            # La ecología sigue cada intervalo reconstruido, incluso cuando
+            # varios intervalos se evaluaron en un solo salto temporal.
+            muertes_intervalo = 1 if cantidad_viva > 1 else 0
+            self.ciclo_organico.procesar_intervalo(planeta, muertes_intervalo)
             primero = fin
 
         planeta.nacimientos_biologicos_procesados = nacimientos
@@ -96,6 +106,26 @@ class ModeloHerenciaVariacionUnicelular:
                 "rasgo": variante,
                 "origen": "variacion",
             }
+            capacidad_nueva = self.metabolismo.adquiere_fotosintesis(
+                planeta, seed, numero
+            )
+            hereda_capacidad = (
+                planeta.linaje_observado_id in planeta.linajes_fotosinteticos
+            )
+            if hereda_capacidad or capacidad_nueva:
+                planeta.linajes_fotosinteticos.add(numero)
+            if capacidad_nueva:
+                planeta.alcanzo_fotosintesis = True
+            capacidad_descomponedora = self.descomposicion.adquiere_capacidad(
+                planeta, seed, numero
+            )
+            hereda_descomposicion = (
+                planeta.linaje_observado_id in planeta.linajes_descomponedores
+            )
+            if hereda_descomposicion or capacidad_descomponedora:
+                planeta.linajes_descomponedores.add(numero)
+            if capacidad_descomponedora:
+                planeta.alcanzo_capacidad_descomponedora = True
             self.especies.clasificar_linaje(planeta, numero)
             planeta.variaciones_unicelulares += 1
             planeta.rasgo_linea_unicelular = self.seleccion.elegir(

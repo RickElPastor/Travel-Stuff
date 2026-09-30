@@ -1,5 +1,115 @@
 # Vida unicelular: primer paso de Fase 2
 
+## Inicio de Fase 3: energía y metabolismo simbólico
+
+`ModeloMetabolismoInicial` consulta datos que ya calcula el simulador: luz
+estelar recibida, ruta geoquímica actual y orgánicos alcanzados históricamente
+en un entorno prebiótico que sigue siendo candidato. Registra esas fuentes
+como **potenciales**; encontrar luz no implica fotosíntesis y encontrar
+actividad geoquímica no implica quimiosíntesis.
+
+Cuando ya hay vida activa y población unicelular, la primera regla de diseño
+usa compuestos orgánicos del ambiente como fuente simbólica. La ficha
+«Biosfera» muestra el vínculo *orgánicos ambientales → microbios*. El estado
+actual se limpia al cesar la vida o la disponibilidad modelada; el primer año
+en que apareció esta ruta permanece guardado. Un guardado antiguo inicia sin
+estos campos y los recalcula en la siguiente actualización. No se representa
+la cantidad de compuestos, ni se descuentan recursos; la ruta todavía no
+regula reproducción o atmósfera. Descomponedores, efectos atmosféricos y una
+red trófica quedan para los siguientes bloques de Fase 3.
+
+La prueba específica es
+`.venv/bin/python -m unittest tests.test_metabolism -v`.
+
+### Productores fotosintéticos simbólicos
+
+Una variante de un linaje puede adquirir la capacidad cuando hay luz, agua
+líquida y CO₂ en el planeta. La probabilidad elegida para el simulador es
+`0.125`: no representa una tasa científica medida. Cada nacimiento usa su
+propio generador ligado a semilla, planeta y número de nacimiento; por eso no
+cambia el azar de otros sistemas ni depende del número de actualizaciones.
+Una copia conserva el linaje y la capacidad; una variante hija hereda la
+capacidad de su progenitor aunque no la adquiera de nuevo.
+
+`linajes_fotosinteticos` conserva las identidades históricas capaces. Las
+`unidades_productoras_activas` cuentan solo unidades vivas de esos linajes
+cuando siguen disponibles luz, agua líquida y CO₂. Con orgánicos ambientales,
+la ruta combina productores y consumidores; sin ellos, muestra solo la ruta
+productora. La capacidad permanece en el historial al apagarse la ruta o
+extinguirse la población. Los campos se guardan y un guardado anterior los
+inicia vacíos, sin asignar adaptaciones retrospectivas. La ruta aún no fabrica
+orgánicos, cambia la atmósfera ni altera el tamaño de la población.
+
+La prueba específica es
+`.venv/bin/python -m unittest tests.test_photosynthetic_producers -v`.
+
+### Aporte atmosférico biológico
+
+[`ModeloAporteAtmosfericoBiologico`](atmospheric_impact_model.py) recibe el CO₂
+físico del planeta y el número actual de unidades productoras. Calcula un
+escenario separado: cada unidad transforma simbólicamente el 1 % del CO₂
+físico, hasta un máximo conjunto del 5 %. La resta de CO₂ y el aporte de O₂
+en bar son una aproximación de diseño, no una medición ni una acumulación
+realista. No se modelan depósitos de carbono ni sumideros de oxígeno.
+
+`presion_co2_preclima_bar` permanece intacta. Los campos nuevos
+`presion_co2_con_vida_bar` y `aporte_o2_biologico_bar` se recalculan después
+del metabolismo; no se suman paso a paso. Sin productores, la primera vuelve
+al CO₂ físico y la segunda vale cero. Si falta el dato físico, ambas quedan
+sin dato. Se guardan con el planeta; una partida antigua los calcula al
+actualizar sin inventar un pasado biológico. Esta proyección todavía no cambia
+la habitabilidad, la temperatura ni el crecimiento de la población.
+
+Prueba específica:
+`.venv/bin/python -m unittest tests.test_atmospheric_impact -v`.
+
+### Primer rol descomponedor
+
+[`ModeloDescomposicionMicrobiana`](decomposition_model.py) permite que una
+variante en un entorno con orgánicos adquiera capacidad descomponedora. La
+probabilidad `0.125` es una regla de diseño, no una tasa científica. Usa azar
+local por nacimiento, igual que la capacidad fotosintética. Las copias del
+linaje y sus variantes hijas conservan la capacidad.
+
+El enlace *restos de unidades muertas → descomponedores* está activo solo si
+coinciden unidades capaces vivas y muertes ocurridas en la actualización
+actual. Las muertes anteriores no se tratan como restos nuevos para siempre.
+La ficha Biosfera lo muestra junto a productores y consumidores, y la
+capacidad histórica persiste aunque se extingan los linajes. Un guardado
+anterior no recibe capacidades retrospectivas.
+
+El primer enlace descomponedor por sí solo era cualitativo: no creaba una
+reserva de nutrientes ni alimentaba consumidores. La relación material del
+siguiente apartado añade esas reservas sin alterar población ni atmósfera.
+Prueba específica del rol:
+`.venv/bin/python -m unittest tests.test_decomposition -v`.
+
+### Reserva orgánica y consumo reciclado
+
+[`ModeloCicloOrganico`](material_cycle_model.py) añade una primera relación
+material simbólica: una muerte nueva crea una unidad de restos. Si hay
+descomponedores activos, los restos disponibles pasan a una reserva de
+nutrientes; la ruta microbiana que consume orgánicos aprovecha esos nutrientes.
+Los dos totales históricos permiten ver cuánto se recicló y aprovechó, aunque
+ambas reservas actuales vuelvan a cero. Son unidades de diseño, no masas de
+carbono ni cantidades de células reales.
+
+`muertes_contabilizadas_ciclo` evita crear restos de nuevo al reevaluar el
+mismo año o cargar una partida. Una partida antigua empieza con las muertes
+previas ya contabilizadas y no inventa reservas retrospectivas. Si falta un
+eslabón, los restos o nutrientes quedan guardados hasta que pueda actuar.
+Cuando un salto temporal contiene varios intervalos de reproducción, el
+ciclo procesa cada intervalo con los linajes vivos de ese momento. Así, un
+descomponedor que apareció y se extinguió durante el salto deja el mismo
+historial material que con pasos cortos, si el entorno permaneció igual.
+El modelo no cambia nacimientos, extinciones, clima, CO₂ físico ni la
+proyección atmosférica. Con cambios ambientales dentro de un paso muy largo,
+el simulador sigue limitado por su resolución temporal: no reconstruye cada
+condición intermedia del planeta.
+
+Prueba específica:
+`.venv/bin/python -m unittest tests.test_material_cycle -v`.
+
 [`ModeloPoblacionUnicelular`](unicellular_population_model.py) observa el
 indicador `vida_activa` calculado al final de la abiogénesis. Cuando aparece,
 funda una población de **una unidad simbólica** y registra un nacimiento. Cada

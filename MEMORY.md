@@ -7,14 +7,201 @@ para conocer exactamente qué quedó confirmado en un commit.
 
 ## Estado actual — 2026-09-30
 
+- `change_ui` quedó publicada en GitHub con el commit `b023b31`. Se recreó
+  `fase-3` desde ese commit y se actualizó `origin/fase-3`; incluye estructura,
+  exploración, eventos y calendario.
 - La base simbólica de evolución biológica del paso 4 quedó validada para el
   cierre de `fase-2`. Consultar Git para el commit publicado; las entradas
   anteriores conservan el historial de trabajo local previo al cierre.
-- Siguiente rama: `fase-3`, creada desde el cierre de `fase-2` para comenzar
-  el paso 5, metabolismo y biosfera. La estructura y la interfaz se prepararon
-  antes de añadir esas reglas; todavía no se implementan metabolismos.
+- La base simbólica del paso 5, metabolismo y biosfera, quedó validada en
+  `fase-3`. Incluye consumo de orgánicos, productores fotosintéticos,
+  proyección atmosférica separada, descomponedores y ciclo orgánico. Consultar
+  Git para el commit y la publicación de la rama; la fase siguiente aún no
+  comenzó.
 - Al iniciar cada fase se explica su alcance; al terminarla se revisa,
   confirma y sube su rama. La instrucción permanente está en `AGENTS.md`.
+
+## 2026-09-30 — Revisión integral y cierre técnico de Fase 3
+
+- La revisión detectó que un salto largo podía omitir reciclaje de un linaje
+  descomponedor transitorio. `biology/inheritance_variation_model.py` ahora
+  procesa con `biology/material_cycle_model.py` cada intervalo de reproducción
+  reconstruido, con sus linajes sobrevivientes y la muerte de ese intervalo.
+  `universe/universe.py` conserva el cierre de muertes pendientes al extinguirse
+  toda la población. `tests/test_material_cycle.py` fija el caso de regresión;
+  `tests/test_unicellular_competition.py` reconoce los dos campos materiales
+  que cambian con una muerte. `tests/test_phase3_integration.py` prueba juntas
+  herencia, fotosíntesis, atmósfera y ciclo material con guardado/carga.
+- Pasaron 109 pruebas automáticas, compilación y `git diff --check`. En una
+  auditoría adicional, 200 semillas controladas con entorno constante dieron
+  el mismo estado con pasos de 1 y 20 millones; el balance material se
+  conservó en las 200. El universo real con semilla `374852300` avanzó del
+  año 0 al 3 000 millones: pasos de 20 millones hasta 2 760 millones,
+  1 millón hasta 2 820 millones y de nuevo 20 millones. Protocélulas en
+  2 760 millones, primera vida y metabolismo en 2 763 millones y especies
+  coexistentes en 2 769 millones. El resultado final tuvo 1849 planetas,
+  cinco especies extintas, 26 restos pendientes y cero productores o
+  descomponedores. Esta semilla no ejercitó esas capacidades; el caso
+  combinado controlado sí. Guardar/cargar y avanzar otro millón conservó los
+  estados.
+- `FASES.md` marca terminada la base simbólica del paso 5. Queda publicar el
+  commit de cierre en `fase-3`; la siguiente fase corresponde a vida compleja
+  del paso 6 y todavía no se inicia.
+
+## 2026-09-30 — Reservas de restos y nutrientes reciclados
+
+- `biology/material_cycle_model.py` da una unidad simbólica de restos por
+  muerte nueva. Descomponedores activos transfieren los restos disponibles a
+  nutrientes; la ruta existente de consumo de orgánicos aprovecha esa reserva.
+  Se guardan las reservas, muertes ya contabilizadas y totales históricos.
+  Un guardado antiguo inicia sin reservas y no recrea muertes pasadas.
+  `biology/decomposition_model.py` reconoce restos guardados además de
+  muertes del paso como material para activar su enlace. No cambia población,
+  física normal, clima ni atmósfera.
+- `planets/planet.py` persiste los cinco campos de este ciclo;
+  `universe/universe.py` lo evalúa después del rol descomponedor;
+  `ui/simulation_ui.py` muestra restos, nutrientes y total aprovechado en
+  Biosfera. `biology/README.md`, `ui/README.md` y `FASES.md` describen el
+  alcance. `tests/run_universe_from_zero.py` informa ambos stocks y totales.
+- `tests/test_material_cycle.py` comprueba balance, falta de un eslabón,
+  reciclaje posterior, consumo, reevaluación, pasos temporales, guardado/carga
+  y partida antigua. `tests/test_simulation_dashboard.py` comprueba la línea
+  visible. Pasaron 107 pruebas automáticas, compilación y `git diff --check`.
+  La corrida natural completa con
+  semilla `374852300` avanzó del año 0 a 3 000 millones: pasos de 20 millones
+  hasta 2 760 millones, 1 millón hasta 2 820 millones y luego 20 millones.
+  Protocélulas en 2 760 millones, primera vida en 2 763 millones y especies
+  coexistentes en 2 769 millones. Al final había 1849 planetas, cinco
+  especies extintas, 26 unidades de restos pendientes y cero recicladas:
+  esta semilla no produjo descomponedores. Guardar/cargar y avanzar otro
+  millón mantuvo estados iguales. Las pruebas controladas sí recorrieron
+  restos → nutrientes → consumo.
+- `fase-3` continúa local sin commit ni push. Siguiente trabajo: revisión
+  integral del paso 5 y cierre de la fase si no quedan fallos.
+
+## 2026-09-30 — Capacidad descomponedora y restos recientes
+
+- `biology/decomposition_model.py` decide una capacidad descomponedora por
+  variante con azar local y una probabilidad de diseño, solo en un entorno
+  con orgánicos. En `biology/inheritance_variation_model.py`, copias y
+  variantes hijas del progenitor capaz la conservan. `planets/planet.py`
+  persiste los linajes capaces, el hito histórico y las unidades actualmente
+  activas; los guardados antiguos comienzan vacíos.
+- `universe/universe.py` calcula las muertes de cada actualización, evalúa
+  descomposición después del metabolismo y registra el hito planetario.
+  Muertes viejas no se convierten en restos siempre disponibles. La señal
+  activa es cualitativa: no hay reserva de nutrientes ni retroalimentación
+  de crecimiento o atmósfera. `ui/simulation_ui.py` muestra el enlace en
+  Biosfera. `tests/run_universe_from_zero.py`, `biology/README.md`,
+  `ui/README.md` y `FASES.md` explican la regla y sus límites.
+- `tests/test_decomposition.py` cubre ausencia de capacidad, adaptación,
+  herencia, cese, extinción, equivalencia de pasos y guardado antiguo/nuevo;
+  `tests/test_simulation_dashboard.py` cubre el texto de la vista. Al revisar
+  se corrigió una duplicación del sufijo «con reciclaje» al evaluar dos veces
+  el mismo paso. Pasaron 103 pruebas automáticas, compilación y
+  `git diff --check`.
+- Corrida real con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, 1 millón hasta 2 820 millones y luego
+  20 millones. Protocélulas en 2 760 millones, primera vida y metabolismo
+  en 2 763 millones, coexistencia en 2 769 millones. A 3 000 millones había
+  1849 planetas, cinco especies extintas y cero linajes con capacidad
+  descomponedora; la semilla no ejercitó el nuevo enlace. Las pruebas
+  controladas sí lo activaron. Guardar/cargar y continuar otro millón
+  conservó todos los estados.
+- `fase-3` sigue local, sin commit ni push. Siguiente bloque: una relación
+  material pequeña entre restos, reciclaje y consumo, y después revisión
+  integral de la fase.
+
+## 2026-09-30 — Proyección atmosférica de productores
+
+- `biology/atmospheric_impact_model.py` calcula después del metabolismo una
+  proyección actual de CO₂ y aporte de O₂ solo con productores activos. Cada
+  unidad transforma simbólicamente 1 % del CO₂ físico, con tope conjunto de
+  5 %. Son parámetros de diseño; el resultado no se acumula por actualización
+  y vuelve a la base física cuando cesa la producción. El modelo no modifica
+  `presion_co2_preclima_bar`, clima, habitabilidad o población.
+- `universe/universe.py` lo ejecuta tras contar productores. `planets/planet.py`
+  guarda ambos valores y usa `None` para partidas antiguas hasta recalcular.
+  `ui/simulation_ui.py` enseña la comparación en Biosfera.
+  `tests/test_atmospheric_impact.py` comprueba tope, ausencia de productores,
+  conservación de la física y guardado antiguo/nuevo;
+  `tests/test_photosynthetic_producers.py` comprueba igualdad de pasos también
+  con estos campos. `tests/test_simulation_dashboard.py` comprueba la vista.
+  `tests/run_universe_from_zero.py`, `biology/README.md`, `ui/README.md` y
+  `FASES.md` reflejan el nuevo bloque.
+- Pasaron 97 pruebas automáticas y compilación. Corrida natural con semilla
+  `374852300`, año 0 a 3 000 millones: pasos de 20 millones hasta 2 760
+  millones, 1 millón hasta 2 820 millones y después 20 millones. Protocélulas
+  en 2 760 millones, primera vida y metabolismo en 2 763 millones y especies
+  coexistentes en 2 769 millones. A 3 000 millones había 1849 planetas,
+  cinco especies extintas, cero productores y cero atmósferas con aporte
+  biológico. La semilla no activó fotosíntesis; las pruebas controladas sí
+  verifican la proyección. Guardar/cargar y continuar otro millón conservó
+  los estados. Rama `fase-3` sin commit ni push mientras sigue abierta.
+- Siguiente bloque: rol de descomponedores y primeras relaciones ecológicas
+  entre productores, consumidores y reciclaje, todavía simbólicas.
+
+## 2026-09-30 — Productores fotosintéticos simbólicos
+
+- `biology/metabolism_model.py` reconoce luz, agua líquida y CO₂ como entorno
+  apto, y una adaptación de diseño puede surgir en una variante biológica.
+  `biology/inheritance_variation_model.py` conserva esa capacidad en copias y
+  variantes hijas del linaje capaz. Se corrigió durante la revisión una
+  consulta al identificador de la hija en vez del progenitor; una prueba nueva
+  comprueba la herencia en una variante aunque no adquiera la capacidad de
+  nuevo. El azar se decide por nacimiento y no consume el del universo.
+- `planets/planet.py` persiste el conjunto de linajes capaces, productores
+  activos e hito histórico; un guardado anterior comienza con valores vacíos.
+  `universe/universe.py` registra el primer hito como evento planetario.
+  `ui/simulation_ui.py` muestra productores y vínculos simbólicos en Biosfera.
+  `biology/README.md`, `ui/README.md` y `FASES.md` explican el alcance.
+  `tests/run_universe_from_zero.py` informa fotosíntesis histórica y
+  productores activos; `tests/test_photosynthetic_producers.py` y
+  `tests/test_simulation_dashboard.py` comprueban condiciones, herencia,
+  persistencia, determinismo y pantalla.
+- Pasaron 94 pruebas automáticas, compilación y `git diff --check`.
+  Corrida natural con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, 1 millón hasta 2 820 millones y luego
+  20 millones. Primera vida y metabolismo en 2 763 millones; coexistencia
+  de especies en 2 769 millones. A 3 000 millones había 1849 planetas,
+  cinco especies extintas, cero fotosíntesis histórica y cero productores
+  activos. Es un resultado válido para esta semilla; las pruebas controladas
+  sí activan y desactivan la ruta. Guardar/cargar y continuar otro millón
+  conservó los estados.
+- Rama `fase-3`, trabajo local sin commit ni push mientras la fase continúa.
+  Siguiente bloque: efecto biológico acotado sobre la atmósfera, manteniendo
+  separadas las condiciones físicas de la contribución de la vida.
+
+## 2026-09-30 — Primera energía metabólica y base ecológica microbiana
+
+- `biology/metabolism_model.py` consulta luz, ruta geoquímica y orgánicos
+  ambientales actuales. La primera población con vida activa y orgánicos
+  recibe la ruta simbólica `consumo_organicos`; sin vida no se crea ruta. Luz
+  y geoquímica son potenciales y no fuerzan fotosíntesis o quimiosíntesis.
+  La base ecológica observada es el vínculo entre orgánicos y microbios,
+  todavía sin red trófica ni efecto sobre reproducción o atmósfera.
+- `planets/planet.py` persiste fuentes, ruta y estado actuales, además del
+  primer año histórico de metabolismo; guardados anteriores usan valores
+  vacíos y se recalculan al actualizar. `universe/universe.py` evalúa después
+  de la población unicelular y registra el primer hito como evento planetario.
+- `ui/simulation_ui.py` muestra la ruta breve en la ficha planetaria y abre
+  con `M` una ficha Biosfera con fuentes, ruta y vínculo ecológico.
+  `biology/README.md`, `ui/README.md` y `FASES.md` explican alcance y límites.
+- `tests/test_metabolism.py` cubre ausencia de vida, disponibilidad sin rutas
+  inventadas, cese y persistencia histórica, guardado/carga y compatibilidad;
+  `tests/test_simulation_dashboard.py` revisa navegación y datos de Biosfera.
+  `tests/run_universe_from_zero.py` comprueba el hito y su evento en un universo
+  natural. 88 pruebas automáticas aprobadas.
+- Corrida real con semilla `374852300`: año 0 a 3 000 millones; pasos de
+  20 millones hasta 2 760 millones, 1 millón hasta 2 820 millones y de nuevo
+  20 millones. Protocélulas en 2 760 millones; primera vida, metabolismo y
+  base ecológica en 2 763 millones; tres especies coexistentes en 2 769
+  millones. A 3 000 millones había 1849 planetas, un metabolismo histórico,
+  ninguna base ecológica activa y cinco especies extintas. Guardar/cargar y
+  avanzar otro millón conservó los estados planetarios y el historial.
+- El push ordinario de `change_ui` falló por DNS; con acceso autorizado se
+  publicaron tanto `change_ui` como `fase-3`. Próximo bloque: rutas energéticas
+  nuevas que requieran adaptación biológica y primeros roles de productores.
 
 ## 2026-09-30 — Rama `change_ui`
 
