@@ -2,7 +2,8 @@ class Time:
     def __init__(self):
         self.anio = 0
 
-        self.velocidades_planeta = [0, 1, 2, 3]
+        # Conserva los cuatro índices antiguos para partidas ya guardadas.
+        self.velocidades_planeta = [0, 1, 2, 3, 10, 100, 1_000, 10_000]
 
         self.velocidades_universo = [
             0,
@@ -83,4 +84,4 @@ class Time:
         valor = f"{velocidad:,}".replace(",", " ")
 
         unidad = "año/s" if velocidad == 1 else "años/s"
-        return f"{valor} {unidad}"
+        return f"x{valor} · {valor} {unidad}"

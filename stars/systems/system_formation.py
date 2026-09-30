@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from stellar_systems.companion_model import ModeloCompaneraEstelar
-from stellar_systems.multiplicity_model import ModeloMultiplicidadEstelar
-from stellar_systems.orbital_model import ModeloOrbitalEstelar
+from stars.systems.companion_model import ModeloCompaneraEstelar
+from stars.systems.multiplicity_model import ModeloMultiplicidadEstelar
+from stars.systems.orbital_model import ModeloOrbitalEstelar
 
 
 @dataclass(frozen=True)

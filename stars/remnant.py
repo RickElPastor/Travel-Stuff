@@ -1,4 +1,4 @@
-from format_utils import formatear_identificador
+from stars.format_utils import formatear_identificador
 
 
 class RemanenteEstelar:

@@ -4,8 +4,8 @@ import unittest
 
 from biology.unicellular_population_model import ModeloPoblacionUnicelular
 from planets.planet import Planet
-from save_manager import SaveManager
-from universe import Universe
+from universe.save_manager import SaveManager
+from universe.universe import Universe
 
 
 class PoblacionUnicelularTests(unittest.TestCase):

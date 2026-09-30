@@ -12,8 +12,9 @@ from chemistry.protocell_viability_model import ModeloViabilidadProtocelular
 
 from extraordinary.chemistry_support_model import ModeloApoyoQuimicoExtraordinario
 
-from events import EventManager
-from stellar_systems.stellar_system import SistemaEstelar
+from universe.events import EventManager
+from planets.local_calendar import periodo_orbital_dias
+from stars.systems.stellar_system import SistemaEstelar
 from planets.disk_environment_model import (
     ModeloEntornoDisco,
 )
@@ -80,10 +81,10 @@ from chemistry.prebiotic_compartment_model import (
 from chemistry.protocell_model import (
     ModeloProtocelula,
 )
-from remnant import RemanenteEstelar
-from star import Star
-from star_formation import FormacionEstelarCosmica
-from world_time import Time
+from stars.remnant import RemanenteEstelar
+from stars.star import Star
+from stars.star_formation import FormacionEstelarCosmica
+from universe.world_time import Time
 
 
 class Universe:
@@ -104,6 +105,10 @@ class Universe:
         self.random = random.Random(self.seed)
 
         self.event_manager = EventManager()
+        self.event_manager.agregar_evento(
+            "Inicio de simulación", 0,
+            f"Se inició el universo con la semilla {self.seed}."
+        )
 
         self.time = Time()
 
@@ -215,6 +220,10 @@ class Universe:
             )
 
             self.sistemas_estelares.append(sistema)
+            self.event_manager.agregar_evento(
+                "Formación de sistema", int(anio_formacion),
+                f"Se formó {nombre}.", "sistema", nombre,
+            )
 
         else:
             sistema.anio_formacion = min(
@@ -318,9 +327,18 @@ class Universe:
         planetas = self.modelo_formacion_planetas.generar_planetas(disco)
 
         for planeta in planetas:
+            planeta.anio_formacion = int(nacimiento.anio)
+            planeta.periodo_orbital_dias = periodo_orbital_dias(
+                planeta.semieje_mayor_au, nacimiento.masa_inicial
+            )
             self.planetas.append(planeta)
 
             sistema.agregar_planeta(planeta)
+            self.event_manager.agregar_evento(
+                "Formación planetaria", int(nacimiento.anio),
+                f"Se formó {planeta.nombre} alrededor de {nacimiento.nombre}.",
+                "planeta", planeta.nombre,
+            )
 
         self.discos_protoplanetarios.append(disco)
 
@@ -509,6 +527,7 @@ class Universe:
                 f"Z={estrella.metalicidad_z:.6g}"
                 f"{texto_redshift}."
             ),
+            "estrella", estrella.nombre,
         )
 
         if estrella.ha_finalizado():
@@ -570,6 +589,7 @@ class Universe:
                 f"{remanente.masa:.3f} "
                 "masas solares."
             ),
+            "estrella", estrella.nombre,
         )
 
         return remanente
@@ -700,6 +720,7 @@ class Universe:
                         f"{etapa_anterior.replace('_', ' ')} -> "
                         f"{estrella.obtener_etapa_visible()}."
                     ),
+                    "estrella", estrella.nombre,
                 )
 
             if estrella.ha_finalizado():
@@ -748,6 +769,12 @@ class Universe:
                     + 1
                 )
 
+                self.event_manager.agregar_evento(
+                    "Nacimiento fuera del modelo", nacimiento.anio,
+                    f"{nacimiento.nombre} se formó, pero SEVN no la evoluciona: "
+                    f"{motivo}.", "estrella", nacimiento.nombre,
+                )
+
                 continue
 
             self.crear_estrella(
@@ -765,6 +792,26 @@ class Universe:
                 q_objetivo=(nacimiento.q_objetivo),
                 q_real=nacimiento.q_real,
             )
+
+        hitos = (
+            ("Atmósfera secundaria", "tiene_atmosfera_secundaria"),
+            ("Orgánicos simples", "alcanzo_organicos_simples"),
+            ("Concentración prebiótica", "alcanzo_concentracion_prebiotica"),
+            ("Precursores complejos", "alcanzo_precursores_complejos"),
+            ("Polimerización", "alcanzo_polimerizacion_prebiotica"),
+            ("Red química", "alcanzo_red_quimica_primitiva"),
+            ("Compartimentalización", "alcanzo_compartimentalizacion_prebiotica"),
+            ("Protocélulas", "alcanzo_protocelula"),
+            ("Replicación prebiótica", "alcanzo_replicacion_prebiotica"),
+            ("Primera vida", "alcanzo_primera_vida"),
+        )
+        hitos_anteriores = {
+            planeta.nombre: (
+                tuple(getattr(planeta, atributo) for _, atributo in hitos),
+                planeta.vida_activa,
+            )
+            for planeta in self.planetas
+        }
 
         self.actualizar_reglas_mundos()
 
@@ -813,6 +860,21 @@ class Universe:
         self.actualizar_poblacion_unicelular()
 
         self.actualizar_herencia_unicelular()
+
+        for planeta in self.planetas:
+            anteriores, vida_anterior = hitos_anteriores[planeta.nombre]
+            for indice, (tipo, atributo) in enumerate(hitos):
+                if not anteriores[indice] and getattr(planeta, atributo):
+                    self.event_manager.agregar_evento(
+                        tipo, anio_final, f"{planeta.nombre} alcanzó {tipo.lower()}.",
+                        "planeta", planeta.nombre,
+                    )
+            if vida_anterior and not planeta.vida_activa:
+                self.event_manager.agregar_evento(
+                    "Extinción local", anio_final,
+                    f"La vida activa cesó en {planeta.nombre}.",
+                    "planeta", planeta.nombre,
+                )
 
         for motivo, cantidad in no_modeladas.items():
             self.event_manager.agregar_evento(

@@ -1,20 +1,26 @@
 import curses
 import time
+import textwrap
 
-from save_manager import SaveManager
+from planets.local_calendar import fecha_local, periodo_orbital_dias
+from universe.events import Event
+from universe.save_manager import SaveManager
 from ui.console_utils import centrar, escribir_seguro
 from ui.save_game_menu import SaveGameMenu
 
 
 class SimulationUI:
-    REFRESCO_SEGUNDOS = 0.01
-    VISTAS = ("Origen", "Universo", "Condiciones", "Vida", "Especies")
+    REFRESCO_SEGUNDOS = 0.05
 
     def __init__(self, simulation):
         self.simulation = simulation
         self.universe = simulation.universe
-        self.scroll_eventos = 0
-        self.vista = 0
+        if self.universe.time.escala == "planeta":
+            # La ubicación no se guarda: al reabrir empezamos en Universo.
+            self.universe.time.establecer_escala("universo")
+            self.universe.time.indice_velocidad = 1
+        self.ruta = [{"tipo": "universo"}]
+        self.velocidad_previa = None
         self.save_manager = SaveManager()
         self.save_game_menu = SaveGameMenu()
 
@@ -34,58 +40,185 @@ class SimulationUI:
                 curses.init_pair(3, curses.COLOR_YELLOW, -1)
         except curses.error:
             pass
-        curses.mousemask(curses.ALL_MOUSE_EVENTS)
 
         while True:
-            tecla = stdscr.getch()
-            if tecla == 27:
+            if self._procesar_tecla(stdscr, stdscr.getch()):
                 stdscr.nodelay(False)
                 return
-            self._procesar_tecla(stdscr, tecla)
             self.simulation.actualizar()
             self._dibujar(stdscr)
             time.sleep(self.REFRESCO_SEGUNDOS)
 
+    def _actual(self):
+        return self.ruta[-1]
+
+    def _abrir(self, tipo, objeto=None):
+        pagina = {"tipo": tipo, "objeto": objeto}
+        if tipo in ("estrellas", "sistemas", "planetas", "eventos"):
+            pagina.update(filtro="", indice=0)
+        self.ruta.append(pagina)
+        if tipo == "planeta":
+            tiempo = self.universe.time
+            self.velocidad_previa = (tiempo.escala, tiempo.indice_velocidad)
+            tiempo.establecer_escala("planeta")
+            tiempo.indice_velocidad = 1  # x1 equivale al x1 universal.
+
+    def _volver(self):
+        if len(self.ruta) == 1:
+            return True
+        if self._actual()["tipo"] == "planeta":
+            escala, indice = self.velocidad_previa
+            tiempo = self.universe.time
+            tiempo.establecer_escala(escala)
+            tiempo.indice_velocidad = indice
+            self.velocidad_previa = None
+        self.ruta.pop()
+        return False
+
     def _procesar_tecla(self, stdscr, tecla):
-        if tecla == curses.KEY_UP:
+        if tecla == 27:
+            return self._volver()
+        if tecla in (ord("+"), ord("=")):
             self.simulation.subir_velocidad()
-        elif tecla == curses.KEY_DOWN:
+            return False
+        if tecla == ord("-"):
             self.simulation.bajar_velocidad()
-        elif tecla == curses.KEY_PPAGE:
-            self._subir_eventos()
-        elif tecla == curses.KEY_NPAGE:
-            self._bajar_eventos()
-        elif tecla == curses.KEY_MOUSE:
-            self._procesar_mouse()
-        elif tecla in (ord("s"), ord("S")):
+            return False
+        if tecla in (ord("s"), ord("S")):
             self._guardar(stdscr)
-        elif tecla in (ord("1"), ord("2"), ord("3"), ord("4"), ord("5")):
-            self.vista = tecla - ord("1")
+            return False
 
-    def _procesar_mouse(self):
+        pagina = self._actual()
+        tipo = pagina["tipo"]
+        if tecla in (ord("v"), ord("V")) and tipo in (
+            "universo", "estrella", "sistema", "planeta"
+        ):
+            if tipo == "universo":
+                contexto = None
+            else:
+                contexto = (tipo, self._nombre(pagina["objeto"]))
+            self._abrir("eventos", contexto)
+            return False
+        if tipo in ("estrellas", "sistemas", "planetas", "eventos"):
+            items = self._items(pagina)
+            pagina["indice"] = max(0, min(pagina["indice"], len(items) - 1))
+            salto = max(1, stdscr.getmaxyx()[0] - 14)
+            if tecla == curses.KEY_UP:
+                pagina["indice"] = max(0, pagina["indice"] - 1)
+            elif tecla == curses.KEY_DOWN:
+                pagina["indice"] = min(len(items) - 1, pagina["indice"] + 1)
+            elif tecla == curses.KEY_PPAGE:
+                pagina["indice"] = max(0, pagina["indice"] - salto)
+            elif tecla == curses.KEY_NPAGE:
+                pagina["indice"] = min(len(items) - 1, pagina["indice"] + salto)
+            elif tecla in (ord("/"), ord("f"), ord("F")):
+                self._buscar(stdscr)
+            elif tecla in (curses.KEY_ENTER, 10, 13) and items:
+                elegido = items[pagina["indice"]]
+                siguiente = {"estrellas": "estrella", "sistemas": "sistema",
+                             "planetas": "planeta", "eventos": "evento"}[tipo]
+                self._abrir(siguiente, elegido)
+            return False
+
+        if tipo == "universo":
+            if tecla in (curses.KEY_ENTER, 10, 13):
+                self._abrir("sistemas")
+            elif tecla in (ord("e"), ord("E")):
+                self._abrir("estrellas")
+        elif tipo == "estrella" and tecla in (curses.KEY_ENTER, 10, 13):
+            sistema = self._sistema_de_estrella(pagina["objeto"])
+            if sistema is not None:
+                self._abrir("sistema", sistema)
+        elif tipo == "sistema":
+            if tecla in (curses.KEY_ENTER, 10, 13, ord("p"), ord("P")):
+                self._abrir("planetas", pagina["objeto"])
+            elif tecla in (ord("e"), ord("E")):
+                self._abrir("estrellas", pagina["objeto"])
+        return False
+
+    def _buscar(self, stdscr):
+        pagina = self._actual()
+        anterior = pagina["filtro"]
+        texto = anterior
+        stdscr.nodelay(False)
         try:
-            estado = curses.getmouse()[4]
-        except curses.error:
-            return
-        if estado & curses.BUTTON4_PRESSED:
-            self._subir_eventos()
-        elif estado & curses.BUTTON5_PRESSED:
-            self._bajar_eventos()
-
-    def _subir_eventos(self):
-        eventos = self.universe.event_manager.obtener_eventos()
-        self.scroll_eventos = min(self.scroll_eventos + 1, max(0, len(eventos) - 1))
-
-    def _bajar_eventos(self):
-        self.scroll_eventos = max(0, self.scroll_eventos - 1)
+            while True:
+                pagina["filtro"] = texto
+                pagina["indice"] = 0
+                self._dibujar(stdscr)
+                alto, _ = stdscr.getmaxyx()
+                self._texto(stdscr, alto - 3,
+                            "Buscar: " + texto + "_  ·  Enter aplicar · Esc cancelar")
+                stdscr.refresh()
+                tecla = stdscr.getch()
+                if tecla in (curses.KEY_ENTER, 10, 13):
+                    break
+                if tecla == 27:
+                    pagina["filtro"] = anterior
+                    break
+                if tecla in (curses.KEY_BACKSPACE, 127, 8):
+                    texto = texto[:-1]
+                elif 32 <= tecla <= 126 and len(texto) < 40:
+                    texto += chr(tecla)
+        finally:
+            stdscr.nodelay(True)
+            self.simulation.reiniciar_reloj()
 
     def _guardar(self, stdscr):
         stdscr.nodelay(False)
-        nombre = self.save_game_menu.guardar_partida(stdscr, self.save_manager)
-        if nombre:
-            self.save_manager.guardar(self.universe, nombre)
-        self.simulation.reiniciar_reloj()
-        stdscr.nodelay(True)
+        try:
+            nombre = self.save_game_menu.guardar_partida(stdscr, self.save_manager)
+            if nombre:
+                self.save_manager.guardar(self.universe, nombre)
+        finally:
+            self.simulation.reiniciar_reloj()
+            stdscr.nodelay(True)
+
+    def _items(self, pagina):
+        tipo = pagina["tipo"]
+        if tipo == "eventos":
+            contexto = pagina["objeto"]
+            if contexto is None:
+                items = list(self.universe.event_manager.obtener_eventos())
+            else:
+                items = self.universe.event_manager.obtener_por_entidad(*contexto)
+            items.reverse()
+        elif tipo == "estrellas":
+            sistema = pagina["objeto"]
+            if sistema is None:
+                nombres = {nombre for s in self.universe.sistemas_estelares
+                           for nombre in s.nombres_estrellas}
+                nombres.update(e.nombre for e in self.universe.estrellas)
+                nombres.update(r.nombre_origen for r in self.universe.remanentes)
+            else:
+                nombres = set(sistema.nombres_estrellas)
+            items = sorted(nombres)
+        elif tipo == "sistemas":
+            items = sorted(self.universe.sistemas_estelares,
+                           key=lambda s: s.nombre)
+        else:
+            sistema = pagina["objeto"]
+            items = sorted((p for p in self.universe.planetas
+                            if p.sistema_nombre == sistema.nombre),
+                           key=lambda p: p.nombre)
+        filtro = pagina["filtro"].casefold()
+        return [item for item in items if filtro in self._nombre(item).casefold()]
+
+    def _nombre(self, item):
+        if isinstance(item, Event):
+            return str(item)
+        return item if isinstance(item, str) else item.nombre
+
+    def _sistema_de_estrella(self, nombre):
+        return next((s for s in self.universe.sistemas_estelares
+                     if nombre in s.nombres_estrellas), None)
+
+    def _estrella_activa(self, nombre):
+        return next((e for e in self.universe.estrellas if e.nombre == nombre), None)
+
+    def _remanente(self, nombre):
+        return next((r for r in self.universe.remanentes
+                     if r.nombre_origen == nombre), None)
 
     def _color(self, numero):
         try:
@@ -93,12 +226,12 @@ class SimulationUI:
         except curses.error:
             return 0
 
+    def _texto(self, stdscr, fila, texto, atributo=0):
+        escribir_seguro(stdscr, fila, 2, texto, atributo)
+
     def _separador(self, stdscr, fila):
         _, ancho = stdscr.getmaxyx()
         escribir_seguro(stdscr, fila, 0, "─" * (ancho - 1), self._color(1))
-
-    def _texto(self, stdscr, fila, texto, atributo=0):
-        escribir_seguro(stdscr, fila, 2, texto, atributo)
 
     def _dibujar(self, stdscr):
         stdscr.erase()
@@ -108,342 +241,210 @@ class SimulationUI:
             centrar(stdscr, 4, "Amplía la terminal a 72 columnas x 24 filas.")
             stdscr.refresh()
             return
-
+        pagina = self._actual()
+        tipo = pagina["tipo"]
         self._separador(stdscr, 0)
-        self._texto(stdscr, 1, "TRAVEL STUFF  /  SIMULADOR DE UNIVERSOS",
+        self._texto(stdscr, 1, "TRAVEL STUFF  /  EXPLORADOR DEL UNIVERSO",
                     curses.A_BOLD | self._color(1))
-        edad = f"{self.universe.time.anio:,}".replace(",", " ")
-        self._texto(
-            stdscr, 2,
-            f"Año {edad}   ·   Semilla {self.universe.seed}   ·   "
-            f"{self.universe.time.obtener_descripcion_velocidad()}",
-        )
-        self._separador(stdscr, 3)
-        x = 2
-        for indice, nombre in enumerate(self.VISTAS):
-            etiqueta = f" {indice + 1} {nombre} "
-            atributo = (curses.A_BOLD | self._color(1)) if indice == self.vista else 0
-            escribir_seguro(stdscr, 4, x, etiqueta, atributo)
-            x += len(etiqueta) + 2
+        anio = f"{self.universe.time.anio:,}".replace(",", " ")
+        self._texto(stdscr, 2, f"Año {anio} · Semilla {self.universe.seed} · "
+                    f"{self.universe.time.obtener_descripcion_velocidad()}")
+        self._texto(stdscr, 4, "  ›  ".join(
+            self._nombre(p["objeto"]) if p.get("objeto") is not None
+            and p["tipo"] not in ("estrellas", "planetas", "eventos")
+            else p["tipo"].capitalize() for p in self.ruta))
         self._separador(stdscr, 5)
-
-        if self.vista == 0:
-            self._dibujar_abiogenesis(stdscr)
-        elif self.vista == 1:
+        if tipo == "universo":
             self._dibujar_universo(stdscr)
-        elif self.vista == 2:
-            self._dibujar_condiciones(stdscr)
-        elif self.vista == 3:
-            self._dibujar_vida(stdscr)
+        elif tipo in ("estrellas", "sistemas", "planetas", "eventos"):
+            self._dibujar_lista(stdscr, pagina)
+        elif tipo == "estrella":
+            self._dibujar_estrella(stdscr, pagina["objeto"])
+        elif tipo == "sistema":
+            self._dibujar_sistema(stdscr, pagina["objeto"])
+        elif tipo == "evento":
+            self._dibujar_evento(stdscr, pagina["objeto"])
         else:
-            self._dibujar_especies(stdscr)
-
-        self._dibujar_eventos(stdscr, alto)
+            self._dibujar_planeta(stdscr, pagina["objeto"])
         self._separador(stdscr, alto - 2)
-        self._texto(
-            stdscr, alto - 1,
-            "1-5 Vistas · ↑↓ Vel. · S Guardar · PgUp/PgDn Eventos · Esc Menú",
-        )
+        controles = ("Enter Sistemas · E Estrellas · V Eventos · S Guardar · +/- · Esc Menú"
+                     if tipo == "universo" else
+                     "↑↓/PgUp/PgDn Mover · / Buscar · Enter Abrir · Esc Volver"
+                     if tipo in ("estrellas", "sistemas", "planetas", "eventos") else
+                     "V Eventos · S Guardar · +/- Tiempo · Esc Volver"
+                     if tipo == "planeta" else
+                     "Enter Sistema · V Eventos · S Guardar · +/- · Esc Volver"
+                     if tipo == "estrella" else
+                     "Enter Planetas · E Estrellas · V Eventos · S Guardar · Esc"
+                     if tipo == "sistema" else
+                     "S Guardar · +/- Tiempo · Esc Volver")
+        self._texto(stdscr, alto - 1, controles)
         stdscr.refresh()
 
-    def _encabezado(self, stdscr, fila, texto):
-        self._texto(stdscr, fila, texto, curses.A_BOLD | self._color(1))
-
-    def _dibujar_abiogenesis(self, stdscr):
-        conteos = {
-            "entorno": 0, "organicos": 0, "concentracion": 0,
-            "precursores": 0, "polimeros": 0, "redes": 0,
-            "compartimentos": 0, "protocelulas": 0,
-            "normal": 0, "extra": 0, "rep_hist": 0, "rep_activa": 0,
-            "herencia": 0, "variacion": 0, "seleccion": 0,
-            "favorecidas": 0, "descartadas": 0,
-            "vida_activa": 0, "vida_historica": 0,
-        }
-        foco = None
-        for planeta in self.universe.planetas:
-            conteos["entorno"] += bool(planeta.tuvo_entorno_prebiotico)
-            conteos["organicos"] += bool(planeta.alcanzo_organicos_simples)
-            conteos["concentracion"] += bool(planeta.alcanzo_concentracion_prebiotica)
-            conteos["precursores"] += bool(planeta.alcanzo_precursores_complejos)
-            conteos["polimeros"] += bool(planeta.alcanzo_polimerizacion_prebiotica)
-            conteos["redes"] += bool(planeta.alcanzo_red_quimica_primitiva)
-            conteos["compartimentos"] += bool(planeta.alcanzo_compartimentalizacion_prebiotica)
-            conteos["protocelulas"] += bool(planeta.alcanzo_protocelula)
-            conteos["normal"] += bool(planeta.protocelula_viable_normal)
-            conteos["extra"] += bool(
-                planeta.protocelula_viable and not planeta.protocelula_viable_normal
-            )
-            conteos["rep_hist"] += bool(planeta.alcanzo_replicacion_prebiotica)
-            conteos["rep_activa"] += bool(planeta.replicacion_prebiotica_activa)
-            conteos["herencia"] += planeta.copias_heredables > 0
-            conteos["variacion"] += planeta.variaciones_prebioticas > 0
-            conteos["seleccion"] += (
-                planeta.variantes_favorecidas + planeta.variantes_descartadas > 0
-            )
-            conteos["favorecidas"] += planeta.variantes_favorecidas
-            conteos["descartadas"] += planeta.variantes_descartadas
-            conteos["vida_activa"] += bool(planeta.vida_activa)
-            conteos["vida_historica"] += bool(planeta.alcanzo_primera_vida)
-            if planeta.alcanzo_protocelula and (
-                foco is None
-                or (planeta.vida_activa,
-                    planeta.replicacion_prebiotica_activa,
-                    planeta.copias_heredables)
-                > (foco.vida_activa,
-                   foco.replicacion_prebiotica_activa,
-                   foco.copias_heredables)
-            ):
-                foco = planeta
-
-        c = conteos
-        self._encabezado(stdscr, 6, "01  QUÍMICA PREBIÓTICA  ·  logros históricos")
-        self._texto(stdscr, 7, f"Entorno {c['entorno']}   →   Orgánicos {c['organicos']}"
-                    f"   →   Concentración {c['concentracion']}")
-        self._texto(stdscr, 8, f"Precursores {c['precursores']}   →   "
-                    f"Polímeros {c['polimeros']}   →   Redes {c['redes']}")
-        self._texto(stdscr, 9, f"Compartimentos {c['compartimentos']}   →   "
-                    f"Protocélulas {c['protocelulas']}")
-        self._encabezado(stdscr, 11, "02  ABIOGÉNESIS  ·  condiciones actuales e historia")
-        self._texto(stdscr, 12, f"Viabilidad ahora   normal {c['normal']}   "
-                    f"extraordinaria {c['extra']}", self._color(2))
-        self._texto(stdscr, 13, f"Replicación        activa {c['rep_activa']}   "
-                    f"histórica {c['rep_hist']}")
-        self._texto(stdscr, 14, f"Mundos con herencia {c['herencia']}   ·   "
-                    f"con variación {c['variacion']}")
-        self._texto(stdscr, 15, f"Mundos con selección {c['seleccion']}   ·   "
-                    f"favorecidas {c['favorecidas']}   descartadas {c['descartadas']}")
-        self._texto(stdscr, 16,
-                    f"PRIMERA VIDA   activa {c['vida_activa']}   "
-                    f"histórica {c['vida_historica']}",
-                    curses.A_BOLD | self._color(2))
-        if foco is None:
-            self._texto(stdscr, 17, "Línea actual: aún sin protocélulas.",
-                        self._color(3))
-        elif foco.patron_copia is None:
-            self._texto(stdscr, 17,
-                        f"Línea inactiva · {foco.copias_heredables} copias "
-                        f"históricas · {foco.nombre}", self._color(3))
-        else:
-            self._texto(stdscr, 17,
-                        f"Línea activa · patrón {foco.patron_copia} · "
-                        f"{foco.copias_linea} copias · {foco.nombre}",
-                        self._color(3))
-
     def _dibujar_universo(self, stdscr):
-        sistemas = self.universe.sistemas_estelares
-        discos = self.universe.discos_protoplanetarios
-        planetas = self.universe.planetas
-        tipos = {"normal": 0, "arcano": 0, "anomalia_fisica": 0,
-                 "energia_exotica": 0}
-        gigantes = 0
-        for planeta in planetas:
-            if planeta.regimen_mundo == "normal":
-                tipos["normal"] += 1
-            elif planeta.tipo_regla_extraordinaria in tipos:
-                tipos[planeta.tipo_regla_extraordinaria] += 1
-            gigantes += bool(planeta.entro_runaway)
+        u = self.universe
+        self._texto(stdscr, 6, "UNIVERSO  ·  resumen", curses.A_BOLD)
+        self._texto(stdscr, 8, f"Sistemas {len(u.sistemas_estelares)} · "
+                    f"Estrellas activas {len(u.estrellas)} · Remanentes {len(u.remanentes)}")
+        self._texto(stdscr, 9, f"Planetas formados {len(u.planetas)}")
+        self._texto(stdscr, 11, f"Mundos con vida ahora {sum(p.vida_activa for p in u.planetas)}"
+                    f" · con vida histórica {sum(p.alcanzo_primera_vida for p in u.planetas)}")
+        self._texto(stdscr, 12, f"Mundos con protocélulas históricas "
+                    f"{sum(p.alcanzo_protocelula for p in u.planetas)}")
+        self._texto(stdscr, 14, "EVENTOS RECIENTES", curses.A_BOLD)
+        recientes = u.event_manager.obtener_recientes(4)
+        if not recientes:
+            self._texto(stdscr, 15, "Aún no hay eventos registrados.")
+        for fila, evento in enumerate(reversed(recientes), start=15):
+            self._texto(stdscr, fila, str(evento))
+        self._texto(stdscr, 20, "Las galaxias aún no están modeladas.")
 
-        self._encabezado(stdscr, 6, "01  ESTRUCTURA DEL UNIVERSO")
-        self._texto(stdscr, 7, f"Estrellas activas {len(self.universe.estrellas)}   "
-                    f"Remanentes {len(self.universe.remanentes)}")
-        self._texto(stdscr, 8, f"Sistemas estelares {len(sistemas)}   "
-                    f"Discos {len(discos)}")
-        self._encabezado(stdscr, 10, "02  FORMACIÓN PLANETARIA")
-        self._texto(stdscr, 11, f"Embriones {sum(d.obtener_cantidad_embriones() for d in discos)}"
-                    f"   Protoplanetas {sum(d.obtener_cantidad_protoplanetas() for d in discos)}")
-        self._texto(stdscr, 12, f"Planetas {len(planetas)}   Gigantes runaway {gigantes}")
-        self._encabezado(stdscr, 14, "03  REGLAS DE LOS MUNDOS")
-        self._texto(stdscr, 15, f"Normales {tipos['normal']}   "
-                    f"Extraordinarios {sum(tipos.values()) - tipos['normal']}")
-        self._texto(stdscr, 16, f"Arcanos {tipos['arcano']}   "
-                    f"Anomalías {tipos['anomalia_fisica']}   "
-                    f"Energía exótica {tipos['energia_exotica']}")
+    def _resumen_item(self, tipo, item):
+        if tipo == "eventos":
+            return str(item)
+        if tipo == "sistemas":
+            return (f"{item.nombre} · estrellas {len(item.nombres_estrellas)}"
+                    f" · planetas {len(item.nombres_planetas)}")
+        if tipo == "planetas":
+            vida = "vida" if item.vida_activa else "sin vida activa"
+            return f"{item.nombre} · {item.masa_tierra:.2f} M⊕ · {vida}"
+        estrella = self._estrella_activa(item)
+        if estrella is not None:
+            return f"{item} · activa · {estrella.etapa.replace('_', ' ')}"
+        remanente = self._remanente(item)
+        if remanente is not None:
+            return f"{item} · remanente {remanente.tipo.replace('_', ' ')}"
+        return f"{item} · sin estado estelar actual"
 
-    def _dibujar_condiciones(self, stdscr):
-        planetas = self.universe.planetas
-        hz = ter = ret = atm = agua = hab = quim = 0
-        temperados = glaciados = 0
-        for p in planetas:
-            hz += bool(p.en_zona_habitable_radiativa)
-            ter += bool(p.candidato_terrestre_hz)
-            ret += bool(p.retencion_atmosferica_aprox)
-            atm += bool(p.tiene_atmosfera_secundaria)
-            agua += bool(p.tiene_agua_condensada)
-            hab += bool(p.candidato_habitable_fase1)
-            quim += bool(p.candidato_quimica_prebiotica)
-            temperados += p.estado_habitabilidad_fase1 == "candidato_temperado"
-            glaciados += p.estado_habitabilidad_fase1 == "candidato_glaciado"
+    def _dibujar_lista(self, stdscr, pagina):
+        tipo = pagina["tipo"]
+        items = self._items(pagina)
+        pagina["indice"] = max(0, min(pagina["indice"], len(items) - 1))
+        alto, _ = stdscr.getmaxyx()
+        visibles = alto - 14
+        inicio = max(0, pagina["indice"] - visibles + 1)
+        inicio = min(inicio, max(0, len(items) - visibles))
+        titulo = "HISTORIAL DE EVENTOS" if tipo == "eventos" else f"CATÁLOGO DE {tipo.upper()}"
+        self._texto(stdscr, 6, titulo, curses.A_BOLD)
+        self._texto(stdscr, 7, f"Filtro: {pagina['filtro'] or 'todos'}")
+        self._texto(stdscr, 8, f"Resultados {len(items)} · "
+                    f"selección {pagina['indice'] + 1 if items else 0}")
+        self._separador(stdscr, 9)
+        if not items:
+            mensaje = ("Sin resultados. Borra el filtro con /."
+                       if pagina["filtro"] else
+                       "Aún no hay eventos en esta vista." if tipo == "eventos" else
+                       f"Aún no hay {tipo} registrados.")
+            self._texto(stdscr, 11, mensaje)
+        for fila, item in enumerate(items[inicio:inicio + visibles], start=10):
+            indice = inicio + fila - 10
+            marca = "›" if indice == pagina["indice"] else " "
+            self._texto(stdscr, fila, f"{marca} {self._resumen_item(tipo, item)}",
+                        curses.A_REVERSE if indice == pagina["indice"] else 0)
+        if items:
+            self._texto(stdscr, alto - 4,
+                        f"Mostrando {inicio + 1}-{min(inicio + visibles, len(items))}"
+                        f" de {len(items)}")
 
-        self._encabezado(stdscr, 6, "01  HABITABILIDAD  ·  condiciones actuales")
-        self._texto(stdscr, 7, f"Zona habitable {hz}   →   Terrestres {ter}"
-                    f"   →   Retención {ret}")
-        self._texto(stdscr, 8, f"Atmósfera secundaria {atm}   Agua condensada {agua}")
-        self._texto(stdscr, 9, f"Habitables ahora {hab}   "
-                    f"(templados {temperados}, glaciados {glaciados})",
-                    self._color(2))
-        self._encabezado(stdscr, 11, "02  ENTORNO QUÍMICO ACTUAL")
-        self._texto(stdscr, 12, f"Candidatos químicos {quim}")
-        self._texto(stdscr, 13, "Los logros históricos se muestran en Abiogénesis.")
-        self._texto(stdscr, 15, "Una condición puede desaparecer al cambiar la estrella")
-        self._texto(stdscr, 16, "o la atmósfera; los logros históricos permanecen.")
-
-    def _dibujar_vida(self, stdscr):
-        planetas = self.universe.planetas
-        activos = [p for p in planetas if p.poblacion_unicelular > 0]
-        historicos = sum(bool(p.alcanzo_primera_vida) for p in planetas)
-        unidades = sum(p.poblacion_unicelular for p in activos)
-        nacimientos = sum(p.nacimientos_unicelulares for p in planetas)
-        muertes = sum(p.muertes_unicelulares for p in planetas)
-        con_historia = [p for p in planetas if p.nacimientos_unicelulares > 0]
-        especies = self.universe.modelo_especies_unicelulares
-        especies_vivas = sum(len(especies.especies_vivas(p)) for p in planetas)
-        especies_registradas = sum(len(especies.especies_registradas(p)) for p in planetas)
-        especies_extintas = especies_registradas - especies_vivas
-        foco = (max(con_historia,
-                    key=lambda p: (p.poblacion_unicelular,
-                                   p.nacimientos_unicelulares))
-                if con_historia else None)
-
-        self._encabezado(stdscr, 6, "01  VIDA UNICELULAR  ·  fase 2")
-        if foco is None:
-            resumen_rasgos = "Rasgos vivos: aún no hay población."
+    def _dibujar_estrella(self, stdscr, nombre):
+        self._texto(stdscr, 6, "ESTRELLA  ·  ficha", curses.A_BOLD)
+        self._texto(stdscr, 8, nombre)
+        sistema = self._sistema_de_estrella(nombre)
+        self._texto(stdscr, 9, f"Sistema: {sistema.nombre if sistema else 'desconocido'}")
+        estrella = self._estrella_activa(nombre)
+        remanente = self._remanente(nombre)
+        if estrella is not None:
+            self._texto(stdscr, 11, f"Estado: {estrella.etapa.replace('_', ' ')}")
+            self._texto(stdscr, 12, f"Masa actual: {estrella.masa_actual:.2f} M☉")
+            if estrella.temperatura_efectiva is not None:
+                self._texto(stdscr, 13,
+                            f"Temperatura efectiva: {estrella.temperatura_efectiva:.0f} K")
+        elif remanente is not None:
+            self._texto(stdscr, 11, f"Remanente: {remanente.tipo.replace('_', ' ')}")
+            self._texto(stdscr, 12, f"Masa: {remanente.masa:.2f} M☉")
         else:
-            rasgos = foco.rasgos_unicelulares_vivos
-            grupos = len(set(rasgos))
-            linajes = len(set(foco.linajes_unicelulares_vivos))
-            resumen_rasgos = (
-                f"Rasgos vivos {grupos} · linajes {linajes} · 0:{rasgos.count(0)} "
-                f"1:{rasgos.count(1)} 2:{rasgos.count(2)} "
-                "· unidades simbólicas"
-            )
-        self._texto(stdscr, 7, resumen_rasgos, self._color(3))
-        self._texto(stdscr, 8, f"Mundos con población activa {len(activos)} · "
-                    f"Especies vivas {especies_vivas}")
-        self._texto(stdscr, 9, f"Unidades simbólicas en total {unidades} · "
-                    f"Especies extintas {especies_extintas}",
-                    self._color(2))
-        self._texto(stdscr, 10, f"Mundos que alcanzaron primera vida {historicos} · "
-                    f"Especies reg. {especies_registradas}")
-        self._texto(stdscr, 11,
-                    f"Historial: nacimientos {nacimientos}   muertes {muertes}")
-        titulo_mundo = "02  MUNDO OBSERVADO"
-        if foco is not None:
-            registrados = len(foco.historial_linajes_unicelulares)
-            titulo_mundo += f" · linajes registrados {registrados}"
-        self._encabezado(stdscr, 12, titulo_mundo)
-        if foco is not None:
-            capacidad = self.universe.modelo_poblacion_unicelular.CAPACIDAD_INICIAL
-            ajustada = self.universe.modelo_seleccion_unicelular.esta_ajustada(foco)
-            ajuste = "sí" if ajustada else "no"
-            self._texto(stdscr, 13, foco.nombre)
-            self._texto(stdscr, 14,
-                        f"Población actual {foco.poblacion_unicelular} "
-                        f"de {capacidad} unidades   ·   ajuste agua {ajuste}")
-            seleccion = self.universe.modelo_seleccion_unicelular
-            if seleccion.rasgo_favorecido(foco) is None:
-                comparacion = "sin regla"
-            else:
-                ajustados = len(seleccion.linajes_ajustados(foco))
-                comparacion = f"{ajustados}/{linajes}"
-            self._texto(stdscr, 15,
-                        f"Nacimientos {foco.nacimientos_unicelulares}   "
-                        f"Muertes {foco.muertes_unicelulares} · "
-                        f"Linajes ajustados {comparacion}")
-            rasgo = ("inactivo" if foco.rasgo_linea_unicelular is None
-                     else str(foco.rasgo_linea_unicelular))
-            linaje = ("—" if foco.linaje_observado_id is None
-                      else str(foco.linaje_observado_id))
-            registro = foco.historial_linajes_unicelulares.get(foco.linaje_observado_id)
-            origen = "—"
-            if registro is not None:
-                if registro["origen"] == "fundacion":
-                    origen = "fundador"
-                elif registro["origen"] == "variacion":
-                    origen = str(registro["progenitor_id"])
-                else:
-                    origen = "desconocido"
-            self._texto(stdscr, 16,
-                        f"Rasgo {rasgo} · Linaje {linaje} · Origen {origen} · "
-                        f"Variaciones {foco.variaciones_unicelulares}")
-            clasificacion = foco.clasificacion_especies_unicelulares.get(
-                foco.linaje_observado_id
-            )
-            especie = "—" if clasificacion is None else clasificacion["especie_id"]
-            self._texto(stdscr, 17,
-                        f"Selección: favorecidas "
-                        f"{foco.variantes_biologicas_favorecidas}   "
-                        f"descartadas {foco.variantes_biologicas_descartadas} · "
-                        f"Especie {especie}")
+            self._texto(stdscr, 11, "Sin estado estelar actual modelado.")
+        recientes = self.universe.event_manager.obtener_por_entidad("estrella", nombre)
+        self._texto(stdscr, 15, "EVENTOS RECIENTES", curses.A_BOLD)
+        if not recientes:
+            self._texto(stdscr, 16, "Aún no hay eventos de esta estrella.")
+        for fila, evento in enumerate(reversed(recientes[-3:]), start=16):
+            self._texto(stdscr, fila, str(evento))
+
+    def _dibujar_sistema(self, stdscr, sistema):
+        self._texto(stdscr, 6, "SISTEMA ESTELAR  ·  ficha", curses.A_BOLD)
+        self._texto(stdscr, 8, sistema.nombre)
+        self._texto(stdscr, 9, f"Formación: año {sistema.anio_formacion:,}".replace(",", " "))
+        self._texto(stdscr, 11, f"Tipo: {sistema.obtener_tipo()} · "
+                    f"estrellas {len(sistema.nombres_estrellas)}")
+        self._texto(stdscr, 12, f"Planetas registrados: {len(sistema.nombres_planetas)}")
+        self._texto(stdscr, 13, "Estrella principal: " +
+                    (sistema.nombre_estrella_primaria or "sin dato"))
+        recientes = self.universe.event_manager.obtener_por_entidad(
+            "sistema", sistema.nombre
+        )
+        self._texto(stdscr, 16, "EVENTOS RECIENTES", curses.A_BOLD)
+        for fila, evento in enumerate(reversed(recientes[-3:]), start=17):
+            self._texto(stdscr, fila, str(evento))
+
+    def _dibujar_evento(self, stdscr, evento):
+        self._texto(stdscr, 6, "EVENTO  ·  detalle", curses.A_BOLD)
+        self._texto(stdscr, 8, evento.tipo)
+        self._texto(stdscr, 9, f"Año universal {evento.anio:,}".replace(",", " "))
+        self._texto(stdscr, 10, f"Ámbito: {evento.ambito}"
+                    + (f" · {evento.entidad}" if evento.entidad else ""))
+        _, ancho = stdscr.getmaxyx()
+        for fila, linea in enumerate(textwrap.wrap(evento.mensaje, ancho - 5), start=12):
+            if fila >= stdscr.getmaxyx()[0] - 3:
+                break
+            self._texto(stdscr, fila, linea)
+
+    def _dibujar_planeta(self, stdscr, planeta):
+        u = self.universe
+        especies = u.modelo_especies_unicelulares
+        self._texto(stdscr, 6, "PLANETA  ·  observación", curses.A_BOLD)
+        self._texto(stdscr, 7, planeta.nombre)
+        self._texto(stdscr, 8, f"Sistema: {planeta.sistema_nombre or 'sin dato'}")
+        self._texto(stdscr, 9, f"Masa {planeta.masa_tierra:.2f} M⊕ · "
+                    f"órbita {planeta.semieje_mayor_au:.2f} AU")
+        self._texto(stdscr, 10, "Regla: " + planeta.regimen_mundo.replace("_", " "))
+        self._texto(stdscr, 12, "CONDICIONES ACTUALES", curses.A_BOLD)
+        self._texto(stdscr, 13, "Habitabilidad: " +
+                    planeta.estado_habitabilidad_fase1.replace("_", " "))
+        self._texto(stdscr, 14, "Agua: " + (planeta.estado_agua_preclima or "sin dato"))
+        self._texto(stdscr, 15, "Química: " +
+                    planeta.estado_quimica_prebiotica.replace("_", " "))
+        self._texto(stdscr, 16, f"Protocélulas: {'viables' if planeta.protocelula_viable else 'no viables'}"
+                    f" · logro histórico {'sí' if planeta.alcanzo_protocelula else 'no'}")
+        self._texto(stdscr, 17, f"Vida: {'activa' if planeta.vida_activa else 'inactiva'}"
+                    f" · población {planeta.poblacion_unicelular}")
+        self._texto(stdscr, 18, f"Especies vivas {len(especies.especies_vivas(planeta))}"
+                    f" · extintas {len(especies.especies_extintas(planeta))}")
+        anio_formacion = planeta.anio_formacion
+        duracion = planeta.periodo_orbital_dias
+        aproximada = False
+        if anio_formacion is None or duracion is None:
+            # Los guardados antiguos no tenían calendario; reconstruimos
+            # una fecha aproximada sin cambiar el archivo ni la simulación.
+            aproximada = True
+            estrella = self._estrella_activa(planeta.estrella_anfitriona)
+            disco = next((d for d in u.discos_protoplanetarios
+                          if d.estrella_nombre == planeta.estrella_anfitriona), None)
+            sistema = u.buscar_sistema_estelar(planeta.sistema_nombre)
+            if anio_formacion is None:
+                anio_formacion = (estrella.anio_nacimiento if estrella else
+                                   sistema.anio_formacion if sistema else None)
+            if duracion is None:
+                masa = (disco.masa_estelar_msol if disco else
+                        estrella.masa_inicial if estrella else None)
+                duracion = periodo_orbital_dias(planeta.semieje_mayor_au, masa)
+        fecha = fecha_local(planeta, u.time, anio_formacion, duracion)
+        if fecha is None:
+            self._texto(stdscr, 20, "Fecha local: faltan datos orbitales o de formación.")
         else:
-            self._texto(stdscr, 13, "Aún no hay población registrada.")
-
-    def _dibujar_especies(self, stdscr):
-        planetas = self.universe.planetas
-        modelo = self.universe.modelo_especies_unicelulares
-        vivas = sum(len(modelo.especies_vivas(p)) for p in planetas)
-        registradas = sum(len(modelo.especies_registradas(p)) for p in planetas)
-        coexistencia = sum(len(modelo.especies_vivas(p)) >= 2 for p in planetas)
-        unidades = sum(p.poblacion_unicelular for p in planetas)
-        linajes = sum(len(set(p.linajes_unicelulares_vivos)) for p in planetas)
-        con_historia = [p for p in planetas if p.historial_linajes_unicelulares]
-
-        self._encabezado(stdscr, 6, "01  DIVERSIFICACIÓN  ·  especies simbólicas")
-        self._texto(stdscr, 7, f"Especies vivas {vivas} · extintas "
-                    f"{registradas - vivas} · registradas {registradas}")
-        self._texto(stdscr, 8, f"Mundos con dos o más especies vivas {coexistencia}")
-        self._texto(stdscr, 9, f"Unidades vivas {unidades} · linajes vivos {linajes}")
-        self._texto(stdscr, 10,
-                    "Una especie puede vivir sin su linaje fundador.")
-        self._encabezado(stdscr, 12, "02  MUNDO OBSERVADO")
-        if not con_historia:
-            self._texto(stdscr, 13, "Aún no hay especies registradas.")
-            return
-
-        foco = max(con_historia, key=lambda p: (
-            len(modelo.especies_vivas(p)), p.poblacion_unicelular,
-            len(modelo.especies_registradas(p)), p.nacimientos_unicelulares,
-        ))
-        abundancia = modelo.abundancia_por_especie(foco)
-        especies_registradas = modelo.especies_registradas(foco)
-        self._texto(stdscr, 13, foco.nombre)
-        self._texto(stdscr, 14,
-                    f"Especies vivas {len(abundancia)} · "
-                    f"extintas {len(especies_registradas) - len(abundancia)}")
-        if abundancia:
-            grupos = [f"{especie}:{abundancia[especie]}"
-                      for especie in sorted(abundancia)]
-            self._texto(stdscr, 15,
-                        "Unidades por especie: " + "  ".join(grupos[:4]))
-            if len(grupos) > 4:
-                self._texto(stdscr, 16, "Otras especies: " + "  ".join(grupos[4:]))
-            else:
-                self._texto(stdscr, 16, "Cada número identifica una especie local.")
-        else:
-            self._texto(stdscr, 15, "Sin unidades vivas; la historia permanece.")
-
-        linaje = foco.linaje_observado_id
-        if linaje is None:
-            self._texto(stdscr, 17, "Rama observada: ninguna activa.")
-            return
-        especie = foco.clasificacion_especies_unicelulares[linaje]["especie_id"]
-        progenitora = modelo.especie_progenitora(foco, especie)
-        if progenitora is None:
-            progenitora = "desconocida o fundadora"
-        hijas = len(modelo.especies_hijas(foco, especie))
-        self._texto(stdscr, 17,
-                    f"Especie observada {especie} · origen {progenitora} · "
-                    f"hijas {hijas}")
-
-    def _dibujar_eventos(self, stdscr, alto):
-        fila = 18
-        self._separador(stdscr, fila)
-        self._encabezado(stdscr, fila + 1, "EVENTOS RECIENTES  ·  PgUp/PgDn")
-        eventos = self.universe.event_manager.obtener_eventos()
-        espacio = alto - fila - 4
-        fin = max(0, len(eventos) - self.scroll_eventos)
-        visibles = eventos[max(0, fin - espacio):fin]
-        if not visibles:
-            self._texto(stdscr, fila + 2, "Aún no hay eventos.")
-        else:
-            for desplazamiento, evento in enumerate(visibles):
-                self._texto(stdscr, fila + 2 + desplazamiento, f"• {evento}")
+            anio, mes, dia, hora, minuto, segundo = fecha
+            marca = " aprox." if aproximada else ""
+            self._texto(stdscr, 19, f"Año orbital{marca}: {duracion:.2f} días estándar")
+            self._texto(stdscr, 20, f"Año {anio:,} · mes {mes} · día {dia}".replace(",", " "))
+            self._texto(stdscr, 21, f"Hora {hora:02d}:{minuto:02d}:{segundo:02d}"
+                        " · meses = 1/12 del año orbital")

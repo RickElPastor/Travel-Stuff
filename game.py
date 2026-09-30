@@ -1,15 +1,15 @@
 import curses
 
-from hybrid_stellar_model import ModeloEstelarHibrido
-from popiii_hassan_model import ModeloHassanPopIII
-from save_manager import SaveManager
-from sevn_model import ModeloSEVN
-from simulation import Simulation
+from stars.hybrid_stellar_model import ModeloEstelarHibrido
+from stars.popiii_hassan_model import ModeloHassanPopIII
+from universe.save_manager import SaveManager
+from stars.sevn_model import ModeloSEVN
+from universe.simulation import Simulation
 from ui.info_screen import InfoScreen
 from ui.menu import Menu
 from ui.save_menu import SaveMenu
 from ui.simulation_ui import SimulationUI
-from universe import Universe
+from universe.universe import Universe
 
 
 def crear_modelo_estelar():

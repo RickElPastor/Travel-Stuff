@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
 
-from events import Event
+from universe.events import Event
 from planets.protoplanetary_disk import DiscoProtoplanetario
 from planets.planet import Planet
-from remnant import RemanenteEstelar
-from star import Star
-from stellar_systems.stellar_system import SistemaEstelar
-from universe import Universe
+from stars.remnant import RemanenteEstelar
+from stars.star import Star
+from stars.systems.stellar_system import SistemaEstelar
+from universe.universe import Universe
 
 
 class SaveManager:

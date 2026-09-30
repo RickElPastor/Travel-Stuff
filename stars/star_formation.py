@@ -1,11 +1,11 @@
 import math
 import random
 from dataclasses import dataclass
-from stellar_systems.system_formation import (
+from stars.systems.system_formation import (
     FormadorSistemasEstelares,
 )
 
-from cosmology import CosmologiaPlanck18
+from universe.cosmology import CosmologiaPlanck18
 
 
 @dataclass(frozen=True)

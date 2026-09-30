@@ -4,7 +4,7 @@ import json
 import math
 from pathlib import Path
 
-from stellar_model import (
+from stars.stellar_model import (
     EstadoEstelar,
     ModeloEvolutivoEstelar,
 )

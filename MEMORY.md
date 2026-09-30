@@ -11,9 +11,107 @@ para conocer exactamente qué quedó confirmado en un commit.
   cierre de `fase-2`. Consultar Git para el commit publicado; las entradas
   anteriores conservan el historial de trabajo local previo al cierre.
 - Siguiente rama: `fase-3`, creada desde el cierre de `fase-2` para comenzar
-  el paso 5, metabolismo y biosfera. Todavía no se implementan esas reglas.
+  el paso 5, metabolismo y biosfera. La estructura y la interfaz se prepararon
+  antes de añadir esas reglas; todavía no se implementan metabolismos.
 - Al iniciar cada fase se explica su alcance; al terminarla se revisa,
   confirma y sube su rama. La instrucción permanente está en `AGENTS.md`.
+
+## 2026-09-30 — Rama `change_ui`
+
+- Por petición del usuario, los cambios locales de preparación estructural,
+  navegación, eventos y calendario se guardan juntos en `change_ui`, creada
+  desde `fase-3`. Tras subirla, se vuelve a `fase-3` sin integrarla todavía;
+  allí quedan pendientes tanto esta integración como el metabolismo.
+- No se añadieron reglas de civilización: sus nombres de meses y siglos
+  requerirán un estado persistente y una vista propia en una etapa posterior.
+- La validación del código para este commit es la de las dos entradas
+  siguientes: 83 pruebas automáticas y universo natural desde año 0 hasta
+  3 000 millones con continuidad de guardado/carga. No se modificó el motor
+  después de esas comprobaciones.
+
+## 2026-09-30 — Eventos por ámbito y calendario local de observación
+
+- Rama `fase-3`, cambios locales sin commit ni push: la fase de metabolismo y
+  biosfera sigue abierta. Se mantiene íntegro el reordenamiento de carpetas
+  y la navegación de la entrada anterior.
+- `universe/events.py` añade ámbito y entidad opcionales a cada evento. Los
+  eventos de guardados antiguos se interpretan como universales; guardar y
+  cargar conserva los campos nuevos. `universe/universe.py` registra el inicio
+  de un universo nuevo con su semilla, y después la formación
+  de sistemas y planetas, nacimiento/evolución/remanente de estrellas (incluso
+  cuando una estrella queda fuera del modelo), y primeros hitos planetarios
+  (atmósfera secundaria, etapas de química prebiótica, protocélulas,
+  replicación, vida y extinción local). No altera la física ni el azar.
+- `planets/planet.py` guarda año de formación y duración orbital calculada al
+  formarse. `planets/local_calendar.py` deriva la fecha visible del único
+  reloj universal. Usa la aproximación kepleriana para el año orbital, doce
+  divisiones iguales para meses y días estándar de 24 horas; no hay rotación
+  ni calendario cultural. Los guardados previos intentan reconstruir datos
+  disponibles para la pantalla y marcan la fecha como aproximada.
+- `ui/simulation_ui.py` quita las indicaciones repetidas de Enter/E del
+  contenido. `V` abre eventos universales o del objeto seleccionado; las
+  fichas muestran recientes donde caben. Entrar a planeta ahora fija x1,
+  igual al x1 universal (un año universal por segundo), y presenta año, mes,
+  día, hora, minuto y segundo locales, junto al año universal del encabezado.
+  `universe/world_time.py` hace visible la etiqueta x1. En
+  `universe/simulation.py` el límite por refresco pasó a 0.1 s: antes cortaba
+  cada intervalo de pantalla de 0.05 s a 0.02 s, y x1 avanzaba más lento de
+  lo anunciado. `ui/README.md` y `FASES.md` explican los límites de esta
+  observación.
+- `tests/test_simulation_dashboard.py` cubre navegación de eventos, ámbitos,
+  persistencia, compatibilidad de eventos anteriores, año orbital de 1000
+  días, reloj compartido y x1 medido con veinte refrescos de 0.05 s. La
+  prueba de pantalla previa falló al seguir
+  esperando 1000 años/s y la nota de galaxias en la fila anterior; se ajustó
+  a los requisitos nuevos. `tests/run_universe_from_zero.py` exige eventos
+  por los tres ámbitos, hitos de protocélulas/vida, periodos planetarios y
+  continuidad del historial tras guardar/cargar.
+- Validación: 83 pruebas automáticas aprobadas; corrida real con semilla
+  `374852300` desde 0 hasta 3 000 000 000, pasos de 20 millones hasta
+  2 760 millones, 1 millón hasta 2 820 millones y de nuevo 20 millones.
+  Protocélulas a 2 760 millones, vida a 2 763 millones, tres especies
+  coexistentes a 2 769 millones; al final 1849 planetas y 5 especies
+  extintas. Eventos: 956 de sistema, 1099 de estrella y 1878 de planeta.
+  Guardar/cargar y continuar conservaron estados y eventos. Falta una
+  revisión manual de legibilidad en una terminal real con muchos eventos.
+- Siguiente bloque de `fase-3`: fuentes de energía y metabolismo simbólico.
+
+## 2026-09-30 — Preparación de la estructura y exploración antes de metabolismo
+
+- Rama `fase-3`; trabajo local sin commit ni push porque la fase sigue abierta.
+  La raíz conserva `main.py` y `game.py` como entradas, además de los
+  documentos. El motor, tiempo, eventos, cosmología, simulación y guardado
+  están en `universe/`; estrellas, sistemas, remanentes, modelos y track Hassan
+  están en `stars/`. La configuración de pantalla pasó a `ui/config.py`.
+  Se actualizaron imports de juego, modelos, interfaz y pruebas, y las rutas
+  de los datos estelares. El formato JSON y las reglas físicas no cambiaron.
+- `ui/simulation_ui.py` sustituyó las cinco vistas por una ruta: Universo →
+  catálogo de sistemas o estrellas → ficha del sistema → catálogo de sus
+  planetas → ficha planetaria. Cada catálogo muestra la lista completa por
+  páginas, datos relevantes y filtro de nombre con `/`. `Esc` retrocede,
+  `Enter` abre, `S` guarda y `+/-` modifica velocidad. No hay galaxias
+  simuladas, así que la pantalla lo dice sin inventarlas. `ui/README.md`
+  explica la navegación para el usuario.
+- `universe/world_time.py` añadió velocidades planetarias hasta 10 000
+  años/s conservando los índices antiguos 0–3 para partidas guardadas. Al
+  entrar en una ficha planetaria se usan 1 000 años/s y al salir se recupera
+  la escala e índice anteriores. Una partida guardada dentro del planeta abre
+  el explorador en Universo y vuelve a la escala universal. El tiempo sigue
+  siendo del universo entero.
+- `tests/test_simulation_dashboard.py` cubre inicio en Universo, navegación,
+  búsqueda, lista larga, estrellas, datos relevantes, velocidad local,
+  preservación del azar y guardado/carga. El catálogo vacío muestra una
+  explicación propia. 80 pruebas automáticas aprobadas; el modelo estelar
+  híbrido se pudo crear tras mover el track. Se inició y cerró el juego real
+  en una terminal de 100×30, entrando al universo y al catálogo sin excepción.
+- Se repitió el escenario real desde año 0, semilla 374852300, con pasos de
+  20 millones hasta 2 760 millones, 1 millón hasta 2 820 millones y de nuevo
+  20 millones hasta 3 000 millones. Conservó el resultado de Fase 2:
+  protocélulas en 2 760 millones, vida en 2 763 millones y coexistencia de
+  tres especies en 2 769 millones; guardar/cargar y continuar coincidieron.
+  La navegación con un universo poblado merece inspección manual de
+  usabilidad, aunque la ruta se cubrió con pruebas de pantalla simulada.
+- Próximo bloque de `fase-3`: fuentes de energía y metabolismo simbólico.
 
 ## 2026-09-30 — Revisión integral y cierre de Fase 2
 

@@ -1,6 +1,6 @@
 import curses
 
-from config import SUBTITULO, TITULO
+from ui.config import SUBTITULO, TITULO
 from ui.console_utils import (
     centrar,
     escribir_seguro,

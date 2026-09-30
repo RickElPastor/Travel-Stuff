@@ -1,4 +1,4 @@
-from stellar_model import ModeloEvolutivoEstelar
+from stars.stellar_model import ModeloEvolutivoEstelar
 
 
 class ModeloEstelarHibrido(ModeloEvolutivoEstelar):

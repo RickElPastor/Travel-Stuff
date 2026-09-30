@@ -134,6 +134,8 @@ class Planet:
         linaje_observado_id=None,
         historial_linajes_unicelulares=None,
         clasificacion_especies_unicelulares=None,
+        anio_formacion=None,
+        periodo_orbital_dias=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -168,6 +170,13 @@ class Planet:
         self.estrella_anfitriona = estrella_anfitriona
 
         self.tipo_orbita = tipo_orbita
+
+        self.anio_formacion = (
+            None if anio_formacion is None else int(anio_formacion)
+        )
+        self.periodo_orbital_dias = (
+            None if periodo_orbital_dias is None else float(periodo_orbital_dias)
+        )
 
         self.composicion_inicial = str(composicion_inicial)
 
@@ -669,6 +678,8 @@ class Planet:
             "nombre": self.nombre,
             "masa_tierra": (self.masa_tierra),
             "semieje_mayor_au": (self.semieje_mayor_au),
+            "anio_formacion": self.anio_formacion,
+            "periodo_orbital_dias": self.periodo_orbital_dias,
             "excentricidad": (self.excentricidad),
             "sistema_nombre": (self.sistema_nombre),
             "estrella_anfitriona": (self.estrella_anfitriona),
@@ -790,6 +801,8 @@ class Planet:
             nombre=datos["nombre"],
             masa_tierra=(datos["masa_tierra"]),
             semieje_mayor_au=(datos["semieje_mayor_au"]),
+            anio_formacion=datos.get("anio_formacion"),
+            periodo_orbital_dias=datos.get("periodo_orbital_dias"),
             excentricidad=datos.get(
                 "excentricidad",
                 0.0,

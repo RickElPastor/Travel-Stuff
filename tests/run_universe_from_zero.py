@@ -3,8 +3,8 @@
 import tempfile
 
 from game import crear_modelo_estelar
-from save_manager import SaveManager
-from universe import Universe
+from universe.save_manager import SaveManager
+from universe.universe import Universe
 
 
 SEMILLA = 374852300
@@ -77,6 +77,18 @@ def ejecutar_con_modelo(modelo_estelar):
     for nombre in ("protocélulas", "primera vida", "especies coexistentes"):
         assert nombre in primeros, f"No apareció el hito esperado: {nombre}"
     assert datos["especies_extintas"] > 0
+    eventos = universo.event_manager.obtener_eventos()
+    conteos = {
+        tipo: sum(evento.ambito == tipo for evento in eventos)
+        for tipo in ("sistema", "estrella", "planeta")
+    }
+    assert all(conteos.values()), f"Faltan eventos por ámbito: {conteos}"
+    assert any(e.tipo == "Protocélulas" for e in eventos)
+    assert any(e.tipo == "Primera vida" for e in eventos)
+    assert all(p.anio_formacion is not None and p.periodo_orbital_dias > 0
+               for p in universo.planetas)
+    print(f"Eventos por ámbito: {conteos}; protocélulas y primera vida registrados.",
+          flush=True)
 
     with tempfile.TemporaryDirectory() as carpeta:
         gestor = SaveManager(carpeta)
@@ -86,6 +98,9 @@ def ejecutar_con_modelo(modelo_estelar):
     assert resumen(cargado) == resumen(universo)
     assert [p.a_dict() for p in cargado.planetas] == [
         p.a_dict() for p in universo.planetas
+    ]
+    assert [e.a_dict() for e in cargado.event_manager.eventos] == [
+        e.a_dict() for e in eventos
     ]
     print("Guardado/carga: año, resumen y estados planetarios iguales.", flush=True)
     for version in (universo, cargado):

@@ -103,6 +103,21 @@ La base de Fase 2 queda terminada. El paso 5 de la hoja de ruta comienza en
 
 ### Inicio de Fase 3 — Metabolismos y biosfera
 
+Antes de agregar metabolismo, se ordenaron los módulos del universo y de
+estrellas y se cambió la interfaz a una exploración por catálogos de sistemas,
+estrellas y planetas. Todavía no existe un modelo de galaxias; la navegación
+parte del universo directamente a los sistemas o las estrellas. Esta
+preparación de estructura e interfaz no cuenta como metabolismo implementado.
+
+La rama `change_ui`, creada desde `fase-3`, prepara eventos universales y eventos
+filtrados de sistemas, estrellas y planetas. El reloj universal sigue siendo
+único; la vista planetaria entra en x1 y deriva una fecha numérica local del
+periodo orbital al formarse cada planeta. Meses y días son convenciones de
+visualización provisionales, no cultura ni rotación planetaria simulada.
+Los calendarios que una civilización pudiera crear pertenecen a pasos
+posteriores. Esta mejora de observación tampoco cuenta como metabolismo y
+queda pendiente integrarla en `fase-3` cuando se retome ese trabajo.
+
 Explicar primero al usuario el alcance y trabajar por bloques pequeños:
 fuentes de energía y metabolismo simbólico; rutas metabólicas como posible
 fotosíntesis si las condiciones lo permiten; efectos biológicos sobre la

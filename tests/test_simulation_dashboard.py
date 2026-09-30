@@ -1,15 +1,24 @@
+import curses
+import tempfile
 import unittest
 
 from planets.planet import Planet
-from simulation import Simulation
+from planets.local_calendar import fecha_local, periodo_orbital_dias
+from stars.star import Star
+from stars.systems.stellar_system import SistemaEstelar
+from universe.save_manager import SaveManager
+from universe.events import Event
+from universe.simulation import Simulation
+from universe.universe import Universe
+from universe.world_time import Time
 from ui.simulation_ui import SimulationUI
-from universe import Universe
 
 
 class PantallaFalsa:
-    def __init__(self, alto, ancho):
+    def __init__(self, alto=24, ancho=72, teclas=None):
         self.alto = alto
         self.ancho = ancho
+        self.teclas = list(teclas or [])
         self.erase()
 
     def getmaxyx(self):
@@ -26,222 +35,234 @@ class PantallaFalsa:
     def refresh(self):
         pass
 
+    def nodelay(self, valor):
+        self.sin_espera = valor
+
+    def getch(self):
+        return self.teclas.pop(0)
+
     def linea(self, numero):
         return "".join(self.filas[numero]).rstrip()
 
 
-class PanelTests(unittest.TestCase):
-    def test_cinco_vistas_y_controles_en_terminal_minima(self):
-        universo = Universe(seed=374852300)
-        universo.time.anio = 2_780_000_000
+class ExploradorTests(unittest.TestCase):
+    def crear_universo(self):
+        universo = Universe(seed=73)
+        alfa = SistemaEstelar("Sistema Alfa", 100, estrellas=["Alfa"],
+                              estrella_primaria="Alfa")
+        beta = SistemaEstelar("Sistema Beta", 200, estrellas=["Beta"],
+                              estrella_primaria="Beta")
+        universo.sistemas_estelares = [alfa, beta]
+        universo.estrellas = [Star("Alfa", 1, 0.01)]
         planeta = Planet(
-            "Planeta-Prueba", 1, 1,
-            alcanzo_protocelula=True, protocelula_viable=True,
-            replicacion_prebiotica_activa=True,
-            alcanzo_replicacion_prebiotica=True,
-            copias_heredables=21, variaciones_prebioticas=3,
-            variantes_favorecidas=1, variantes_descartadas=2,
-            patron_copia=0, vida_activa=True,
-            alcanzo_primera_vida=True, poblacion_unicelular=3,
-            nacimientos_unicelulares=7, muertes_unicelulares=4,
-            rasgo_linea_unicelular=2, variaciones_unicelulares=3,
-            variantes_biologicas_favorecidas=1,
-            variantes_biologicas_descartadas=2,
-            rasgos_unicelulares_vivos=[0, 2, 2],
-            linajes_unicelulares_vivos=[1, 2, 2],
-            linaje_observado_id=2,
-            historial_linajes_unicelulares={
-                1: {"progenitor_id": None, "rasgo": 0, "origen": "fundacion"},
-                2: {"progenitor_id": 1, "rasgo": 2, "origen": "variacion"},
-            },
-            estado_agua_preclima="liquida",
+            "Mundo Beta", 1.5, 1.2, sistema_nombre="Sistema Beta",
+            estrella_anfitriona="Beta", estado_agua_preclima="liquida",
+            estado_habitabilidad_fase1="candidato_temperado",
+            alcanzo_protocelula=True, vida_activa=True,
+            poblacion_unicelular=1, rasgos_unicelulares_vivos=[1],
+            linajes_unicelulares_vivos=[1], linaje_observado_id=1,
         )
         universo.planetas = [planeta]
+        beta.agregar_planeta(planeta)
+        return universo
+
+    def test_empieza_en_universo_y_las_teclas_antiguas_no_cambian_vista(self):
+        universo = self.crear_universo()
         interfaz = SimulationUI(Simulation(universo))
-        pantalla = PantallaFalsa(24, 72)
-        antes = planeta.a_dict()
-
+        pantalla = PantallaFalsa()
         interfaz._dibujar(pantalla)
-        self.assertIn("TRAVEL STUFF", pantalla.linea(1))
-        self.assertIn("Protocélulas 1", pantalla.linea(9))
-        self.assertIn("Mundos con selección 1", pantalla.linea(15))
-        self.assertIn("PRIMERA VIDA", pantalla.linea(16))
-        self.assertIn("Línea activa", pantalla.linea(17))
-        self.assertIn("EVENTOS RECIENTES", pantalla.linea(19))
-        self.assertIn("Esc Menú", pantalla.linea(23))
-
-        interfaz._procesar_tecla(pantalla, ord("2"))
-        interfaz._dibujar(pantalla)
-        self.assertIn("ESTRUCTURA DEL UNIVERSO", pantalla.linea(6))
-        self.assertIn("Planetas 1", pantalla.linea(12))
-        interfaz._procesar_tecla(pantalla, ord("3"))
-        interfaz._dibujar(pantalla)
-        self.assertIn("HABITABILIDAD", pantalla.linea(6))
-        self.assertIn("Candidatos químicos", pantalla.linea(12))
-        interfaz._procesar_tecla(pantalla, ord("4"))
-        interfaz._dibujar(pantalla)
-        self.assertIn("VIDA UNICELULAR", pantalla.linea(6))
-        self.assertIn("Rasgos vivos 2 · linajes 2 · 0:1 1:0 2:2",
-                      pantalla.linea(7))
-        self.assertIn("Mundos con población activa 1", pantalla.linea(8))
-        self.assertIn("Especies vivas 1", pantalla.linea(8))
-        self.assertIn("Especies extintas 0", pantalla.linea(9))
-        self.assertIn("Especies reg. 1", pantalla.linea(10))
-        self.assertIn("Unidades simbólicas en total 3", pantalla.linea(9))
-        self.assertIn("Historial: nacimientos 7   muertes 4", pantalla.linea(11))
-        self.assertIn("Población actual 3 de 8 unidades", pantalla.linea(14))
-        self.assertIn("ajuste agua sí", pantalla.linea(14))
-        self.assertIn("Nacimientos 7   Muertes 4", pantalla.linea(15))
-        self.assertIn("Linajes ajustados 1/2", pantalla.linea(15))
-        self.assertIn("linajes registrados 2", pantalla.linea(12))
-        self.assertIn("Rasgo 2 · Linaje 2 · Origen 1", pantalla.linea(16))
-        self.assertIn("Variaciones 3", pantalla.linea(16))
-        self.assertIn("Selección: favorecidas 1   descartadas 2",
-                      pantalla.linea(17))
-        self.assertIn("Especie 1", pantalla.linea(17))
+        self.assertIn("EXPLORADOR DEL UNIVERSO", pantalla.linea(1))
+        self.assertIn("Sistemas 2", pantalla.linea(8))
+        self.assertIn("Planetas formados 1", pantalla.linea(9))
+        self.assertIn("Las galaxias aún no están modeladas", pantalla.linea(20))
         interfaz._procesar_tecla(pantalla, ord("5"))
-        interfaz._dibujar(pantalla)
-        self.assertIn("DIVERSIFICACIÓN", pantalla.linea(6))
-        self.assertIn("Especies vivas 1", pantalla.linea(7))
-        self.assertIn("Mundos con dos o más especies vivas 0", pantalla.linea(8))
-        self.assertIn("Unidades por especie: 1:3", pantalla.linea(15))
-        self.assertIn("1-5 Vistas", pantalla.linea(23))
-        self.assertEqual(antes, planeta.a_dict())
-
-        planeta.estado_agua_preclima = None
-        interfaz.vista = 3
-        interfaz._dibujar(pantalla)
-        self.assertIn("Linajes ajustados sin regla", pantalla.linea(15))
-
-    def test_linea_inactiva_y_primera_vida_historica_se_explican(self):
-        universo = Universe(seed=1)
-        universo.planetas = [Planet(
-            "Planeta-Prueba", 1, 1,
-            alcanzo_protocelula=True, copias_heredables=41,
-            alcanzo_primera_vida=True, anio_primera_vida=100,
-        )]
-        pantalla = PantallaFalsa(24, 72)
-        SimulationUI(Simulation(universo))._dibujar(pantalla)
-        self.assertIn("activa 0", pantalla.linea(16))
-        self.assertIn("histórica 1", pantalla.linea(16))
-        self.assertIn("Línea inactiva", pantalla.linea(17))
-        self.assertIn("41 copias históricas", pantalla.linea(17))
-
-    def test_vida_muestra_historial_tras_extincion(self):
-        universo = Universe(seed=1)
-        universo.planetas = [Planet(
-            "Planeta-Prueba", 1, 1,
-            alcanzo_primera_vida=True,
-            nacimientos_unicelulares=7,
-            muertes_unicelulares=7,
-            variaciones_unicelulares=3,
-            variantes_biologicas_favorecidas=1,
-            variantes_biologicas_descartadas=2,
-        )]
-        interfaz = SimulationUI(Simulation(universo))
-        interfaz.vista = 3
-        pantalla = PantallaFalsa(24, 72)
-        interfaz._dibujar(pantalla)
-        self.assertIn("Mundos con población activa 0", pantalla.linea(8))
-        self.assertIn("linajes 0", pantalla.linea(7))
-        self.assertIn("Linajes ajustados sin regla", pantalla.linea(15))
-        self.assertIn("Historial: nacimientos 7   muertes 7",
-                      pantalla.linea(11))
-        self.assertIn("Planeta-Prueba", pantalla.linea(13))
-        self.assertIn("Población actual 0", pantalla.linea(14))
-        self.assertIn("ajuste agua no", pantalla.linea(14))
-        self.assertIn("Rasgo inactivo", pantalla.linea(16))
-        self.assertIn("Linaje — · Origen —", pantalla.linea(16))
-        self.assertIn("Variaciones 3", pantalla.linea(16))
-        self.assertIn("Selección: favorecidas 1   descartadas 2",
-                      pantalla.linea(17))
-
-    def test_eventos_no_tapan_los_controles_y_se_desplazan(self):
-        universo = Universe(seed=1)
-        universo.event_manager.eventos = [f"Evento {n}" for n in range(12)]
-        interfaz = SimulationUI(Simulation(universo))
-        pantalla = PantallaFalsa(24, 72)
-        interfaz._dibujar(pantalla)
-        self.assertIn("Evento 11", pantalla.linea(21))
-        interfaz._subir_eventos()
-        interfaz._dibujar(pantalla)
-        self.assertIn("Evento 10", pantalla.linea(21))
+        self.assertEqual(interfaz._actual()["tipo"], "universo")
         self.assertIn("Esc Menú", pantalla.linea(23))
+        self.assertTrue(interfaz._procesar_tecla(pantalla, 27))
 
-    def test_especies_se_cuentan_por_planeta_y_conservan_extintas(self):
-        universo = Universe(seed=73)
-        historia = {
-            1: {"progenitor_id": None, "rasgo": 1, "origen": "fundacion"},
-            2: {"progenitor_id": 1, "rasgo": 0, "origen": "variacion"},
-            3: {"progenitor_id": 2, "rasgo": 1, "origen": "variacion"},
-        }
-        universo.planetas = [Planet(
-            nombre, 1, 1, vida_activa=True, poblacion_unicelular=1,
-            nacimientos_unicelulares=3, muertes_unicelulares=2,
-            linajes_unicelulares_vivos=[3], rasgos_unicelulares_vivos=[1],
-            rasgo_linea_unicelular=1, linaje_observado_id=3,
-            historial_linajes_unicelulares=historia,
-        ) for nombre in ("Uno", "Dos")]
+    def test_buscar_sistema_planeta_y_restaurar_velocidad_al_volver(self):
+        universo = self.crear_universo()
         interfaz = SimulationUI(Simulation(universo))
-        interfaz.vista = 3
-        pantalla = PantallaFalsa(24, 72)
-        interfaz._dibujar(pantalla)
-        self.assertIn("Especies vivas 2", pantalla.linea(8))
-        self.assertIn("Especies extintas 2", pantalla.linea(9))
-        self.assertIn("Especies reg. 4", pantalla.linea(10))
-        self.assertIn("Especie 3", pantalla.linea(17))
-        for planeta in universo.planetas:
-            planeta.vida_activa = False
-        universo.actualizar_poblacion_unicelular()
-        universo.actualizar_herencia_unicelular()
-        interfaz._dibujar(pantalla)
-        self.assertIn("Especies vivas 0", pantalla.linea(8))
-        self.assertIn("Especies extintas 4", pantalla.linea(9))
-        self.assertIn("Especie —", pantalla.linea(17))
+        pantalla = PantallaFalsa()
+        antes = universo.planetas[0].a_dict()
+        azar_antes = universo.random.getstate()
 
-    def test_diversificacion_muestra_coexistencia_y_rama(self):
-        universo = Universe(seed=73)
-        planeta = Planet(
-            "Diverso", 1, 1, vida_activa=True, poblacion_unicelular=5,
-            linajes_unicelulares_vivos=[2, 3, 3, 4, 5],
-            rasgos_unicelulares_vivos=[0, 1, 1, 0, 2],
-            linaje_observado_id=5, rasgo_linea_unicelular=2,
-            historial_linajes_unicelulares={
-                1: {"progenitor_id": None, "rasgo": 1, "origen": "fundacion"},
-                2: {"progenitor_id": 1, "rasgo": 0, "origen": "variacion"},
-                3: {"progenitor_id": 2, "rasgo": 1, "origen": "variacion"},
-                4: {"progenitor_id": 3, "rasgo": 0, "origen": "variacion"},
-                5: {"progenitor_id": 4, "rasgo": 2, "origen": "variacion"},
-            },
-        )
-        universo.planetas = [planeta]
+        interfaz._procesar_tecla(pantalla, 10)
+        interfaz._dibujar(pantalla)
+        self.assertIn("Resultados 2", pantalla.linea(8))
+        self.assertIn("Sistema Alfa", pantalla.linea(10))
+        self.assertIn("Sistema Beta", pantalla.linea(11))
+        pantalla.teclas = [ord(letra) for letra in "Beta"] + [10]
+        interfaz._procesar_tecla(pantalla, ord("/"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("Resultados 1", pantalla.linea(8))
+        self.assertIn("Sistema Beta", pantalla.linea(10))
+
+        interfaz._procesar_tecla(pantalla, 10)
+        interfaz._dibujar(pantalla)
+        self.assertIn("SISTEMA ESTELAR", pantalla.linea(6))
+        self.assertIn("Planetas registrados: 1", pantalla.linea(12))
+        interfaz._procesar_tecla(pantalla, 10)
+        interfaz._dibujar(pantalla)
+        self.assertIn("CATÁLOGO DE PLANETAS", pantalla.linea(6))
+        self.assertIn("Mundo Beta", pantalla.linea(10))
+        interfaz._procesar_tecla(pantalla, 10)
+        interfaz._dibujar(pantalla)
+        self.assertIn("PLANETA", pantalla.linea(6))
+        self.assertIn("Masa 1.50", pantalla.linea(9))
+        self.assertIn("Vida: activa · población 1", pantalla.linea(17))
+        self.assertEqual(universo.time.escala, "planeta")
+        self.assertEqual(universo.time.obtener_velocidad_actual(), 1)
+        interfaz._procesar_tecla(pantalla, ord("+"))
+        self.assertEqual(universo.time.obtener_velocidad_actual(), 2)
+        self.assertEqual(universo.planetas[0].a_dict(), antes)
+        self.assertEqual(universo.random.getstate(), azar_antes)
+        self.assertFalse(interfaz._procesar_tecla(pantalla, 27))
+        self.assertEqual(universo.time.escala, "universo")
+        self.assertEqual(universo.time.obtener_velocidad_actual(), 1)
+        self.assertEqual(interfaz._actual()["tipo"], "planetas")
+
+    def test_estrellas_incluye_nombres_historicos_y_abre_su_sistema(self):
+        interfaz = SimulationUI(Simulation(self.crear_universo()))
+        pantalla = PantallaFalsa()
+        interfaz._procesar_tecla(pantalla, ord("e"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("Resultados 2", pantalla.linea(8))
+        self.assertIn("Alfa · activa", pantalla.linea(10))
+        self.assertIn("Beta · sin estado estelar actual", pantalla.linea(11))
+        interfaz._procesar_tecla(pantalla, curses.KEY_DOWN)
+        interfaz._procesar_tecla(pantalla, 10)
+        interfaz._dibujar(pantalla)
+        self.assertIn("Beta", pantalla.linea(8))
+        self.assertIn("Sistema Beta", pantalla.linea(9))
+        interfaz._procesar_tecla(pantalla, 10)
+        self.assertEqual(interfaz._actual()["objeto"].nombre, "Sistema Beta")
+
+    def test_lista_larga_pagina_y_filtro_sin_resultados(self):
+        universo = self.crear_universo()
+        universo.sistemas_estelares += [
+            SistemaEstelar(f"Sistema {n:02d}", 0) for n in range(30)
+        ]
         interfaz = SimulationUI(Simulation(universo))
-        interfaz.vista = 4
-        pantalla = PantallaFalsa(24, 72)
-        antes = planeta.a_dict()
+        pantalla = PantallaFalsa()
+        interfaz._procesar_tecla(pantalla, 10)
+        interfaz._procesar_tecla(pantalla, curses.KEY_NPAGE)
         interfaz._dibujar(pantalla)
-        self.assertIn("Especies vivas 3 · extintas 0", pantalla.linea(7))
-        self.assertIn("Mundos con dos o más especies vivas 1", pantalla.linea(8))
-        self.assertIn("Unidades por especie: 1:1  3:3  5:1", pantalla.linea(15))
-        self.assertIn("Especie observada 5 · origen 3 · hijas 0", pantalla.linea(17))
-        self.assertEqual(planeta.a_dict(), antes)
-
-        planeta.vida_activa = False
-        universo.actualizar_poblacion_unicelular()
-        universo.actualizar_herencia_unicelular()
+        self.assertIn("Resultados 32", pantalla.linea(8))
+        self.assertIn("selección 11", pantalla.linea(8))
+        pantalla.teclas = [ord(letra) for letra in "No existe"] + [10]
+        interfaz._procesar_tecla(pantalla, ord("/"))
         interfaz._dibujar(pantalla)
-        self.assertIn("Especies vivas 0 · extintas 3", pantalla.linea(7))
-        self.assertIn("Sin unidades vivas; la historia permanece.",
-                      pantalla.linea(15))
-        self.assertIn("Rama observada: ninguna activa.", pantalla.linea(17))
+        self.assertIn("Resultados 0", pantalla.linea(8))
+        self.assertIn("Sin resultados", pantalla.linea(11))
 
-    def test_terminal_alta_reserva_mas_espacio_para_eventos(self):
+    def test_catalogo_vacio_explicado_sin_filtro(self):
         interfaz = SimulationUI(Simulation(Universe(seed=1)))
-        pantalla = PantallaFalsa(30, 100)
+        pantalla = PantallaFalsa()
+        interfaz._procesar_tecla(pantalla, 10)
         interfaz._dibujar(pantalla)
-        self.assertIn("EVENTOS RECIENTES", pantalla.linea(19))
-        self.assertIn("Esc Menú", pantalla.linea(29))
-        self.assertTrue(pantalla.linea(28).startswith("─"))
+        self.assertIn("Aún no hay sistemas registrados", pantalla.linea(11))
+
+    def test_escala_planeta_persiste_al_guardar_y_cargar(self):
+        universo = self.crear_universo()
+        interfaz = SimulationUI(Simulation(universo))
+        interfaz._abrir("planeta", universo.planetas[0])
+        interfaz._procesar_tecla(PantallaFalsa(), ord("+"))
+        with tempfile.TemporaryDirectory() as carpeta:
+            gestor = SaveManager(carpeta)
+            gestor.guardar(universo, "tiempo")
+            cargado = gestor.cargar("tiempo")
+        self.assertEqual(cargado.time.escala, "planeta")
+        self.assertEqual(cargado.time.obtener_velocidad_actual(), 2)
+        self.assertEqual(cargado.planetas[0].a_dict(), universo.planetas[0].a_dict())
+        nueva_interfaz = SimulationUI(Simulation(cargado))
+        self.assertEqual(nueva_interfaz._actual()["tipo"], "universo")
+        self.assertEqual(cargado.time.escala, "universo")
+        self.assertEqual(cargado.time.obtener_velocidad_actual(), 1)
+
+    def test_tiempo_planeta_no_avanza_millones_en_un_refresco(self):
+        tiempo = Time()
+        tiempo.establecer_escala("planeta")
+        tiempo.indice_velocidad = 3
+        self.assertEqual(tiempo.obtener_velocidad_actual(), 3)
+        tiempo.indice_velocidad = len(tiempo.velocidades_planeta) - 1
+        self.assertEqual(tiempo.obtener_velocidad_actual(), 10_000)
+        self.assertEqual(tiempo.avanzar(0.02), 200)
+        self.assertEqual(tiempo.anio, 200)
+
+    def test_fecha_local_usa_el_mismo_reloj_y_orbita_del_planeta(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.anio_formacion = 0
+        planeta.periodo_orbital_dias = 1_000
+        interfaz = SimulationUI(Simulation(universo))
+        interfaz._abrir("planeta", planeta)
+        self.assertEqual(universo.time.obtener_velocidad_actual(), 1)
+        self.assertEqual(fecha_local(planeta, universo.time), (0, 1, 1, 0, 0, 0))
+        universo.time.avanzar(0.5)
+        self.assertEqual(universo.time.anio, 0)
+        self.assertGreater(fecha_local(planeta, universo.time)[2], 1)
+        universo.time.anio = 2
+        self.assertEqual(fecha_local(planeta, universo.time)[0], 0)
+        universo.time.anio = 3
+        self.assertEqual(fecha_local(planeta, universo.time)[0], 1)
+        self.assertAlmostEqual(periodo_orbital_dias(1, 1), 365.2425)
+        pantalla = PantallaFalsa()
+        interfaz._dibujar(pantalla)
+        self.assertIn("Año orbital: 1000.00", pantalla.linea(19))
+        self.assertIn("Año 1", pantalla.linea(20))
+        self.assertIn("Hora", pantalla.linea(21))
+        self.assertIn("x1", universo.time.obtener_descripcion_velocidad())
+
+    def test_x1_universo_y_planeta_avanzan_al_mismo_ritmo_real(self):
+        universo = Universe(seed=7)
+        reloj = [0.0]
+        simulacion = Simulation(universo, reloj=lambda: reloj[0])
+        for _ in range(20):
+            reloj[0] += 0.05
+            simulacion.actualizar()
+        self.assertEqual(universo.time.anio, 1)
+        universo.time.establecer_escala("planeta")
+        for _ in range(20):
+            reloj[0] += 0.05
+            simulacion.actualizar()
+        self.assertEqual(universo.time.anio, 2)
+
+    def test_eventos_filtrados_y_guardados(self):
+        universo = self.crear_universo()
+        gestor = universo.event_manager
+        gestor.agregar_evento("Origen", 100, "Surgió Alfa.", "estrella", "Alfa")
+        gestor.agregar_evento("Origen", 200, "Surgió Mundo Beta.",
+                             "planeta", "Mundo Beta")
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._dibujar(pantalla)
+        self.assertIn("Surgió Mundo Beta", pantalla.linea(15))
+        self.assertNotIn("Enter: buscar", pantalla.linea(15))
+        interfaz._procesar_tecla(pantalla, ord("v"))
+        self.assertEqual(len(interfaz._items(interfaz._actual())), 3)
+        interfaz._procesar_tecla(pantalla, 27)
+        interfaz._abrir("estrella", "Alfa")
+        interfaz._procesar_tecla(pantalla, ord("v"))
+        self.assertEqual(len(interfaz._items(interfaz._actual())), 1)
+        interfaz._procesar_tecla(pantalla, 27)
+        interfaz._procesar_tecla(pantalla, 27)
+        interfaz._abrir("planeta", universo.planetas[0])
+        interfaz._procesar_tecla(pantalla, ord("v"))
+        self.assertEqual(len(interfaz._items(interfaz._actual())), 1)
+        interfaz._procesar_tecla(pantalla, 10)
+        interfaz._dibujar(pantalla)
+        self.assertIn("Surgió Mundo Beta", pantalla.linea(12))
+        with tempfile.TemporaryDirectory() as carpeta:
+            archivos = SaveManager(carpeta)
+            archivos.guardar(universo, "eventos")
+            cargado = archivos.cargar("eventos")
+        self.assertEqual([e.a_dict() for e in cargado.event_manager.eventos],
+                         [e.a_dict() for e in gestor.eventos])
+        antiguo = Event.desde_dict({"tipo": "antiguo", "anio": 1,
+                                   "mensaje": "Evento sin ámbito."})
+        self.assertEqual(antiguo.ambito, "universo")
+        self.assertIsNone(antiguo.entidad)
 
 
 if __name__ == "__main__":

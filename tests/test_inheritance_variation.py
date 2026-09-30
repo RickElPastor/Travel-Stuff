@@ -4,8 +4,8 @@ import unittest
 
 from abiogenesis.inheritance_variation_model import ModeloHerenciaVariacion
 from planets.planet import Planet
-from save_manager import SaveManager
-from universe import Universe
+from universe.save_manager import SaveManager
+from universe.universe import Universe
 
 
 class HerenciaVariacionTests(unittest.TestCase):

@@ -6,8 +6,8 @@ import unittest
 from chemistry.protocell_viability_model import ModeloViabilidadProtocelular
 from extraordinary.chemistry_support_model import ModeloApoyoQuimicoExtraordinario
 from planets.planet import Planet
-from save_manager import SaveManager
-from universe import Universe
+from universe.save_manager import SaveManager
+from universe.universe import Universe
 
 
 class ViabilidadTests(unittest.TestCase):
