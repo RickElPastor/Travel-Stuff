@@ -5,8 +5,14 @@ al terminar cada cambio: fecha, archivos, decisión, pruebas, estado de Git y
 siguiente paso. Conserva las entradas anteriores; Git sigue siendo la fuente
 para conocer exactamente qué quedó confirmado en un commit.
 
-## Estado actual — 2026-09-30
+## Estado actual — 2026-10-01
 
+- La rama `fase-5` parte de `8bf7f14`. Su base simbólica de inteligencia
+  precursora quedó revisada y validada: candidatas, memoria, transmisión,
+  soporte, señales, práctica compartida, códigos y técnica recuperada. La
+  revisión corrigió la observación de restos durante el reciclaje. El cierre
+  se confirma en Git; el siguiente paso de desarrollo es el paso 8 en una
+  nueva rama `fase-6`.
 - `fase-3` cerró en el commit `fbaeb84` y se publicó en GitHub. La rama
   `fase-4` se creó desde ese cierre y ya existe en `origin`. Colonias simples,
   nichos por recurso, primera depredación, red trófica actual y extinciones
@@ -25,6 +31,287 @@ para conocer exactamente qué quedó confirmado en un commit.
   Git para el commit y la publicación de la rama; la fase siguiente ya comenzó.
 - Al iniciar cada fase se explica su alcance; al terminarla se revisa,
   confirma y sube su rama. La instrucción permanente está en `AGENTS.md`.
+
+## 2026-10-01 — Revisión integral y cierre técnico de Fase 5
+
+- La revisión de `universe/universe.py`, `biology/material_cycle_model.py` y
+  los modelos de soporte, comunicación y tecnología encontró que los
+  descomponedores podían reciclar todos los restos antes de que la fase 5
+  los observara. Así, las pruebas aisladas pasaban, pero la ruta de `restos`
+  podía quedar inaccesible en una actualización completa.
+- `planets/planet.py` guarda `restos_observados_intervalo`, calculado en
+  `universe/universe.py` como material reciclado durante el paso más restos
+  pendientes al cierre. Los modelos de `biology/initial_tool_model.py`,
+  `biology/initial_communication_model.py` y
+  `biology/early_technology_model.py` consultan ese material observado. El
+  ciclo orgánico no cambia su balance; la observación se reinicia cada paso.
+  Los guardados antiguos cargan cero sin inventar una oportunidad pasada.
+- `tests/test_phase5_integration.py` recorre ciclo → aprendizaje → transmisión
+  → soporte → comunicación → cultura → códigos → técnica con material
+  reciclado, escasez y regreso; compara guardado/carga y verifica ausencia de
+  cambios en el generador aleatorio. `FASES.md`, `biology/README.md` y
+  `ui/README.md` explican ahora el criterio y el cierre de la fase.
+- Pasaron 178 pruebas, compilación y `git diff --check`. Universo nuevo con
+  semilla `374852300`, año 0 a 3 000 millones: pasos de 20 millones hasta
+  2 760 millones, de uno hasta 2 820 millones y luego de 20 millones.
+  Protocélulas a 2 760 millones, primera vida a 2 763, radiación a 2 769 y
+  extinción masiva local a 2 783. Final: 1849 planetas, cinco especies
+  extintas y ninguna colonia o hito de fase 5. Guardar/cargar y continuar
+  un millón produjo estados iguales. La semilla natural no ejercitó fase 5;
+  la prueba integrada controlada sí. Cero es un resultado válido.
+- La base simbólica del paso 7 queda terminada. Próximo desarrollo: explicar
+  alcance del paso 8 (civilizaciones), crear `fase-6` desde el cierre
+  confirmado, y empezar con asentamientos condicionados sin forzarlos.
+
+## 2026-10-01 — Técnica temprana de soporte recuperado
+
+- `biology/early_technology_model.py` distingue una técnica compartida del
+  ensayo aislado de soporte: exige uso previo, código histórico para `restos`,
+  una actualización observada sin material mientras la especie conserva
+  colonia y memoria, y regreso del material con dos linajes capaces de usar
+  soporte y repertorio activo que incluye esa ruta. Un entorno estable no
+  progresa solo por contar actualizaciones. El método es simbólico; no fabrica
+  objetos, consume restos ni mejora la supervivencia.
+- `planets/planet.py` persiste especies con escasez observada y técnica
+  alcanzada; partidas antiguas empiezan sin ambos hitos. `universe/universe.py`
+  evalúa al final del bloque de inteligencia. `ui/simulation_ui.py` añade el
+  conteo actual/histórico a la línea de soporte. `tests/run_universe_from_zero.py`
+  resume técnicas actuales e históricas. `FASES.md`, `biology/README.md` y
+  `ui/README.md` explican condiciones, límites y ausencia de efectos físicos.
+- `tests/test_early_technology.py` prueba la secuencia soporte→escasez→regreso,
+  estabilidad con pasos constantes, código y soporte necesarios, pérdida de
+  actividad sin borrar historia, consulta sin mutación, azar, guardado/carga
+  durante la escasez y partida anterior. La prueba de pantalla verifica el
+  conteo. Pasaron 176 pruebas, compilación y `git diff --check`.
+- Universo natural nuevo con semilla `374852300`, del año 0 a 3 000 millones:
+  pasos de 20 millones hasta 2 760 millones, de uno hasta 2 820 millones y
+  luego de 20 millones. Protocélulas a 2 760 millones, primera vida a 2 763,
+  radiación a 2 769 y extinción masiva local a 2 783. Final: 1849 planetas,
+  cinco especies extintas, ninguna colonia ni técnica actual o histórica.
+  Guardar/cargar y continuar un millón mantuvieron estados iguales. La semilla
+  natural no ejercitó la técnica; los casos controlados sí. Cero es válido.
+- `fase-5` sigue local sin commit ni push. La base simbólica prevista ya está
+  implementada; próximo bloque obligatorio: revisión integral de toda la
+  fase, corrección de hallazgos y, solo si queda cerrada, commit y push.
+
+## 2026-10-01 — Repertorio inicial de códigos de recurso
+
+- `biology/initial_language_model.py` asigna por especie códigos abstractos
+  `C1`, `C2` y siguientes cuando hay prácticas recíprocas actuales sobre al
+  menos dos rutas distintas. Una práctica única no basta. Los códigos se
+  conservan al desaparecer y volver un recurso; una tercera ruta recibe el
+  siguiente sin renumerar. Es una distinción de referentes interna, no palabras,
+  sonido, gramática ni demostración de lenguaje humano.
+- `planets/planet.py` guarda el mapa recurso→código por especie; partidas
+  anteriores empiezan vacías. `universe/universe.py` evalúa después de cultura.
+  `ui/simulation_ui.py` muestra especies con repertorio activo e histórico y
+  un ejemplo de códigos. `tests/run_universe_from_zero.py` resume ambas
+  cantidades. `FASES.md`, `biology/README.md` y `ui/README.md` explican el
+  criterio y sus límites; no hay efectos en población, recursos ni física.
+- `tests/test_initial_language.py` verifica requisito de dos rutas, códigos
+  estables, tercera ruta, ausencia de repertorio con aviso unilateral,
+  idempotencia, pérdida y recuperación de actividad, azar, lectura sin mutar,
+  guardado/carga y partida anterior. La pantalla se prueba en
+  `tests/test_simulation_dashboard.py`. Pasaron 173 pruebas, compilación y
+  `git diff --check`.
+- Universo natural nuevo con semilla `374852300`, año 0 a 3 000 millones:
+  pasos de 20 millones hasta 2 760 millones, de uno hasta 2 820 millones y
+  luego de 20 millones. Protocélulas a 2 760 millones, primera vida a 2 763,
+  radiación a 2 769 y extinción masiva local a 2 783. Final: 1849 planetas,
+  cinco especies extintas, cero colonias y repertorios actuales o históricos.
+  Guardar/cargar y continuar un millón mantuvieron estados iguales. La semilla
+  no ejercitó los códigos; los casos controlados sí. Cero es válido.
+- `fase-5` sigue sin commit ni push. Próximo bloque: tecnología temprana
+  condicionada a soporte externo, códigos y recursos; luego revisión integral
+  y solo entonces cierre de la rama.
+
+## 2026-09-30 — Práctica cultural incipiente
+
+- `biology/initial_culture_model.py` consulta los avisos de recurso existentes
+  y reconoce una práctica compartida cuando dos linajes con colonias de la
+  misma especie se avisan recíprocamente sobre la misma ruta. Un aviso de ida
+  no basta. La práctica actual desaparece al faltar las condiciones; la ruta
+  histórica persiste por especie sin duplicarse. No hay normas complejas,
+  lenguaje, beneficio de supervivencia ni cambios físicos.
+- `planets/planet.py` guarda rutas culturales por especie; las partidas
+  anteriores empiezan vacías. `universe/universe.py` evalúa después de las
+  señales. `ui/simulation_ui.py` muestra especies con práctica activa e
+  histórica y un ejemplo de ruta. `tests/run_universe_from_zero.py` añade
+  ambos resúmenes. `FASES.md`, `biology/README.md` y `ui/README.md` explican
+  el criterio y su límite como regla de diseño.
+- `tests/test_initial_culture.py` prueba aviso unilateral, reciprocidad,
+  coincidencia de recurso y especie, necesidad de colonia, idempotencia,
+  desaparición y reaparición de la práctica, azar, lectura sin mutación,
+  guardado/carga y partida anterior. La prueba de pantalla muestra los
+  conteos y ruta. Pasaron 168 pruebas, compilación y `git diff --check`.
+- Universo nuevo con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, de uno hasta 2 820 millones y luego de
+  20 millones. Protocélulas a 2 760 millones, primera vida a 2 763, radiación
+  a 2 769 y extinción masiva local a 2 783. Final: 1849 planetas, cinco
+  especies extintas, ninguna colonia ni práctica actual o histórica. Guardar,
+  cargar y continuar un millón mantuvieron estados iguales. La semilla natural
+  no ejercitó cultura; el caso controlado sí. Cero es un resultado válido.
+- `fase-5` sigue sin commit ni push. Próximo bloque: lenguaje inicial, si puede
+  definirse con símbolos y convenciones explícitas más allá de estos avisos;
+  tecnología temprana y revisión integral quedan después.
+
+## 2026-09-30 — Señales iniciales de recurso
+
+- `biology/initial_communication_model.py` consulta avisos temporales con
+  emisor, receptor y recurso entre colonias de linajes distintos de una misma
+  especie candidata. El emisor debe recordar y poder usar la ruta, y esta debe
+  estar disponible ahora; para restos se exige material aún sin reciclar. No
+  crea sonido, gesto, lenguaje, efecto ecológico ni azar. El recuerdo social
+  anterior es duradero, mientras el aviso actual desaparece al faltar la
+  condición.
+- `planets/planet.py` guarda las especies que alguna vez tuvieron un aviso;
+  una partida anterior comienza con el conjunto vacío. `universe/universe.py`
+  evalúa después de memoria, transmisión y soporte. `ui/simulation_ui.py`
+  muestra cantidad actual, especies históricas y el primer aviso en
+  Precursores. `tests/run_universe_from_zero.py` resume ambas cantidades.
+  `FASES.md`, `biology/README.md` y `ui/README.md` explican el alcance.
+- `tests/test_initial_communication.py` cubre emisor y receptor correctos,
+  aislamiento de especie, memoria y colonia necesarias, desaparición al perder
+  recurso, restos ya reciclados, idempotencia, lectura sin mutación, azar,
+  guardado/carga y partida antigua. La pantalla se verificó en
+  `tests/test_simulation_dashboard.py`. Pasaron 165 pruebas, compilación y
+  `git diff --check`.
+- Universo natural nuevo con semilla `374852300`, del año 0 a 3 000 millones:
+  pasos de 20 millones hasta 2 760 millones, de uno hasta 2 820 millones y
+  de 20 millones después. Protocélulas a 2 760 millones, primera vida a
+  2 763, radiación a 2 769 y extinción masiva local a 2 783. Final: 1849
+  planetas, cinco especies extintas, cero vida activa, colonias y señales.
+  Guardar/cargar y continuar un millón mantuvieron estados iguales. Esta
+  semilla no ejercitó comunicación; el caso controlado sí. Un lector abreviado
+  del log falló por separar una línea por `:` en lugar de `;`; se corrigió la
+  lectura del mismo registro. La simulación había terminado sin errores.
+- `fase-5` sigue local sin commit ni push. Próximo bloque: cultura inicial
+  como práctica compartida persistente, distinta de una señal momentánea;
+  lenguaje y tecnología quedan después.
+
+## 2026-09-30 — Ensayo inicial de soporte orgánico
+
+- `biology/initial_tool_model.py` consulta especies candidatas con una colonia
+  cuyo linaje recuerda `restos` y material orgánico sin reciclar disponible.
+  Reconoce un ensayo simbólico de usar un fragmento externo como soporte; no
+  crea objetos, consume restos, mejora población ni demuestra herramientas
+  animales. `universe/universe.py` evalúa después del aprendizaje y la
+  transmisión. `planets/planet.py` persiste por especie el hito histórico;
+  partidas antiguas comienzan sin él.
+- `ui/simulation_ui.py` muestra especies con ensayo actual e histórico en
+  Precursores. `tests/run_universe_from_zero.py` resume ambas cantidades.
+  `FASES.md`, `biology/README.md` y `ui/README.md` explican el criterio, su
+  naturaleza de diseño y la observación al final de cada actualización. El
+  ciclo orgánico puede reciclar el material antes de evaluar esta oportunidad.
+- `tests/test_initial_tools.py` comprueba material, colonia, recuerdo por
+  linaje, recuerdo recibido socialmente, idempotencia, pérdida de condiciones,
+  ausencia de vida, guardado/carga y partida anterior. La prueba de pantalla
+  verifica los conteos. Pasaron 160 pruebas automáticas, compilación y
+  `git diff --check`.
+- Universo nuevo con semilla `374852300`, del año 0 a 3 000 millones: pasos
+  de 20 millones hasta 2 760 millones, de uno hasta 2 820 millones y de 20
+  millones después. Protocélulas a 2 760 millones, primera vida a 2 763,
+  radiación a 2 769 y extinción masiva local a 2 783. Final: 1849 planetas,
+  cinco especies extintas, ninguna vida activa, cero colonias, memorias,
+  transmisiones y soportes. Guardar/cargar y continuar un millón mantuvieron
+  los estados iguales. La semilla natural no ejercitó esta regla; las pruebas
+  controladas sí. Cero soportes es válido.
+- `fase-5` sigue sin commit ni push. Próximo bloque: comunicación inicial,
+  condicionada a colonias y memorias, antes de cultura, lenguaje y tecnología.
+
+## 2026-09-30 — Transmisión social simbólica entre colonias
+
+- `biology/intelligence_precursor_model.py` expone la consulta de linajes con
+  colonia para reutilizar el mismo criterio de dos unidades cohesivas.
+  `biology/initial_learning_model.py` registra también la ruta que cada linaje
+  con colonia puede aprovechar directamente, sin borrar el resumen histórico
+  por especie. `biology/social_transmission_model.py` copia un recuerdo nuevo
+  entre dos colonias vivas de linajes distintos de la misma especie candidata;
+  nunca entre especies. Compartir el recuerdo no concede la capacidad de usar
+  el recurso. El contador crece solo por cada ruta nueva recibida.
+- `planets/planet.py` guarda memoria por linaje y contador; los guardados
+  anteriores empiezan vacíos en esos campos. `universe/universe.py` evalúa la
+  transmisión después del aprendizaje. `ui/simulation_ui.py` muestra el total
+  histórico en Precursores; `tests/run_universe_from_zero.py` lo reporta.
+  `FASES.md`, `biology/README.md` y `ui/README.md` describen alcance y límite
+  de la observación al final de cada actualización.
+- `tests/test_social_transmission.py` comprueba recepción dentro de una
+  especie, aislamiento entre especies, ausencia de duplicados, requisito de
+  dos colonias y entorno apto, fuente sin colonia, guardado/carga y partida
+  antigua. La prueba de pantalla verifica el contador. Pasaron 156 pruebas,
+  compilación y `git diff --check`.
+- Universo nuevo con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, de uno hasta 2 820 millones y de 20
+  millones después. Protocélulas a 2 760 millones, primera vida a 2 763,
+  radiación a 2 769 y extinción masiva local a 2 783. Al final: 1849
+  planetas, cinco especies extintas, cero vida activa, colonias, candidatas,
+  memorias y transmisiones. Guardar/cargar y continuar un millón conservaron
+  los estados. La semilla natural no ejercitó transmisión; el caso controlado
+  sí lo hizo. El contador 0 es normal, no una falla.
+- `fase-5` sigue local sin commit ni push de estos cambios. Próximo bloque:
+  posible herramienta inicial, condicionada a memoria y recursos, sin afirmar
+  todavía lenguaje, cultura ni organismos grandes.
+
+## 2026-09-30 — Primera memoria simbólica de recursos
+
+- `biology/initial_learning_model.py` registra por especie candidata las
+  rutas adicionales que encontró: luz, restos y presas posibles. Los orgánicos
+  quedan fuera de la preferencia porque ya son requisito de su colonia. La
+  primera ruta conocida que sigue disponible tiene prioridad simbólica; si
+  desaparece, puede elegir otra recordada sin perder la anterior. No mejora
+  aún población, consumo ni supervivencia y no prueba inteligencia avanzada.
+- `planets/planet.py` persiste las listas en orden de descubrimiento; las
+  partidas anteriores inician vacías. `universe/universe.py` evalúa la memoria
+  después de colonias y nichos. `ui/simulation_ui.py` muestra las rutas
+  recordadas y la prioridad en Precursores. `tests/run_universe_from_zero.py`
+  resume especies con memoria histórica. `FASES.md`, `biology/README.md` y
+  `ui/README.md` explican el alcance y el límite de observar solo los extremos
+  de cada salto temporal.
+- `tests/test_initial_learning.py` verifica adquisición, cambio de prioridad,
+  recuerdo al perder candidatura, idempotencia, pasos estables, guardado/carga
+  y partida antigua. `tests/test_simulation_dashboard.py` comprueba la línea
+  visible. Pasaron 152 pruebas, compilación y `git diff --check`.
+- Universo natural con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, de uno hasta 2 820 millones y después de
+  20 millones. Protocélulas en 2 760 millones, primera vida en 2 763,
+  radiación en 2 769 y extinción masiva local en 2 783. Sin colonias, no hubo
+  candidatas ni memorias; al final había 1849 planetas, cinco especies
+  extintas y ninguna vida activa. Guardar/cargar y continuar un millón
+  mantuvieron los estados iguales. El caso controlado ejercita la memoria.
+- `fase-5` sigue local sin commit ni push de estos cambios. Próximo bloque:
+  transmisión social posible entre unidades de la misma especie, condicionada
+  a una memoria ya adquirida; herramientas y lenguaje aún quedan después.
+
+## 2026-09-30 — Inicio de Fase 5 y condiciones precursoras
+
+- `biology/intelligence_precursor_model.py` consulta especies vivas que
+  mantienen al menos una colonia actual del mismo linaje y tienen acceso a dos
+  recursos modelados. El umbral es de diseño y la especie solo queda candidata
+  para futuros modelos: todavía no aprende ni posee inteligencia comprobada.
+  La consulta usa colonias, linajes, especies y nichos ya guardados, sin azar,
+  campos nuevos, eventos ni efectos sobre población o física.
+- `ui/simulation_ui.py` añade `I Precursores` desde Biosfera, con lista
+  recorrible, explicación del criterio y un cero explícito. Se conservó la
+  idea de dos cambios que ya estaban sin confirmar al iniciar el bloque; se
+  ajustó la vista para no llamarla aprendizaje antes de implementarlo.
+  `tests/run_universe_from_zero.py` cuenta candidatas actuales; `FASES.md`,
+  `biology/README.md` y `ui/README.md` describen alcance y límites.
+- `tests/test_intelligence_precursors.py` comprueba colonia y dos recursos,
+  casos negativos, lectura sin mutación y reconstrucción tras guardar/cargar.
+  `tests/test_simulation_dashboard.py` comprueba navegación, lista de seis
+  candidatas en pantalla mínima, eventos y lista vacía. Pasaron 149 pruebas,
+  compilación y `git diff --check`.
+- Universo natural con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, de uno hasta 2 820 millones y después de
+  20 millones. Protocélulas en 2 760 millones, primera vida en 2 763,
+  radiación en 2 769 y extinción masiva local en 2 783 millones. No hubo
+  colonias ni especies candidatas. Al final había 1849 planetas, cinco especies
+  extintas, ninguna vida activa y cero candidatas. Guardar/cargar y continuar
+  un millón mantuvieron los estados iguales. Los casos controlados sí
+  ejercitaron el filtro; no se presentan como universo emergente.
+- `fase-5` sigue local sin commit ni push de estos cambios. Próximo bloque:
+  definir una primera regla de aprendizaje/memoria para candidatas, sin
+  convertirlas automáticamente en civilizaciones.
 
 ## 2026-09-30 — Revisión integral y cierre técnico de Fase 4
 

@@ -404,6 +404,143 @@ class ExploradorTests(unittest.TestCase):
         interfaz._dibujar(pantalla)
         self.assertIn("Sin relaciones tróficas actuales", pantalla.linea(12))
 
+    def test_precursores_se_abren_y_lista_larga_se_puede_recorrer(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.sistema_nombre = "Sistema Beta"
+        planeta.candidato_quimica_prebiotica = True
+        planeta.alcanzo_organicos_simples = True
+        planeta.fuentes_energia_potenciales = ["organicos_ambientales"]
+        planeta.poblacion_unicelular = 12
+        planeta.linajes_unicelulares_vivos = [
+            numero for numero in range(1, 7) for _ in range(2)
+        ]
+        planeta.clasificacion_especies_unicelulares = {
+            numero: {"especie_id": numero, "distancia": 0}
+            for numero in range(1, 7)
+        }
+        planeta.linajes_cohesivos = set(range(1, 7))
+        planeta.linajes_fotosinteticos = set(range(1, 7))
+        planeta.unidades_productoras_activas = 12
+        planeta.restos_organicos_unidades = 1
+        planeta.recursos_recordados_por_linaje = {1: ["restos"]}
+        universo.actualizar_aprendizaje_inicial()
+        universo.actualizar_herramientas_iniciales()
+        planeta.transmisiones_sociales = 2
+        estado_antes = planeta.a_dict()
+        azar_antes = universo.random.getstate()
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._procesar_tecla(pantalla, ord("i"))
+        interfaz._dibujar(pantalla)
+        self.assertEqual(interfaz._actual()["tipo"], "precursores")
+        self.assertIn("Soporte orgánico: actual 1 · histórico 1",
+                      pantalla.linea(8))
+        self.assertIn("Especies candidatas: 6", pantalla.linea(9))
+        self.assertIn("Transmisiones sociales históricas: 2", pantalla.linea(10))
+        self.assertIn("Especie 1", pantalla.linea(16))
+        self.assertIn("mem luz · pref luz", pantalla.linea(16))
+        self.assertIn("Mostrando 1-5 de 6", pantalla.linea(21))
+        interfaz._procesar_tecla(pantalla, curses.KEY_NPAGE)
+        interfaz._dibujar(pantalla)
+        self.assertIn("Especie 6", pantalla.linea(20))
+        self.assertIn("Mostrando 2-6 de 6", pantalla.linea(21))
+        interfaz._procesar_tecla(pantalla, ord("v"))
+        self.assertEqual(interfaz._actual()["objeto"],
+                         ("planeta", planeta.nombre))
+        interfaz._procesar_tecla(pantalla, 27)
+        interfaz._procesar_tecla(pantalla, 27)
+        self.assertEqual(interfaz._actual()["tipo"], "biosfera")
+        self.assertEqual(planeta.a_dict(), estado_antes)
+        self.assertEqual(universo.random.getstate(), azar_antes)
+
+    def test_precursores_muestra_senal_actual_y_historica(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.candidato_quimica_prebiotica = True
+        planeta.alcanzo_organicos_simples = True
+        planeta.fuentes_energia_potenciales = ["organicos_ambientales"]
+        planeta.poblacion_unicelular = 4
+        planeta.linajes_unicelulares_vivos = [1, 1, 2, 2]
+        planeta.clasificacion_especies_unicelulares = {
+            1: {"especie_id": 1, "distancia": 0},
+            2: {"especie_id": 1, "distancia": 1},
+        }
+        planeta.linajes_cohesivos = {1, 2}
+        planeta.linajes_fotosinteticos = {1, 2}
+        planeta.unidades_productoras_activas = 4
+        planeta.recursos_recordados_por_linaje = {
+            1: ["luz"], 2: ["luz"]
+        }
+        universo.actualizar_comunicacion_inicial()
+        universo.actualizar_cultura_inicial()
+        estado_antes = planeta.a_dict()
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._procesar_tecla(pantalla, ord("i"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("Señales actuales: 2 · especies históricas 1",
+                      pantalla.linea(11))
+        self.assertIn("linaje 1 → 2 · luz", pantalla.linea(12))
+        self.assertIn("Prácticas activas: 1 · históricas 1 · luz",
+                      pantalla.linea(13))
+        self.assertEqual(planeta.a_dict(), estado_antes)
+
+    def test_precursores_sin_condiciones_explican_el_cero(self):
+        universo = self.crear_universo()
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", universo.planetas[0])
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._procesar_tecla(pantalla, ord("i"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("Especies candidatas: 0", pantalla.linea(9))
+        self.assertIn("Ninguna cumple", pantalla.linea(16))
+
+    def test_precursores_muestra_dos_codigos_de_recurso(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.candidato_quimica_prebiotica = True
+        planeta.alcanzo_organicos_simples = True
+        planeta.fuentes_energia_potenciales = ["organicos_ambientales"]
+        planeta.poblacion_unicelular = 4
+        planeta.linajes_unicelulares_vivos = [1, 1, 2, 2]
+        planeta.clasificacion_especies_unicelulares = {
+            1: {"especie_id": 1, "distancia": 0},
+            2: {"especie_id": 1, "distancia": 1},
+        }
+        planeta.linajes_cohesivos = {1, 2}
+        planeta.linajes_fotosinteticos = {1, 2}
+        planeta.unidades_productoras_activas = 4
+        planeta.linajes_descomponedores = {1, 2}
+        planeta.unidades_descomponedoras_activas = 4
+        planeta.restos_organicos_unidades = 1
+        planeta.recursos_recordados_por_linaje = {
+            1: ["luz", "restos"], 2: ["luz", "restos"]
+        }
+        universo.actualizar_herramientas_iniciales()
+        universo.actualizar_lenguaje_inicial()
+        universo.actualizar_tecnologia_temprana()
+        planeta.restos_organicos_unidades = 0
+        universo.actualizar_tecnologia_temprana()
+        planeta.restos_organicos_unidades = 1
+        universo.actualizar_tecnologia_temprana()
+        estado_antes = planeta.a_dict()
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._procesar_tecla(pantalla, ord("i"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("técnica 1/1", pantalla.linea(8))
+        self.assertIn("Códigos: activos 1 · históricos 1", pantalla.linea(15))
+        self.assertIn("C1=luz, C2=restos", pantalla.linea(15))
+        self.assertEqual(planeta.a_dict(), estado_antes)
+
     def test_universo_y_planeta_muestran_extinciones_masivas_locales(self):
         universo = self.crear_universo()
         planeta = universo.planetas[0]

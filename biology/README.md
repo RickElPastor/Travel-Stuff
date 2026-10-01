@@ -634,3 +634,178 @@ reciben radiaciones retrospectivas.
 ```sh
 .venv/bin/python -m unittest tests.test_evolutionary_radiation -v
 ```
+
+## Condiciones precursoras de inteligencia
+
+[`ModeloPrecursoresInteligencia`](intelligence_precursor_model.py) consulta qué
+especies vivas tienen una colonia activa del mismo linaje y al menos dos
+recursos modelados disponibles ahora. Cuenta colonias por especie a partir de
+las unidades y la cohesión ya guardadas; consulta los nichos de orgánicos,
+luz, restos o presas posibles. Dos recursos es una regla de diseño para abrir
+la siguiente etapa del modelo, **no un indicador científico de inteligencia**.
+Dos unidades cohesivas de linajes distintos no constituyen una colonia en
+este modelo. Un nicho de presas posible no demuestra una captura.
+
+La consulta no crea aprendizaje, memoria, conducta, herramientas ni cultura;
+tampoco cambia población, recursos, física o azar. No guarda un campo nuevo:
+guardar/cargar los datos de origen permite reconstruir el mismo resultado.
+Si la colonia se disuelve o un recurso deja de estar disponible, la especie
+deja de ser candidata sin perder sus hitos históricos. Una lista vacía es
+normal incluso en mundos con vida.
+
+```sh
+.venv/bin/python -m unittest tests.test_intelligence_precursors -v
+```
+
+## Memoria inicial de rutas
+
+[`ModeloAprendizajeInicial`](initial_learning_model.py) guarda por especie
+candidata las rutas adicionales que encontró: luz, restos o presas posibles.
+Los orgánicos son parte del ambiente necesario para la colonia y no se usan
+para decidir esta preferencia. La lista conserva el orden del primer encuentro
+y no repite una ruta ya conocida. Entre las rutas recordadas que siguen
+disponibles, la primera tiene prioridad simbólica. Si desaparece, puede
+priorizar otra conocida; el recuerdo anterior permanece.
+
+El estado se persiste con el planeta. Una partida antigua comienza sin memoria
+inventada y puede adquirirla en una actualización posterior. La consulta de
+preferencia no muta la partida. Sin colonia y dos recursos actuales no se
+aprenden rutas nuevas, aunque la memoria histórica persista. Las rutas de
+presas son oportunidades, no capturas. Esta decisión todavía no altera el
+consumo, el crecimiento, la selección ni la física y no equivale a una mente
+demostrada. La observación es por actualización; un salto largo no reconstruye
+recursos transitorios entre sus extremos.
+
+```sh
+.venv/bin/python -m unittest tests.test_initial_learning -v
+```
+
+## Transmisión social inicial
+
+[`ModeloTransmisionSocial`](social_transmission_model.py) comparte una ruta
+recordada cuando dos linajes vivos de la misma especie mantienen colonias
+activas. El aprendizaje inicial guarda ahora también lo que registró cada
+linaje con colonia y capacidad para aprovechar la ruta. Un linaje sin esa
+capacidad puede recibir el recuerdo, pero no obtiene fotosíntesis,
+descomposición ni depredación por escucharlo. El resumen histórico por especie
+continúa siendo una consulta de rutas observadas en la especie; la transmisión
+se comprueba en la memoria por linaje y en el contador histórico. No hay
+comunicación compleja, ventaja de supervivencia ni paso entre especies.
+
+Se guardan memorias y contador; una partida anterior comienza con ambos vacíos
+y puede registrar nuevos recuerdos al avanzar. Como la observación ocurre al
+final del paso, un salto largo puede omitir colonias transitorias.
+
+```sh
+.venv/bin/python -m unittest tests.test_social_transmission -v
+```
+
+## Ensayo inicial de soporte externo
+
+[`ModeloHerramientasIniciales`](initial_tool_model.py) marca una oportunidad
+actual cuando una especie candidata conserva una colonia cuyo linaje recuerda
+`restos` y el planeta tiene restos pendientes o reciclados durante la
+actualización observada. Registra por especie
+si esa combinación se observó alguna vez. Si el material desaparece, el
+ensayo deja de estar activo y el hito histórico permanece. El recuerdo puede
+ser directo o compartido, pero debe estar en el linaje con colonia.
+
+«Soporte orgánico» es un nombre operativo para el posible uso de un fragmento
+externo. No se fabrica ni almacena un objeto, no se consumen los restos y no
+hay efecto sobre población, alimento o física. El modelo no demuestra
+herramientas animales ni inteligencia avanzada. La observación ocurre después
+del reciclaje orgánico de cada actualización. El estado persistido
+`restos_observados_intervalo` conserva cuántas unidades hubo en ese intervalo,
+aun cuando el ciclo ya dejó cero restos pendientes. No se reconstruyen
+oportunidades fuera del intervalo. Los guardados anteriores comienzan sin
+esa observación ni el hito.
+
+```sh
+.venv/bin/python -m unittest tests.test_initial_tools -v
+```
+
+## Comunicación inicial de recursos
+
+[`ModeloComunicacionInicial`](initial_communication_model.py) enumera avisos
+actuales con especie, linaje emisor, receptor y recurso. Exige dos linajes con
+colonias de la misma especie candidata. El emisor debe recordar la ruta, tener
+su capacidad biológica y encontrarla disponible ahora. En el caso de restos
+se exige material pendiente u observado antes del reciclaje en ese intervalo.
+Un linaje de otra especie o sin colonia no
+recibe ese aviso. La consulta no modifica el planeta ni usa azar.
+
+La transmisión social anterior agrega memoria duradera; esta señal representa
+una oportunidad presente y desaparece cuando las condiciones cambian. El
+planeta solo guarda qué especies llegaron a emitir alguna señal, sin contar
+cada actualización como un evento nuevo. No hay lenguaje, sonidos, símbolos,
+beneficio de supervivencia ni cambio físico. Los guardados anteriores inician
+sin el hito histórico y pueden adquirirlo al continuar.
+
+```sh
+.venv/bin/python -m unittest tests.test_initial_communication -v
+```
+
+## Práctica cultural incipiente
+
+[`ModeloCulturaInicial`](initial_culture_model.py) compara los avisos actuales
+del modelo de comunicación. Si dos linajes con colonias de la misma especie
+se envían avisos recíprocos sobre la misma ruta, registra esa ruta como
+práctica compartida de la especie. Un aviso de ida no basta. La práctica
+actual se consulta sin cambiar el planeta; el historial queda guardado y no
+duplica rutas al repetir una actualización.
+
+Si el recurso o una colonia desaparecen, la práctica deja de estar activa
+pero sigue en el historial. Es un umbral de diseño para una convención inicial,
+no una cultura humana ni una medición científica. No concede lenguaje,
+tecnología, supervivencia adicional ni cambios físicos. Guardados anteriores
+inician con prácticas vacías y pueden adquirirlas al continuar.
+
+```sh
+.venv/bin/python -m unittest tests.test_initial_culture -v
+```
+
+## Repertorio de códigos inicial
+
+[`ModeloLenguajeInicial`](initial_language_model.py) asigna códigos abstractos
+por especie cuando al menos dos rutas distintas tienen prácticas recíprocas
+activas. La primera ruta observada recibe `C1`, la siguiente `C2`; una nueva
+ruta recibe el siguiente código sin cambiar los ya guardados. Una práctica
+única o una señal unilateral no forman repertorio. La consulta de repertorios
+actuales exige al menos dos rutas codificadas con prácticas aún posibles.
+
+El planeta guarda el mapa de recurso a código por especie. Los códigos quedan
+como historia aunque cesen las prácticas; las partidas anteriores empiezan
+vacías. Son etiquetas internas para distinguir recursos, no vocabulario
+hablado, sonidos, sintaxis ni una medición científica de lenguaje. No afectan
+al ecosistema, población, física o azar.
+
+```sh
+.venv/bin/python -m unittest tests.test_initial_language -v
+```
+
+## Técnica temprana de soporte recuperado
+
+[`ModeloTecnologiaTemprana`](early_technology_model.py) espera tres hechos
+observados en orden: uso de soporte orgánico, una actualización sin restos
+mientras una colonia viva recuerda esa ruta y existe su código histórico, y
+regreso del material con al menos dos linajes capaces de repetir el soporte
+bajo un repertorio activo que incluye `restos`. Solo entonces guarda el hito
+de una técnica compartida. Repetir pasos con condiciones constantes no basta.
+
+La consulta actual muestra especie, linajes y código de `restos`; desaparece
+si falta el material o el repertorio, aunque el hito histórico se conserve.
+Los dos conjuntos de estado —escasez observada y técnica alcanzada— se guardan;
+partidas anteriores comienzan sin ellos. Es un procedimiento simbólico, no
+fabricación, herramientas duraderas, mejora de población o tasa científica.
+El ciclo orgánico y la física siguen independientes. Una escasez transitoria
+oculta dentro de un salto largo puede perderse.
+
+```sh
+.venv/bin/python -m unittest tests.test_early_technology -v
+```
+
+La revisión conjunta de estas reglas se prueba con
+`.venv/bin/python -m unittest tests.test_phase5_integration -v`. Comprueba
+que los restos vistos antes de reciclarse sirven como oportunidad en ese
+intervalo, que una escasez posterior se reconoce y que guardar/cargar no
+cambia la técnica recuperada.

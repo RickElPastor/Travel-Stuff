@@ -12,6 +12,13 @@ from biology.decomposition_model import ModeloDescomposicionMicrobiana
 from biology.material_cycle_model import ModeloCicloOrganico
 from biology.atmospheric_impact_model import ModeloAporteAtmosfericoBiologico
 from biology.colony_model import ModeloColoniasCelulares
+from biology.initial_learning_model import ModeloAprendizajeInicial
+from biology.social_transmission_model import ModeloTransmisionSocial
+from biology.initial_tool_model import ModeloHerramientasIniciales
+from biology.initial_communication_model import ModeloComunicacionInicial
+from biology.initial_culture_model import ModeloCulturaInicial
+from biology.initial_language_model import ModeloLenguajeInicial
+from biology.early_technology_model import ModeloTecnologiaTemprana
 from biology.mass_extinction_model import ModeloExtincionesMasivas
 
 from chemistry.protocell_viability_model import ModeloViabilidadProtocelular
@@ -183,6 +190,13 @@ class Universe:
         self.modelo_ciclo_organico = ModeloCicloOrganico()
         self.modelo_aporte_atmosferico_biologico = ModeloAporteAtmosfericoBiologico()
         self.modelo_colonias_celulares = ModeloColoniasCelulares()
+        self.modelo_aprendizaje_inicial = ModeloAprendizajeInicial()
+        self.modelo_transmision_social = ModeloTransmisionSocial()
+        self.modelo_herramientas_iniciales = ModeloHerramientasIniciales()
+        self.modelo_comunicacion_inicial = ModeloComunicacionInicial()
+        self.modelo_cultura_inicial = ModeloCulturaInicial()
+        self.modelo_lenguaje_inicial = ModeloLenguajeInicial()
+        self.modelo_tecnologia_temprana = ModeloTecnologiaTemprana()
         self.modelo_extinciones_masivas = ModeloExtincionesMasivas()
         self.modelo_seleccion_unicelular = self.modelo_herencia_unicelular.seleccion
         self.modelo_especies_unicelulares = self.modelo_herencia_unicelular.especies
@@ -696,6 +710,13 @@ class Universe:
         for planeta in self.planetas:
             self.modelo_ciclo_organico.evaluar(planeta)
 
+    def actualizar_restos_observados(self, reciclado_inicial):
+        for planeta in self.planetas:
+            planeta.restos_observados_intervalo = (
+                planeta.total_unidades_recicladas - reciclado_inicial[planeta]
+                + planeta.restos_organicos_unidades
+            )
+
     def actualizar_atmosfera_biologica(self):
         for planeta in self.planetas:
             self.modelo_aporte_atmosferico_biologico.evaluar(planeta)
@@ -703,6 +724,34 @@ class Universe:
     def actualizar_colonias_celulares(self):
         for planeta in self.planetas:
             self.modelo_colonias_celulares.evaluar(planeta)
+
+    def actualizar_aprendizaje_inicial(self):
+        for planeta in self.planetas:
+            self.modelo_aprendizaje_inicial.evaluar(planeta)
+
+    def actualizar_transmision_social(self):
+        for planeta in self.planetas:
+            self.modelo_transmision_social.evaluar(planeta)
+
+    def actualizar_herramientas_iniciales(self):
+        for planeta in self.planetas:
+            self.modelo_herramientas_iniciales.evaluar(planeta)
+
+    def actualizar_comunicacion_inicial(self):
+        for planeta in self.planetas:
+            self.modelo_comunicacion_inicial.evaluar(planeta)
+
+    def actualizar_cultura_inicial(self):
+        for planeta in self.planetas:
+            self.modelo_cultura_inicial.evaluar(planeta)
+
+    def actualizar_lenguaje_inicial(self):
+        for planeta in self.planetas:
+            self.modelo_lenguaje_inicial.evaluar(planeta)
+
+    def actualizar_tecnologia_temprana(self):
+        for planeta in self.planetas:
+            self.modelo_tecnologia_temprana.evaluar(planeta)
 
     def actualizar_herencia_variacion(self):
         for planeta in self.planetas:
@@ -859,6 +908,9 @@ class Universe:
             )
             for planeta in self.planetas
         }
+        reciclado_inicial = {
+            planeta: planeta.total_unidades_recicladas for planeta in self.planetas
+        }
 
         self.actualizar_reglas_mundos()
 
@@ -914,9 +966,25 @@ class Universe:
 
         self.actualizar_ciclo_organico()
 
+        self.actualizar_restos_observados(reciclado_inicial)
+
         self.actualizar_atmosfera_biologica()
 
         self.actualizar_colonias_celulares()
+
+        self.actualizar_aprendizaje_inicial()
+
+        self.actualizar_transmision_social()
+
+        self.actualizar_herramientas_iniciales()
+
+        self.actualizar_comunicacion_inicial()
+
+        self.actualizar_cultura_inicial()
+
+        self.actualizar_lenguaje_inicial()
+
+        self.actualizar_tecnologia_temprana()
 
         for planeta in self.planetas:
             (anteriores, vida_anterior, especies_anteriores, agua_anterior,

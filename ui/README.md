@@ -38,6 +38,44 @@ recorren la lista cuando hay más enlaces que filas; `Esc` vuelve a Biosfera.
 La red vacía se explica en pantalla y no cambia los datos de la partida. `Esc`
 vuelve al planeta sin cambiar la velocidad ni el reloj compartido.
 
+Desde Biosfera, `I` abre **Precursores**. Muestra especies con al menos una
+colonia activa de un mismo linaje y dos recursos modelados disponibles. Esta
+lista señala candidatas para capacidades posteriores: no afirma que ya tengan
+inteligencia o cultura. La columna `mem` muestra las rutas extra
+recordadas por la especie; `pref` muestra la primera conocida que sigue
+disponible. Es una prioridad simbólica que aún no mejora su supervivencia ni
+cambia recursos del planeta. Una candidata sin recuerdo muestra `mem vacía`.
+El contador de transmisiones indica cuántas rutas nuevas pasaron entre dos
+linajes con colonias de la misma especie. El recuerdo no concede la capacidad
+de usar la ruta y el contador permanece aunque las colonias desaparezcan.
+La línea `Soporte orgánico` compara las especies que hoy tienen colonia,
+memoria de restos y material disponible con las que alguna vez cumplieron esa
+combinación. El material pudo reciclarse durante el intervalo, por lo que
+puede haber soporte observado con cero restos pendientes al cerrar el paso.
+Es un ensayo simbólico, no un objeto fabricado ni una mejora de
+supervivencia.
+La cifra `técnica actual/histórica` aparece cuando el soporte se repite después
+de una escasez observada y la especie conserva un repertorio activo que
+codifica `restos`. El hito histórico permanece aunque deje de haber material.
+
+`Señales actuales` indica avisos presentes entre colonias de la misma especie;
+el ejemplo muestra emisor, receptor y recurso. El historial cuenta especies
+que alguna vez pudieron señalar una ruta. Al faltar esa ruta, el aviso actual
+desaparece aunque el historial permanezca. Son avisos simbólicos, no lenguaje.
+
+`Prácticas activas` muestra especies cuyos linajes con colonias se avisan
+recíprocamente sobre la misma ruta; cuando existe una, también muestra la
+ruta. El historial guarda las especies que alguna vez tuvieron una práctica.
+Una señal de ida sola no cuenta como práctica y nada de esto crea lenguaje.
+
+`Códigos` muestra cuántas especies tienen hoy un repertorio activo y cuántas
+lo tuvieron alguna vez. El ejemplo asocia etiquetas abstractas con recursos,
+como `C1=luz` y `C2=restos`. Son identificadores del simulador, no palabras.
+
+`↑/↓` y `PgUp/PgDn` recorren todas
+las candidatas si la lista supera la altura de la terminal. Una lista vacía
+es válida; consultar la página no cambia el universo ni su velocidad.
+
 `V` abre el historial de eventos desde Universo, una estrella, un sistema o
 un planeta. El resumen universal muestra los últimos eventos; las fichas de
 estrella y sistema muestran sus eventos recientes. El historial universal

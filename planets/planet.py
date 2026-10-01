@@ -150,6 +150,7 @@ class Planet:
         unidades_descomponedoras_activas=0,
         alcanzo_capacidad_descomponedora=False,
         restos_organicos_unidades=0,
+        restos_observados_intervalo=0,
         nutrientes_reciclados_unidades=0,
         muertes_contabilizadas_ciclo=None,
         total_unidades_recicladas=0,
@@ -166,6 +167,15 @@ class Planet:
         especies_ultima_extincion_masiva=None,
         ancestros_con_radiacion=None,
         especies_ultima_radiacion=None,
+        recursos_recordados_por_especie=None,
+        recursos_recordados_por_linaje=None,
+        transmisiones_sociales=0,
+        especies_con_soporte_organico=None,
+        especies_con_senal_recurso=None,
+        rutas_culturales_por_especie=None,
+        codigos_senal_por_especie=None,
+        especies_con_tecnica_soporte=None,
+        especies_soporte_con_escasez=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -577,6 +587,7 @@ class Planet:
         self.nacimientos_unicelulares = int(nacimientos_unicelulares)
         self.muertes_unicelulares = int(muertes_unicelulares)
         self.restos_organicos_unidades = int(restos_organicos_unidades)
+        self.restos_observados_intervalo = int(restos_observados_intervalo)
         self.nutrientes_reciclados_unidades = int(nutrientes_reciclados_unidades)
         self.muertes_contabilizadas_ciclo = (
             self.muertes_unicelulares if muertes_contabilizadas_ciclo is None
@@ -611,6 +622,35 @@ class Planet:
         self.especies_ultima_radiacion = sorted(
             int(especie) for especie in (especies_ultima_radiacion or [])
         )
+        self.recursos_recordados_por_especie = {
+            int(especie): list(dict.fromkeys(recursos))
+            for especie, recursos in (recursos_recordados_por_especie or {}).items()
+        }
+        self.recursos_recordados_por_linaje = {
+            int(linaje): list(dict.fromkeys(recursos))
+            for linaje, recursos in (recursos_recordados_por_linaje or {}).items()
+        }
+        self.transmisiones_sociales = int(transmisiones_sociales)
+        self.especies_con_soporte_organico = {
+            int(especie) for especie in (especies_con_soporte_organico or [])
+        }
+        self.especies_con_senal_recurso = {
+            int(especie) for especie in (especies_con_senal_recurso or [])
+        }
+        self.rutas_culturales_por_especie = {
+            int(especie): list(dict.fromkeys(recursos))
+            for especie, recursos in (rutas_culturales_por_especie or {}).items()
+        }
+        self.codigos_senal_por_especie = {
+            int(especie): dict(codigos)
+            for especie, codigos in (codigos_senal_por_especie or {}).items()
+        }
+        self.especies_con_tecnica_soporte = {
+            int(especie) for especie in (especies_con_tecnica_soporte or [])
+        }
+        self.especies_soporte_con_escasez = {
+            int(especie) for especie in (especies_soporte_con_escasez or [])
+        }
         self.rasgo_linea_unicelular = (
             None if rasgo_linea_unicelular is None
             else int(rasgo_linea_unicelular)
@@ -751,6 +791,7 @@ class Planet:
             "unidades_descomponedoras_activas": self.unidades_descomponedoras_activas,
             "alcanzo_capacidad_descomponedora": self.alcanzo_capacidad_descomponedora,
             "restos_organicos_unidades": self.restos_organicos_unidades,
+            "restos_observados_intervalo": self.restos_observados_intervalo,
             "nutrientes_reciclados_unidades": self.nutrientes_reciclados_unidades,
             "muertes_contabilizadas_ciclo": self.muertes_contabilizadas_ciclo,
             "total_unidades_recicladas": self.total_unidades_recicladas,
@@ -769,6 +810,43 @@ class Planet:
             ),
             "ancestros_con_radiacion": sorted(self.ancestros_con_radiacion),
             "especies_ultima_radiacion": list(self.especies_ultima_radiacion),
+            "recursos_recordados_por_especie": {
+                especie: list(recursos)
+                for especie, recursos in sorted(
+                    self.recursos_recordados_por_especie.items()
+                )
+            },
+            "recursos_recordados_por_linaje": {
+                linaje: list(recursos)
+                for linaje, recursos in sorted(
+                    self.recursos_recordados_por_linaje.items()
+                )
+            },
+            "transmisiones_sociales": self.transmisiones_sociales,
+            "especies_con_soporte_organico": sorted(
+                self.especies_con_soporte_organico
+            ),
+            "especies_con_senal_recurso": sorted(
+                self.especies_con_senal_recurso
+            ),
+            "rutas_culturales_por_especie": {
+                especie: list(recursos)
+                for especie, recursos in sorted(
+                    self.rutas_culturales_por_especie.items()
+                )
+            },
+            "codigos_senal_por_especie": {
+                especie: dict(codigos)
+                for especie, codigos in sorted(
+                    self.codigos_senal_por_especie.items()
+                )
+            },
+            "especies_con_tecnica_soporte": sorted(
+                self.especies_con_tecnica_soporte
+            ),
+            "especies_soporte_con_escasez": sorted(
+                self.especies_soporte_con_escasez
+            ),
             "proximo_crecimiento_unicelular_anio": (
                 self.proximo_crecimiento_unicelular_anio
             ),
@@ -1198,6 +1276,7 @@ class Planet:
                 "alcanzo_capacidad_descomponedora", False
             ),
             restos_organicos_unidades=datos.get("restos_organicos_unidades", 0),
+            restos_observados_intervalo=datos.get("restos_observados_intervalo", 0),
             nutrientes_reciclados_unidades=datos.get(
                 "nutrientes_reciclados_unidades", 0
             ),
@@ -1224,6 +1303,31 @@ class Planet:
             ),
             ancestros_con_radiacion=datos.get("ancestros_con_radiacion"),
             especies_ultima_radiacion=datos.get("especies_ultima_radiacion"),
+            recursos_recordados_por_especie=datos.get(
+                "recursos_recordados_por_especie"
+            ),
+            recursos_recordados_por_linaje=datos.get(
+                "recursos_recordados_por_linaje"
+            ),
+            transmisiones_sociales=datos.get("transmisiones_sociales", 0),
+            especies_con_soporte_organico=datos.get(
+                "especies_con_soporte_organico"
+            ),
+            especies_con_senal_recurso=datos.get(
+                "especies_con_senal_recurso"
+            ),
+            rutas_culturales_por_especie=datos.get(
+                "rutas_culturales_por_especie"
+            ),
+            codigos_senal_por_especie=datos.get(
+                "codigos_senal_por_especie"
+            ),
+            especies_con_tecnica_soporte=datos.get(
+                "especies_con_tecnica_soporte"
+            ),
+            especies_soporte_con_escasez=datos.get(
+                "especies_soporte_con_escasez"
+            ),
             proximo_crecimiento_unicelular_anio=datos.get(
                 "proximo_crecimiento_unicelular_anio"
             ),

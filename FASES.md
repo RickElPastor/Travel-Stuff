@@ -69,7 +69,7 @@ La selección prebiótica de `abiogenesis/` es otra capa.
 | 4. Evolución biológica | Reproducción, herencia, mutación, selección, adaptación, linajes, especies, extinción y diversificación. La vida puede permanecer microbiana. | Base simbólica terminada en `fase-2`; modelos biológicos más profundos quedan para etapas posteriores |
 | 5. Metabolismos y biosfera | Fuentes de energía, rutas metabólicas, posible fotosíntesis, efectos sobre la atmósfera, productores, consumidores, descomponedores y ecosistemas. | Base simbólica terminada y validada en `fase-3` |
 | 6. Vida compleja | Multicelularidad, nichos, depredación, redes tróficas, extinciones masivas y radiaciones evolutivas, sin fecha obligatoria. | Base simbólica terminada y validada en `fase-4`; organismos complejos con tejidos quedan para más adelante |
-| 7. Inteligencia | Inteligencia no garantizada, herramientas, aprendizaje social, comunicación, cultura, lenguaje y tecnología inicial. | Pendiente |
+| 7. Inteligencia | Inteligencia no garantizada, herramientas, aprendizaje social, comunicación, cultura, lenguaje y tecnología inicial. | Base simbólica terminada y validada en `fase-5`; inteligencia avanzada queda para etapas posteriores |
 | 8. Civilizaciones | Asentamientos, culturas, territorios, gobiernos, recursos, comercio y tecnologías. Ninguna civilización es obligatoria. | Pendiente |
 | 9. Historia dinámica | Guerras, alianzas, migraciones, revoluciones, descubrimientos, catástrofes y otros eventos emergentes; nunca una cronología fija. | Pendiente |
 | 10. Religiones | Creencias, cultos, mitologías, conversiones, divisiones y desapariciones según condiciones e historia, sin fecha obligatoria. | Pendiente |
@@ -287,6 +287,150 @@ de energía, cantidades consumidas ni fuerza de competencia. Las colonias no
 tienen tejidos ni órganos; «radiación» no demuestra adaptación a nichos.
 Tampoco hay inteligencia o civilizaciones, que pertenecen a pasos posteriores.
 La revisión integral no amplía estas reglas más allá de lo comprobado.
+
+### Inicio de Fase 5 — Inteligencia no garantizada
+
+La rama `fase-5` parte del cierre de `fase-4`. Esta fase avanzará por bloques:
+condiciones precursoras, aprendizaje y memoria, posible transmisión social,
+herramientas, comunicación, cultura y lenguaje inicial, y tecnología temprana.
+Cada capacidad deberá depender de especies vivas y condiciones comprobables;
+ninguna se asignará por una fecha fija. Asentamientos, gobiernos, territorios y
+civilizaciones corresponden al paso 8 y quedan fuera de esta fase.
+
+El primer bloque es una **consulta de candidatas**, no una declaración de
+inteligencia. Requiere al menos una colonia celular actual de un mismo linaje
+y acceso actual a dos recursos modelados en la especie. Dos es un umbral de
+diseño para preparar el siguiente modelo, no una medida científica de mente.
+Una especie puede tener varios nichos sin ser candidata, o formar colonia con
+un solo recurso sin serlo. Se usan los linajes, especies, colonias y nichos ya
+persistidos; la consulta no añade azar, campos de guardado, eventos, nacimientos,
+muertes ni cambios físicos. Al cargar se reconstruye el mismo resultado.
+La vista `I` desde Biosfera enumera las candidatas y explica que todavía no
+hay inteligencia demostrada. Cero candidatas es un resultado normal.
+
+El segundo bloque añade una **memoria simbólica de rutas adicionales**. Al
+observar una especie candidata, registra por primera vez las rutas de luz,
+restos o presas posibles que estaban disponibles; los orgánicos no se anotan
+porque ya son requisito ambiental de la colonia. La prioridad actual es la
+primera ruta recordada que sigue disponible. Si deja de estarlo, puede
+priorizar otra conocida y recuperar la anterior cuando vuelva. Cada especie
+guarda su propia lista en orden de descubrimiento. Sin candidatura no añade
+recuerdos; la memoria histórica no se borra al extinguirse la especie. Los
+guardados anteriores comienzan vacíos y pueden aprender en actualizaciones
+futuras. La regla no se hereda entre especies ni cambia consumo, reproducción,
+supervivencia, clima o física: es una primera preferencia observable, no
+inteligencia avanzada ni ventaja adaptativa comprobada.
+
+La observación ocurre al final de cada actualización del entorno. Con un
+entorno estable, repetir pasos no duplica recuerdos; un salto largo puede
+omitir una ruta que apareció y desapareció entre sus extremos, límite temporal
+del simulador que no se presenta como una observación precisa.
+
+El tercer bloque distingue el resumen histórico por especie de la **memoria
+de cada linaje con colonia**. Un linaje registra directamente una ruta extra
+solo si tiene la capacidad correspondiente y su especie es candidata. Cuando
+dos linajes de la misma especie tienen colonias activas, uno puede compartir
+una ruta que recuerda con el otro. Se cuenta cada ruta nueva recibida una sola
+vez; no cruza especies, no concede la capacidad biológica de usar esa ruta y
+no altera recursos, población ni física. Los guardados anteriores empiezan
+sin memorias por linaje ni transmisiones inventadas; la lista histórica por
+especie sigue disponible y los linajes pueden registrar recursos en futuras
+actualizaciones. El intercambio se observa al final de cada actualización;
+los encuentros transitorios dentro de saltos largos pueden quedar fuera.
+
+El cuarto bloque reconoce un **ensayo simbólico de soporte orgánico externo**:
+una especie candidata tiene una colonia actual cuyo linaje recuerda la ruta de
+restos, y el planeta tiene restos pendientes o reciclados durante la
+actualización observada. En ese estado, el modelo señala un posible uso como
+apoyo; guarda por especie que el ensayo ocurrió alguna vez, aunque desaparezca
+el material o la colonia. Una ruta recordada por otro linaje sin colonia no
+basta. La observación no consume restos, fabrica un objeto, asigna órganos ni
+mejora alimentación o supervivencia. Tampoco representa herramientas animales
+o tecnología. Es una regla de diseño para iniciar la conducta de uso externo,
+no una afirmación científica sobre organismos unicelulares. Se guarda cuánto
+material se encontró en el intervalo, aunque el ciclo orgánico lo haya
+reciclado después; saltos largos aún pueden omitir otras oportunidades breves.
+Los guardados antiguos empiezan sin esta observación ni el hito.
+
+El quinto bloque añade una **señal inicial de recurso** distinta del recuerdo
+compartido. Dos linajes vivos de la misma especie candidata deben mantener
+colonias. El emisor recuerda una ruta que puede usar biológicamente y está
+disponible ahora; el receptor es otro linaje con colonia de esa especie. La
+consulta muestra emisor, receptor y recurso. La señal deja de estar activa si
+falta la ruta, la capacidad o alguna colonia. Por especie se guarda solo el
+hito de haber tenido una señal, sin contar repetidamente el mismo aviso por
+cada paso temporal. Para restos se exige material pendiente u observado y
+reciclado en el intervalo, no solo una capacidad descomponedora marcada.
+
+La regla representa un aviso temporal de oportunidad, mientras la transmisión
+social conserva memoria histórica. El aviso no otorga capacidades ni cambia
+consumo, población, ambiente o física. No simula sonido, gestos, vocabulario,
+significado complejo ni lenguaje. Como otras consultas de esta fase, observa
+el estado al final de la actualización; un aviso transitorio dentro de un
+salto largo puede no registrarse. Guardados anteriores empiezan sin el hito.
+
+El sexto bloque reconoce una **práctica compartida incipiente** cuando dos
+linajes de una misma especie candidata, ambos con colonias, emiten avisos
+recíprocos sobre la misma ruta de recurso disponible. Un aviso en un solo
+sentido, o dos avisos sobre rutas distintas, no bastan. Se guarda por especie
+la ruta que alguna vez cumplió el criterio; repetir la observación no añade
+copias. La práctica está activa solo mientras los dos avisos siguen siendo
+posibles. La historia persiste si desaparece la ruta o la especie se extingue.
+
+Es una convención operacional muy pequeña, no una cultura antropológica:
+no hay normas, tradiciones elaboradas, lenguaje, símbolos compartidos ni
+ventajas ecológicas nuevas. Requiere las capacidades y memorias actuales de
+ambos linajes; un recuerdo social sin capacidad biológica no inventa un aviso
+de vuelta. La regla no altera evolución, recursos ni física. Los guardados
+anteriores comienzan sin prácticas inventadas. Como el resto de esta etapa,
+solo observa el final de cada actualización y puede omitir episodios breves
+dentro de saltos largos.
+
+El séptimo bloque modela un **repertorio de códigos inicial**: una especie debe
+mantener prácticas recíprocas actuales sobre al menos dos rutas de recurso
+distintas. Entonces asigna etiquetas abstractas `C1`, `C2` y siguientes a las
+rutas en el orden del primer reconocimiento, propias de esa especie. Una sola
+práctica no basta; una tercera ruta recibe el siguiente código sin cambiar los
+anteriores. El repertorio histórico se guarda y permanece aunque la especie
+se extinga o el recurso desaparezca. Se considera activo solo si al menos dos
+rutas ya codificadas mantienen prácticas actuales. Los guardados anteriores
+comienzan sin códigos inventados y pueden adquirirlos al continuar.
+
+Los códigos son identificadores internos del simulador para distinguir
+referentes, no sonidos, palabras pronunciadas, gramática ni demostración de
+lenguaje humano. Dos rutas es un umbral de diseño. No altera comunicación,
+consumo, población ni física; observa solo el final de cada actualización, por
+lo que un salto largo puede omitir una combinación pasajera.
+
+El octavo bloque reconoce una **técnica temprana de soporte recuperado**. La
+especie debe haber observado el uso de soporte orgánico y contar con un
+repertorio histórico que codifique `restos`. Si sigue viva, con colonia que
+recuerda esa ruta, y después se observa una actualización sin material, el
+planeta guarda la escasez. Solo cuando reaparecen restos y al menos dos
+linajes con colonias pueden usar soporte mientras está activo el código de
+`restos`, se registra el método compartido. Repetir actualizaciones con el
+material siempre presente no crea la técnica. La historia persiste al cesar
+la actividad; los guardados anteriores no inventan escasez ni técnicas.
+
+La técnica es una regla de diseño para reconocer recuperación de un
+procedimiento, no una tecnología manufacturera. No prepara ni almacena
+objetos, no consume restos ni mejora la supervivencia. Las transiciones solo
+se observan al final de las actualizaciones; un salto largo que oculte una
+escasez transitoria no la registrará. La física normal y el ciclo orgánico
+siguen calculándose sin modificaciones.
+
+### Cierre de Fase 5
+
+- [x] Candidatas por colonias y recursos, memoria de rutas y transmisión social.
+- [x] Ensayo de soporte, señales recíprocas y práctica compartida.
+- [x] Códigos iniciales y técnica de soporte recuperado tras escasez.
+- [x] Revisión integral: el material reciclado durante un intervalo puede
+  observarse sin alterar el balance orgánico; pruebas controladas de la cadena
+  completa, guardado/carga, compatibilidad y universo nuevo desde el año 0.
+
+La base simbólica de Fase 5 queda terminada. Son umbrales de diseño para
+conductas precursoras; no hay inteligencia humana, lenguaje hablado,
+organismos macroscópicos ni civilizaciones. El paso 8 comienza en `fase-6`.
 
 ## Horizontes posteriores, todavía sin paso inmediato
 

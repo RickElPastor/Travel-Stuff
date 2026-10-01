@@ -4,6 +4,13 @@ import textwrap
 
 from biology.niche_model import ModeloNichosEcologicos
 from biology.trophic_web_model import ModeloRedTrofica
+from biology.intelligence_precursor_model import ModeloPrecursoresInteligencia
+from biology.initial_learning_model import ModeloAprendizajeInicial
+from biology.initial_tool_model import ModeloHerramientasIniciales
+from biology.initial_communication_model import ModeloComunicacionInicial
+from biology.initial_culture_model import ModeloCulturaInicial
+from biology.initial_language_model import ModeloLenguajeInicial
+from biology.early_technology_model import ModeloTecnologiaTemprana
 from planets.local_calendar import fecha_local, periodo_orbital_dias
 from universe.events import Event
 from universe.save_manager import SaveManager
@@ -58,7 +65,7 @@ class SimulationUI:
         pagina = {"tipo": tipo, "objeto": objeto}
         if tipo in ("estrellas", "sistemas", "planetas", "eventos"):
             pagina.update(filtro="", indice=0)
-        elif tipo == "red_trofica":
+        elif tipo in ("red_trofica", "precursores"):
             pagina["indice"] = 0
         self.ruta.append(pagina)
         if tipo == "planeta":
@@ -96,12 +103,13 @@ class SimulationUI:
         tipo = pagina["tipo"]
         if tecla in (ord("v"), ord("V")) and tipo in (
             "universo", "estrella", "sistema", "planeta", "biosfera",
-            "red_trofica",
+            "red_trofica", "precursores",
         ):
             if tipo == "universo":
                 contexto = None
             else:
-                ambito = "planeta" if tipo in ("biosfera", "red_trofica") else tipo
+                ambito = ("planeta" if tipo in
+                          ("biosfera", "red_trofica", "precursores") else tipo)
                 contexto = (ambito, self._nombre(pagina["objeto"]))
             self._abrir("eventos", contexto)
             return False
@@ -109,6 +117,21 @@ class SimulationUI:
             enlaces = ModeloRedTrofica().enlaces(pagina["objeto"])
             visibles = max(1, stdscr.getmaxyx()[0] - 14)
             ultimo = max(0, len(enlaces) - visibles)
+            if tecla == curses.KEY_UP:
+                pagina["indice"] = max(0, pagina["indice"] - 1)
+            elif tecla == curses.KEY_DOWN:
+                pagina["indice"] = min(ultimo, pagina["indice"] + 1)
+            elif tecla == curses.KEY_PPAGE:
+                pagina["indice"] = max(0, pagina["indice"] - visibles)
+            elif tecla == curses.KEY_NPAGE:
+                pagina["indice"] = min(ultimo, pagina["indice"] + visibles)
+            return False
+        if tipo == "precursores":
+            candidatas = ModeloPrecursoresInteligencia().candidatas(
+                pagina["objeto"]
+            )
+            visibles = max(1, stdscr.getmaxyx()[0] - 19)
+            ultimo = max(0, len(candidatas) - visibles)
             if tecla == curses.KEY_UP:
                 pagina["indice"] = max(0, pagina["indice"] - 1)
             elif tecla == curses.KEY_DOWN:
@@ -155,8 +178,11 @@ class SimulationUI:
                 self._abrir("estrellas", pagina["objeto"])
         elif tipo == "planeta" and tecla in (ord("m"), ord("M")):
             self._abrir("biosfera", pagina["objeto"])
-        elif tipo == "biosfera" and tecla in (ord("r"), ord("R")):
-            self._abrir("red_trofica", pagina["objeto"])
+        elif tipo == "biosfera":
+            if tecla in (ord("r"), ord("R")):
+                self._abrir("red_trofica", pagina["objeto"])
+            elif tecla in (ord("i"), ord("I")):
+                self._abrir("precursores", pagina["objeto"])
         return False
 
     def _buscar(self, stdscr):
@@ -274,6 +300,7 @@ class SimulationUI:
                     f"{self.universe.time.obtener_descripcion_velocidad()}")
         self._texto(stdscr, 4, "  ›  ".join(
             "Red trófica" if p["tipo"] == "red_trofica" else
+            "Precursores" if p["tipo"] == "precursores" else
             self._nombre(p["objeto"]) if p.get("objeto") is not None
             and p["tipo"] not in ("estrellas", "planetas", "eventos")
             else p["tipo"].capitalize() for p in self.ruta))
@@ -292,6 +319,8 @@ class SimulationUI:
             self._dibujar_biosfera(stdscr, pagina["objeto"])
         elif tipo == "red_trofica":
             self._dibujar_red_trofica(stdscr, pagina, alto)
+        elif tipo == "precursores":
+            self._dibujar_precursores(stdscr, pagina, alto)
         else:
             self._dibujar_planeta(stdscr, pagina["objeto"])
         self._separador(stdscr, alto - 2)
@@ -301,8 +330,10 @@ class SimulationUI:
                      if tipo in ("estrellas", "sistemas", "planetas", "eventos") else
                      "M Biosfera · V Eventos · S Guardar · +/- Tiempo · Esc Volver"
                      if tipo == "planeta" else
-                     "R Red trófica · V Eventos · S Guardar · Esc Volver"
+                     "R Red trófica · I Precursores · V Eventos · S Guardar · Esc"
                      if tipo == "biosfera" else
+                     "↑↓/PgUp/PgDn · V Eventos · S Guardar · Esc Volver"
+                     if tipo == "precursores" else
                      "↑↓/PgUp/PgDn · V Eventos · S Guardar · Esc Volver"
                      if tipo == "red_trofica" else
                      "Enter Sistema · V Eventos · S Guardar · +/- · Esc Volver"
@@ -580,3 +611,75 @@ class SimulationUI:
                     f"Mostrando {inicio + 1 if enlaces else 0}-"
                     f"{min(inicio + visibles, len(enlaces))} de {len(enlaces)}"
                     " · posible no significa realizada")
+
+    def _dibujar_precursores(self, stdscr, pagina, alto):
+        planeta = pagina["objeto"]
+        candidatas = ModeloPrecursoresInteligencia().candidatas(planeta)
+        usos = ModeloHerramientasIniciales().usos_actuales(planeta)
+        senales = ModeloComunicacionInicial().senales_actuales(planeta)
+        practicas = ModeloCulturaInicial().practicas_actuales(planeta)
+        repertorios = ModeloLenguajeInicial().repertorios_actuales(planeta)
+        tecnicas = ModeloTecnologiaTemprana().tecnicas_actuales(planeta)
+        self._texto(stdscr, 6, "PRECURSORES  ·  posibles candidatas",
+                    curses.A_BOLD)
+        self._texto(stdscr, 7, planeta.nombre)
+        self._texto(stdscr, 8,
+                    f"Soporte orgánico: actual {len(usos)} · histórico "
+                    f"{len(planeta.especies_con_soporte_organico)} · técnica "
+                    f"{len(tecnicas)}/{len(planeta.especies_con_tecnica_soporte)}")
+        self._texto(stdscr, 9, f"Especies candidatas: {len(candidatas)}")
+        self._texto(stdscr, 10,
+                    f"Transmisiones sociales históricas: {planeta.transmisiones_sociales}")
+        self._texto(stdscr, 11,
+                    f"Señales actuales: {len(senales)} · especies históricas "
+                    f"{len(planeta.especies_con_senal_recurso)}")
+        if senales:
+            primera = senales[0]
+            ejemplo = (f"Ejemplo: linaje {primera['origen']} → "
+                       f"{primera['destino']} · {primera['recurso']}")
+        else:
+            ejemplo = "Sin señales actuales."
+        self._texto(stdscr, 12, ejemplo)
+        ruta_cultural = next(
+            (recurso for rutas in practicas.values() for recurso in rutas), None
+        )
+        muestra_ruta = f" · {ruta_cultural}" if ruta_cultural else ""
+        self._texto(stdscr, 13,
+                    f"Prácticas activas: {len(practicas)} · históricas "
+                    f"{len(planeta.rutas_culturales_por_especie)}"
+                    f"{muestra_ruta} · sin lenguaje")
+        self._texto(stdscr, 14, "ESPECIES CANDIDATAS", curses.A_BOLD)
+        vista_codigos = repertorios or planeta.codigos_senal_por_especie
+        if vista_codigos:
+            especie, codigos = next(iter(sorted(vista_codigos.items())))
+            muestra_codigos = ", ".join(
+                f"{codigo}={recurso}" for recurso, codigo in codigos.items()
+            )
+            ejemplo_codigo = f" · e{especie} {muestra_codigos}"
+        else:
+            ejemplo_codigo = ""
+        self._texto(stdscr, 15,
+                    f"Códigos: activos {len(repertorios)} · históricos "
+                    f"{len(planeta.codigos_senal_por_especie)}{ejemplo_codigo}")
+        if not candidatas:
+            self._texto(stdscr, 16, "Ninguna cumple las condiciones actuales.")
+        visibles = max(1, alto - 19)
+        inicio = min(pagina["indice"], max(0, len(candidatas) - visibles))
+        pagina["indice"] = inicio
+        items = list(candidatas.items())
+        aprendizaje = ModeloAprendizajeInicial()
+        for fila, (especie, datos) in enumerate(
+            items[inicio:inicio + visibles], start=16
+        ):
+            recordados = planeta.recursos_recordados_por_especie.get(especie, [])
+            preferencia = aprendizaje.preferencia_actual(
+                planeta, especie, datos["recursos"]
+            )
+            self._texto(stdscr, fila,
+                        f"Especie {especie} · col {datos['colonias']}"
+                        f" · mem {', '.join(recordados) or 'vacía'}"
+                        f" · pref {preferencia or 'ninguna'}")
+        self._texto(stdscr, alto - 3,
+                    f"Mostrando {inicio + 1 if items else 0}-"
+                    f"{min(inicio + visibles, len(items))} de {len(items)}"
+                    " · preferencia simbólica")

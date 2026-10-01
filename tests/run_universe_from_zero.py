@@ -4,6 +4,12 @@ import tempfile
 
 from biology.niche_model import ModeloNichosEcologicos
 from biology.trophic_web_model import ModeloRedTrofica
+from biology.intelligence_precursor_model import ModeloPrecursoresInteligencia
+from biology.initial_tool_model import ModeloHerramientasIniciales
+from biology.initial_communication_model import ModeloComunicacionInicial
+from biology.initial_culture_model import ModeloCulturaInicial
+from biology.initial_language_model import ModeloLenguajeInicial
+from biology.early_technology_model import ModeloTecnologiaTemprana
 from game import crear_modelo_estelar
 from universe.save_manager import SaveManager
 from universe.universe import Universe
@@ -26,6 +32,12 @@ def resumen(universo):
     nichos = [modelo_nichos.resumen(p) for p in planetas if p.vida_activa]
     modelo_red = ModeloRedTrofica()
     redes = [modelo_red.resumen(p) for p in planetas if p.vida_activa]
+    modelo_precursores = ModeloPrecursoresInteligencia()
+    modelo_herramientas = ModeloHerramientasIniciales()
+    modelo_comunicacion = ModeloComunicacionInicial()
+    modelo_cultura = ModeloCulturaInicial()
+    modelo_lenguaje = ModeloLenguajeInicial()
+    modelo_tecnologia = ModeloTecnologiaTemprana()
     return {
         "estrellas": len(universo.estrellas),
         "planetas": len(planetas),
@@ -84,6 +96,45 @@ def resumen(universo):
         "radiaciones_evolutivas": sum(
             len(p.ancestros_con_radiacion) for p in planetas
         ),
+        "especies_precursoras_actuales": sum(
+            len(modelo_precursores.candidatas(p)) for p in planetas if p.vida_activa
+        ),
+        "especies_con_memoria_historica": sum(
+            len(p.recursos_recordados_por_especie) for p in planetas
+        ),
+        "transmisiones_sociales": sum(
+            p.transmisiones_sociales for p in planetas
+        ),
+        "soportes_organicos_actuales": sum(
+            len(modelo_herramientas.usos_actuales(p)) for p in planetas
+        ),
+        "soportes_organicos_historicos": sum(
+            len(p.especies_con_soporte_organico) for p in planetas
+        ),
+        "senales_recurso_actuales": sum(
+            len(modelo_comunicacion.senales_actuales(p)) for p in planetas
+        ),
+        "especies_con_senal_historica": sum(
+            len(p.especies_con_senal_recurso) for p in planetas
+        ),
+        "practicas_culturales_actuales": sum(
+            len(modelo_cultura.practicas_actuales(p)) for p in planetas
+        ),
+        "especies_con_practica_historica": sum(
+            len(p.rutas_culturales_por_especie) for p in planetas
+        ),
+        "repertorios_codificados_actuales": sum(
+            len(modelo_lenguaje.repertorios_actuales(p)) for p in planetas
+        ),
+        "repertorios_codificados_historicos": sum(
+            len(p.codigos_senal_por_especie) for p in planetas
+        ),
+        "tecnicas_soporte_actuales": sum(
+            len(modelo_tecnologia.tecnicas_actuales(p)) for p in planetas
+        ),
+        "tecnicas_soporte_historicas": sum(
+            len(p.especies_con_tecnica_soporte) for p in planetas
+        ),
         "atmosferas_con_aporte_biologico": sum(
             p.aporte_o2_biologico_bar is not None
             and p.aporte_o2_biologico_bar > 0
@@ -131,6 +182,14 @@ def ejecutar_con_modelo(modelo_estelar):
             ("primera red trófica", "enlaces_recursos"),
             ("extinción masiva local", "extinciones_masivas_locales"),
             ("radiación evolutiva", "radiaciones_evolutivas"),
+            ("especies precursoras", "especies_precursoras_actuales"),
+            ("primera memoria de recurso", "especies_con_memoria_historica"),
+            ("primera transmisión social", "transmisiones_sociales"),
+            ("primer soporte orgánico", "soportes_organicos_historicos"),
+            ("primera señal de recurso", "especies_con_senal_historica"),
+            ("primera práctica compartida", "especies_con_practica_historica"),
+            ("primer repertorio de códigos", "repertorios_codificados_historicos"),
+            ("primera técnica de soporte", "tecnicas_soporte_historicas"),
             ("base ecológica", "bases_ecologicas_activas"),
             ("especies coexistentes", "mundos_con_especies_coexistentes"),
         ):
