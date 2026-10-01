@@ -1,5 +1,102 @@
 # Vida unicelular: primer paso de Fase 2
 
+## Inicio de Fase 4: colonias celulares simples
+
+[`ModeloColoniasCelulares`](colony_model.py) cuenta agrupaciones simbólicas de
+dos unidades vivas del mismo linaje que heredó cohesión. Una variante puede
+adquirir esa capacidad cuando hay vida, agua líquida y orgánicos disponibles;
+la probabilidad `0.0625` es un parámetro de diseño. El azar local por nacimiento
+no cambia los demás sorteos. Las copias del linaje conservan la capacidad.
+
+`colonias_multicelulares_activas` describe el estado actual; vuelve a cero si
+el entorno deja de ser apto o cesa la vida. `alcanzo_colonia_multicelular`
+recuerda si alguna se formó, incluso durante un intervalo interno de un salto
+temporal largo. Los linajes cohesivos y ambos estados se guardan. Una partida
+antigua empieza sin ellos y no recibe adaptaciones retrospectivas. La colonia
+no tiene tejidos, órganos ni reproducción propia, y no cambia población,
+recursos o física.
+
+Prueba específica:
+`.venv/bin/python -m unittest tests.test_cellular_colonies -v`.
+
+### Nichos actuales por recurso
+
+[`ModeloNichosEcologicos`](niche_model.py) agrupa las unidades vivas por especie
+y consulta tres recursos ya modelados: orgánicos ambientales, luz para linajes
+fotosintéticos y restos para linajes descomponedores activos. Una especie puede
+ocupar varios de estos nichos; por eso los totales por recurso no se suman
+como especies distintas. «Sin recurso modelado» significa únicamente que
+ninguna de estas tres rutas está disponible ahora.
+
+La consulta no asigna capacidades, no usa azar y no modifica el planeta.
+Recalcula sus resultados a partir de especies, linajes y rutas ya persistidos;
+guardar/cargar da la misma ocupación sin duplicar campos de estado. Por ahora
+no hay hábitats espaciales, competencia entre especies ni depredación. La
+ausencia de una ruta modelada no mata a la población.
+
+Prueba específica:
+`.venv/bin/python -m unittest tests.test_ecological_niches -v`.
+
+### Primera depredación entre especies
+
+[`ModeloDepredacion`](predation_model.py) permite que una variante adquiera
+capacidad depredadora cuando ya hay vida y al menos dos unidades. Sus hijas
+la heredan. La probabilidad de adquisición `0.0625` y la de encuentro `0.5`
+son parámetros de diseño, no medidas científicas. El encuentro usa azar local
+por nacimiento; solo puede elegir una unidad previa de **otra especie** en el
+mismo planeta. El nicho «presas» indica una relación posible, no una captura
+garantizada.
+
+Cuando ocurre una captura, la presa ocupa el lugar de la unidad que habría
+muerto en el recambio normal de ese intervalo. Así puede cambiar la abundancia
+de cada especie sin añadir muertes ni cambiar el tamaño total de la población.
+El [`ModeloCicloOrganico`](material_cycle_model.py) contabiliza esa muerte,
+pero no crea restos de una presa consumida. Capturas acumuladas y las especies
+de la última pareja persisten; el hito aparece en eventos. Los guardados
+anteriores empiezan con cero capturas y ninguna capacidad nueva. Aún no hay
+beneficio reproductivo ni red trófica completa.
+
+Prueba específica:
+`.venv/bin/python -m unittest tests.test_predation -v`.
+
+### Red trófica actual
+
+[`ModeloRedTrofica`](trophic_web_model.py) consulta las especies vivas y sus
+nichos. Devuelve enlaces dirigidos de luz, orgánicos o restos hacia las
+especies que usan esos recursos, y de cada especie presa hacia una especie
+depredadora capaz. Dos depredadores pueden tener enlaces opuestos; nunca se
+añade autoconsumo en este primer modelo. Los enlaces de presa son potenciales:
+la captura depende del encuentro de `ModeloDepredacion` y puede no ocurrir.
+
+La consulta es determinista y no modifica el planeta. Se reconstruye desde
+los campos ya persistidos; no crea un estado duplicado en el guardado. La red
+no mide flujos de energía, competencia o beneficio reproductivo. Una especie
+que desaparece deja de figurar en la red actual, aunque las capturas históricas
+permanezcan registradas aparte.
+
+Prueba específica:
+`.venv/bin/python -m unittest tests.test_trophic_web -v`.
+
+### Extinciones masivas locales
+
+[`ModeloExtincionesMasivas`](mass_extinction_model.py) compara las especies
+vivas antes y después de una actualización. Si el planeta perdió la vida
+activa y al menos dos especies desaparecieron en esa transición, registra un
+episodio local. Dos especies son un umbral de diseño, no una definición
+científica de extinción masiva. La regla no mata unidades adicionales: la
+población y la primera vida ya habían determinado el colapso.
+
+El planeta guarda el total de episodios, el año y los identificadores de las
+especies del último. El evento indica el número perdido y un cambio de agua
+observado, si lo hubo, sin presentarlo como causa demostrada. Si solo se
+perdió una especie, se conserva el evento de extinción local anterior.
+Guardar/cargar no repite el episodio; una partida antigua empieza en cero y
+no reescribe su historial. Un paso largo puede omitir cambios ambientales
+intermedios que el simulador no evaluó.
+
+Prueba específica:
+`.venv/bin/python -m unittest tests.test_mass_extinction -v`.
+
 ## Inicio de Fase 3: energía y metabolismo simbólico
 
 `ModeloMetabolismoInicial` consulta datos que ya calcula el simulador: luz
@@ -514,3 +611,26 @@ anterior que había dado cero hasta 5 400 millones de años había omitido el
 modelo estelar al construir `Universe`; por eso no representaba la ruta de
 «Iniciar simulación». Los años observados dependen de la resolución temporal:
 un paso largo puede omitir condiciones transitorias que detectan pasos cortos.
+
+## Radiaciones evolutivas simbólicas
+
+[`ModeloRadiacionesEvolutivas`](evolutionary_radiation_model.py) registra una
+ramificación cuando dos especies hijas **directas** del mismo ancestro están
+vivas después del recambio biológico y la segunda apareció en ese intervalo.
+Sus identificadores de nacimiento deben estar a una distancia de 12 o menos.
+Esa ventana es un parámetro de diseño, no una tasa científica. No basta con
+que convivan una progenitora y una hija, dos especies no emparentadas o dos
+hijas que ya coexistían antes de cargar una partida antigua.
+
+Cada especie ancestral solo cuenta una vez. El planeta guarda los ancestros
+que cumplieron la regla y la última pareja de hijas. Se revisa cada intervalo
+biológico reconstruido, por lo que una coexistencia transitoria puede quedar
+registrada incluso dentro de un paso temporal largo. No añade nacimientos,
+muertes, ventajas, nichos ni cambios físicos. «Radiación» describe aquí una
+ramificación próxima en nacimientos; no demuestra una adaptación a recursos
+distintos ni exige una extinción masiva previa. Los guardados antiguos no
+reciben radiaciones retrospectivas.
+
+```sh
+.venv/bin/python -m unittest tests.test_evolutionary_radiation -v
+```

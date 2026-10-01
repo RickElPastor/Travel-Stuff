@@ -2,6 +2,8 @@
 
 import tempfile
 
+from biology.niche_model import ModeloNichosEcologicos
+from biology.trophic_web_model import ModeloRedTrofica
 from game import crear_modelo_estelar
 from universe.save_manager import SaveManager
 from universe.universe import Universe
@@ -20,6 +22,10 @@ def resumen(universo):
     especies = universo.modelo_especies_unicelulares
     vivas = sum(len(especies.especies_vivas(p)) for p in planetas)
     registradas = sum(len(especies.especies_registradas(p)) for p in planetas)
+    modelo_nichos = ModeloNichosEcologicos()
+    nichos = [modelo_nichos.resumen(p) for p in planetas if p.vida_activa]
+    modelo_red = ModeloRedTrofica()
+    redes = [modelo_red.resumen(p) for p in planetas if p.vida_activa]
     return {
         "estrellas": len(universo.estrellas),
         "planetas": len(planetas),
@@ -57,6 +63,26 @@ def resumen(universo):
         "material_reciclado": sum(p.total_unidades_recicladas for p in planetas),
         "nutrientes_aprovechados": sum(
             p.total_nutrientes_aprovechados for p in planetas
+        ),
+        "colonias_historicas": sum(
+            p.alcanzo_colonia_multicelular for p in planetas
+        ),
+        "colonias_activas": sum(
+            p.colonias_multicelulares_activas for p in planetas
+        ),
+        "especies_nicho_organicos": sum(n["organicos"] for n in nichos),
+        "especies_nicho_luz": sum(n["luz"] for n in nichos),
+        "especies_nicho_restos": sum(n["restos"] for n in nichos),
+        "especies_nicho_presas": sum(n["presas"] for n in nichos),
+        "especies_sin_recurso_modelado": sum(n["sin_recurso"] for n in nichos),
+        "capturas_depredacion": sum(p.capturas_depredacion for p in planetas),
+        "enlaces_recursos": sum(r["recursos"] for r in redes),
+        "enlaces_presas_posibles": sum(r["presas_posibles"] for r in redes),
+        "extinciones_masivas_locales": sum(
+            p.extinciones_masivas_locales for p in planetas
+        ),
+        "radiaciones_evolutivas": sum(
+            len(p.ancestros_con_radiacion) for p in planetas
         ),
         "atmosferas_con_aporte_biologico": sum(
             p.aporte_o2_biologico_bar is not None
@@ -100,6 +126,11 @@ def ejecutar_con_modelo(modelo_estelar):
             ("metabolismo inicial", "metabolismos_historicos"),
             ("fotosíntesis", "fotosintesis_historicas"),
             ("capacidad descomponedora", "capacidad_descomponedora_historica"),
+            ("colonia celular", "colonias_historicas"),
+            ("primera depredación", "capturas_depredacion"),
+            ("primera red trófica", "enlaces_recursos"),
+            ("extinción masiva local", "extinciones_masivas_locales"),
+            ("radiación evolutiva", "radiaciones_evolutivas"),
             ("base ecológica", "bases_ecologicas_activas"),
             ("especies coexistentes", "mundos_con_especies_coexistentes"),
         ):

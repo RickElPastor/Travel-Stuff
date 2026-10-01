@@ -5,6 +5,9 @@ from biology.species_model import ModeloEspeciesUnicelulares
 from biology.metabolism_model import ModeloMetabolismoInicial
 from biology.decomposition_model import ModeloDescomposicionMicrobiana
 from biology.material_cycle_model import ModeloCicloOrganico
+from biology.colony_model import ModeloColoniasCelulares
+from biology.predation_model import ModeloDepredacion
+from biology.evolutionary_radiation_model import ModeloRadiacionesEvolutivas
 
 
 class ModeloHerenciaVariacionUnicelular:
@@ -19,6 +22,9 @@ class ModeloHerenciaVariacionUnicelular:
         self.metabolismo = ModeloMetabolismoInicial()
         self.descomposicion = ModeloDescomposicionMicrobiana()
         self.ciclo_organico = ModeloCicloOrganico()
+        self.colonias = ModeloColoniasCelulares()
+        self.depredacion = ModeloDepredacion()
+        self.radiaciones = ModeloRadiacionesEvolutivas()
 
     def evaluar(self, planeta, seed):
         nacimientos = planeta.nacimientos_unicelulares
@@ -53,6 +59,7 @@ class ModeloHerenciaVariacionUnicelular:
             # Reconstruye cada intervalo del modelo de población: un nacimiento
             # en la fundación o a capacidad; dos mientras crece y hay reemplazo.
             cantidad_viva = len(planeta.rasgos_unicelulares_vivos)
+            especies_antes = self.especies.especies_vivas(planeta)
             crece = cantidad_viva < planeta.poblacion_unicelular
             cantidad_nacimientos = 2 if crece and cantidad_viva > 1 else 1
             cantidad_final = cantidad_viva + 1 if crece else cantidad_viva
@@ -60,18 +67,36 @@ class ModeloHerenciaVariacionUnicelular:
             for numero in range(primero, fin):
                 self._registrar_nacimiento(planeta, seed, numero)
 
-            # Al completar el intervalo, las unidades más antiguas salen.
-            planeta.rasgos_unicelulares_vivos = (
-                planeta.rasgos_unicelulares_vivos[-cantidad_final:]
-            )
-            planeta.linajes_unicelulares_vivos = (
-                planeta.linajes_unicelulares_vivos[-cantidad_final:]
-            )
+            # La captura sustituye una muerte del recambio normal; no añade
+            # muertes ni cambia el tamaño total previsto por la población.
+            captura = None
+            if cantidad_viva > 1:
+                captura = self.depredacion.elegir_captura(
+                    planeta, seed, fin - 1, cantidad_viva
+                )
+            if captura is None:
+                planeta.rasgos_unicelulares_vivos = (
+                    planeta.rasgos_unicelulares_vivos[-cantidad_final:]
+                )
+                planeta.linajes_unicelulares_vivos = (
+                    planeta.linajes_unicelulares_vivos[-cantidad_final:]
+                )
+            else:
+                self.depredacion.registrar_captura(planeta, captura)
+                indice_presa = captura[2]
+                del planeta.rasgos_unicelulares_vivos[indice_presa]
+                del planeta.linajes_unicelulares_vivos[indice_presa]
             self._mantener_linea_viva(planeta)
             # La ecología sigue cada intervalo reconstruido, incluso cuando
             # varios intervalos se evaluaron en un solo salto temporal.
             muertes_intervalo = 1 if cantidad_viva > 1 else 0
-            self.ciclo_organico.procesar_intervalo(planeta, muertes_intervalo)
+            self.ciclo_organico.procesar_intervalo(
+                planeta, muertes_intervalo, 1 if captura is not None else 0
+            )
+            self.colonias.registrar_intervalo(planeta)
+            # Solo una especie nueva que sobreviva al recambio puede completar
+            # una ramificación; los saltos largos recorren los mismos intervalos.
+            self.radiaciones.registrar_intervalo(planeta, especies_antes)
             primero = fin
 
         planeta.nacimientos_biologicos_procesados = nacimientos
@@ -126,6 +151,18 @@ class ModeloHerenciaVariacionUnicelular:
                 planeta.linajes_descomponedores.add(numero)
             if capacidad_descomponedora:
                 planeta.alcanzo_capacidad_descomponedora = True
+            nueva_cohesion = self.colonias.adquiere_cohesion(
+                planeta, seed, numero
+            )
+            if (planeta.linaje_observado_id in planeta.linajes_cohesivos
+                    or nueva_cohesion):
+                planeta.linajes_cohesivos.add(numero)
+            nueva_depredacion = self.depredacion.adquiere_capacidad(
+                planeta, seed, numero
+            )
+            if (planeta.linaje_observado_id in planeta.linajes_depredadores
+                    or nueva_depredacion):
+                planeta.linajes_depredadores.add(numero)
             self.especies.clasificar_linaje(planeta, numero)
             planeta.variaciones_unicelulares += 1
             planeta.rasgo_linea_unicelular = self.seleccion.elegir(

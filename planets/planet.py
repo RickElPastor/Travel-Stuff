@@ -154,6 +154,18 @@ class Planet:
         muertes_contabilizadas_ciclo=None,
         total_unidades_recicladas=0,
         total_nutrientes_aprovechados=0,
+        linajes_cohesivos=None,
+        colonias_multicelulares_activas=0,
+        alcanzo_colonia_multicelular=False,
+        linajes_depredadores=None,
+        capturas_depredacion=0,
+        ultima_especie_predadora_id=None,
+        ultima_especie_presa_id=None,
+        extinciones_masivas_locales=0,
+        anio_ultima_extincion_masiva=None,
+        especies_ultima_extincion_masiva=None,
+        ancestros_con_radiacion=None,
+        especies_ultima_radiacion=None,
     ):
         if masa_tierra <= 0:
             raise ValueError("La masa del planeta debe ser mayor que 0.")
@@ -572,6 +584,33 @@ class Planet:
         )
         self.total_unidades_recicladas = int(total_unidades_recicladas)
         self.total_nutrientes_aprovechados = int(total_nutrientes_aprovechados)
+        self.linajes_cohesivos = set(linajes_cohesivos or [])
+        self.colonias_multicelulares_activas = int(
+            colonias_multicelulares_activas
+        )
+        self.alcanzo_colonia_multicelular = bool(alcanzo_colonia_multicelular)
+        self.linajes_depredadores = set(linajes_depredadores or [])
+        self.capturas_depredacion = int(capturas_depredacion)
+        self.ultima_especie_predadora_id = (
+            None if ultima_especie_predadora_id is None
+            else int(ultima_especie_predadora_id)
+        )
+        self.ultima_especie_presa_id = (
+            None if ultima_especie_presa_id is None
+            else int(ultima_especie_presa_id)
+        )
+        self.extinciones_masivas_locales = int(extinciones_masivas_locales)
+        self.anio_ultima_extincion_masiva = (
+            None if anio_ultima_extincion_masiva is None
+            else int(anio_ultima_extincion_masiva)
+        )
+        self.especies_ultima_extincion_masiva = sorted(
+            int(especie) for especie in (especies_ultima_extincion_masiva or [])
+        )
+        self.ancestros_con_radiacion = set(ancestros_con_radiacion or [])
+        self.especies_ultima_radiacion = sorted(
+            int(especie) for especie in (especies_ultima_radiacion or [])
+        )
         self.rasgo_linea_unicelular = (
             None if rasgo_linea_unicelular is None
             else int(rasgo_linea_unicelular)
@@ -716,6 +755,20 @@ class Planet:
             "muertes_contabilizadas_ciclo": self.muertes_contabilizadas_ciclo,
             "total_unidades_recicladas": self.total_unidades_recicladas,
             "total_nutrientes_aprovechados": self.total_nutrientes_aprovechados,
+            "linajes_cohesivos": sorted(self.linajes_cohesivos),
+            "colonias_multicelulares_activas": self.colonias_multicelulares_activas,
+            "alcanzo_colonia_multicelular": self.alcanzo_colonia_multicelular,
+            "linajes_depredadores": sorted(self.linajes_depredadores),
+            "capturas_depredacion": self.capturas_depredacion,
+            "ultima_especie_predadora_id": self.ultima_especie_predadora_id,
+            "ultima_especie_presa_id": self.ultima_especie_presa_id,
+            "extinciones_masivas_locales": self.extinciones_masivas_locales,
+            "anio_ultima_extincion_masiva": self.anio_ultima_extincion_masiva,
+            "especies_ultima_extincion_masiva": list(
+                self.especies_ultima_extincion_masiva
+            ),
+            "ancestros_con_radiacion": sorted(self.ancestros_con_radiacion),
+            "especies_ultima_radiacion": list(self.especies_ultima_radiacion),
             "proximo_crecimiento_unicelular_anio": (
                 self.proximo_crecimiento_unicelular_anio
             ),
@@ -1153,6 +1206,24 @@ class Planet:
             total_nutrientes_aprovechados=datos.get(
                 "total_nutrientes_aprovechados", 0
             ),
+            linajes_cohesivos=datos.get("linajes_cohesivos"),
+            colonias_multicelulares_activas=datos.get(
+                "colonias_multicelulares_activas", 0
+            ),
+            alcanzo_colonia_multicelular=datos.get(
+                "alcanzo_colonia_multicelular", False
+            ),
+            linajes_depredadores=datos.get("linajes_depredadores"),
+            capturas_depredacion=datos.get("capturas_depredacion", 0),
+            ultima_especie_predadora_id=datos.get("ultima_especie_predadora_id"),
+            ultima_especie_presa_id=datos.get("ultima_especie_presa_id"),
+            extinciones_masivas_locales=datos.get("extinciones_masivas_locales", 0),
+            anio_ultima_extincion_masiva=datos.get("anio_ultima_extincion_masiva"),
+            especies_ultima_extincion_masiva=datos.get(
+                "especies_ultima_extincion_masiva"
+            ),
+            ancestros_con_radiacion=datos.get("ancestros_con_radiacion"),
+            especies_ultima_radiacion=datos.get("especies_ultima_radiacion"),
             proximo_crecimiento_unicelular_anio=datos.get(
                 "proximo_crecimiento_unicelular_anio"
             ),

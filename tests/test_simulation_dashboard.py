@@ -294,6 +294,140 @@ class ExploradorTests(unittest.TestCase):
         self.assertIn("descomponedores: 1 activos", pantalla.linea(17))
         self.assertIn("restos 2 · nutrientes 1 · usados 3", pantalla.linea(10))
 
+    def test_biosfera_muestra_colonias_activas_e_historicas(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.poblacion_unicelular = 2
+        planeta.linajes_unicelulares_vivos = [1, 1]
+        planeta.linajes_cohesivos = {1}
+        planeta.candidato_quimica_prebiotica = True
+        planeta.alcanzo_organicos_simples = True
+        universo.actualizar_colonias_celulares()
+        interfaz = SimulationUI(Simulation(universo))
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(PantallaFalsa(), ord("m"))
+        pantalla = PantallaFalsa()
+        interfaz._dibujar(pantalla)
+        self.assertIn("Colonias simples: 1", pantalla.linea(12))
+        self.assertIn("históricas sí", pantalla.linea(12))
+        planeta.vida_activa = False
+        universo.actualizar_colonias_celulares()
+        interfaz._dibujar(pantalla)
+        self.assertIn("Colonias simples: 0", pantalla.linea(12))
+        self.assertIn("históricas sí", pantalla.linea(12))
+
+    def test_biosfera_resume_nichos_de_especies_vivas(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.candidato_quimica_prebiotica = True
+        planeta.alcanzo_organicos_simples = True
+        planeta.irradiancia_media_w_m2 = 1000
+        planeta.presion_co2_preclima_bar = 0.1
+        planeta.linajes_fotosinteticos = {1}
+        planeta.linajes_descomponedores = {1}
+        planeta.restos_organicos_unidades = 1
+        universo.actualizar_metabolismo_inicial()
+        universo.actualizar_descomposicion({planeta: 0})
+        interfaz = SimulationUI(Simulation(universo))
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(PantallaFalsa(), ord("m"))
+        pantalla = PantallaFalsa()
+        interfaz._dibujar(pantalla)
+        self.assertIn("org 1 · luz 1 · restos 1 · presas 0 · sin ruta 0",
+                      pantalla.linea(7))
+
+    def test_biosfera_muestra_presas_y_ultima_captura(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.poblacion_unicelular = 2
+        planeta.linajes_unicelulares_vivos = [1, 2]
+        planeta.clasificacion_especies_unicelulares[2] = {
+            "especie_id": 2, "distancia": 0,
+        }
+        planeta.linajes_depredadores = {1}
+        planeta.capturas_depredacion = 1
+        planeta.ultima_especie_predadora_id = 1
+        planeta.ultima_especie_presa_id = 2
+        interfaz = SimulationUI(Simulation(universo))
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(PantallaFalsa(), ord("m"))
+        pantalla = PantallaFalsa()
+        interfaz._dibujar(pantalla)
+        self.assertIn("presas 1", pantalla.linea(7))
+        self.assertIn("Capturas: 1 · última: especie 1 → especie 2",
+                      pantalla.linea(21))
+
+    def test_red_trofica_se_abre_y_recorre_todas_las_relaciones(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.poblacion_unicelular = 5
+        planeta.linajes_unicelulares_vivos = [1, 2, 3, 4, 5]
+        planeta.clasificacion_especies_unicelulares = {
+            numero: {"especie_id": numero, "distancia": 0}
+            for numero in range(1, 6)
+        }
+        planeta.fuentes_energia_potenciales = ["organicos_ambientales"]
+        planeta.linajes_depredadores = {1, 2}
+        estado_antes = planeta.a_dict()
+        azar_antes = universo.random.getstate()
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", planeta)
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("R Red trófica", pantalla.linea(23))
+        interfaz._procesar_tecla(pantalla, ord("r"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("RED TRÓFICA", pantalla.linea(6))
+        self.assertIn("recursos 5 · presas posibles 8", pantalla.linea(8))
+        self.assertIn("Orgánicos → especie 1", pantalla.linea(11))
+        self.assertIn("Mostrando 1-10 de 13", pantalla.linea(21))
+        interfaz._procesar_tecla(pantalla, curses.KEY_NPAGE)
+        interfaz._dibujar(pantalla)
+        self.assertIn("Mostrando 4-13 de 13", pantalla.linea(21))
+        self.assertIn("Especie 5 → especie 2 · captura posible", pantalla.linea(20))
+        interfaz._procesar_tecla(pantalla, 27)
+        self.assertEqual(interfaz._actual()["tipo"], "biosfera")
+        interfaz._procesar_tecla(pantalla, 27)
+        self.assertEqual(universo.time.escala, "planeta")
+        self.assertEqual(planeta.a_dict(), estado_antes)
+        self.assertEqual(universo.random.getstate(), azar_antes)
+
+    def test_red_trofica_vacia_explica_ausencia_de_vida(self):
+        universo = self.crear_universo()
+        universo.planetas[0].vida_activa = False
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._abrir("planeta", universo.planetas[0])
+        interfaz._procesar_tecla(pantalla, ord("m"))
+        interfaz._procesar_tecla(pantalla, ord("r"))
+        interfaz._dibujar(pantalla)
+        self.assertIn("Sin relaciones tróficas actuales", pantalla.linea(12))
+
+    def test_universo_y_planeta_muestran_extinciones_masivas_locales(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.extinciones_masivas_locales = 2
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._dibujar(pantalla)
+        self.assertIn("Extinciones masivas locales 2", pantalla.linea(13))
+        interfaz._abrir("planeta", planeta)
+        interfaz._dibujar(pantalla)
+        self.assertIn("ext. masivas 2", pantalla.linea(18))
+
+    def test_universo_y_planeta_muestran_radiaciones_evolutivas(self):
+        universo = self.crear_universo()
+        planeta = universo.planetas[0]
+        planeta.ancestros_con_radiacion = {1, 9}
+        interfaz = SimulationUI(Simulation(universo))
+        pantalla = PantallaFalsa()
+        interfaz._dibujar(pantalla)
+        self.assertIn("Radiaciones 2", pantalla.linea(13))
+        interfaz._abrir("planeta", planeta)
+        interfaz._dibujar(pantalla)
+        self.assertIn("radiaciones 2", pantalla.linea(18))
+
     def test_eventos_filtrados_y_guardados(self):
         universo = self.crear_universo()
         gestor = universo.event_manager

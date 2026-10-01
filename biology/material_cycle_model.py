@@ -1,9 +1,10 @@
 class ModeloCicloOrganico:
     """Balance simbólico de restos, nutrientes y consumo microbiano."""
 
-    def procesar_intervalo(self, planeta, muertes):
+    def procesar_intervalo(self, planeta, muertes, presas_consumidas=0):
         """Procesa un intervalo biológico con sus linajes sobrevivientes."""
-        self._registrar_muertes(planeta, muertes)
+        self._registrar_muertes(planeta, muertes - presas_consumidas)
+        planeta.muertes_contabilizadas_ciclo += presas_consumidas
         descomponedores = sum(
             linaje in planeta.linajes_descomponedores
             for linaje in planeta.linajes_unicelulares_vivos

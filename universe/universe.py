@@ -11,6 +11,8 @@ from biology.metabolism_model import ModeloMetabolismoInicial
 from biology.decomposition_model import ModeloDescomposicionMicrobiana
 from biology.material_cycle_model import ModeloCicloOrganico
 from biology.atmospheric_impact_model import ModeloAporteAtmosfericoBiologico
+from biology.colony_model import ModeloColoniasCelulares
+from biology.mass_extinction_model import ModeloExtincionesMasivas
 
 from chemistry.protocell_viability_model import ModeloViabilidadProtocelular
 
@@ -180,6 +182,8 @@ class Universe:
         self.modelo_descomposicion_microbiana = ModeloDescomposicionMicrobiana()
         self.modelo_ciclo_organico = ModeloCicloOrganico()
         self.modelo_aporte_atmosferico_biologico = ModeloAporteAtmosfericoBiologico()
+        self.modelo_colonias_celulares = ModeloColoniasCelulares()
+        self.modelo_extinciones_masivas = ModeloExtincionesMasivas()
         self.modelo_seleccion_unicelular = self.modelo_herencia_unicelular.seleccion
         self.modelo_especies_unicelulares = self.modelo_herencia_unicelular.especies
         self.modelo_apoyo_extraordinario = ModeloApoyoQuimicoExtraordinario()
@@ -696,6 +700,10 @@ class Universe:
         for planeta in self.planetas:
             self.modelo_aporte_atmosferico_biologico.evaluar(planeta)
 
+    def actualizar_colonias_celulares(self):
+        for planeta in self.planetas:
+            self.modelo_colonias_celulares.evaluar(planeta)
+
     def actualizar_herencia_variacion(self):
         for planeta in self.planetas:
             self.modelo_herencia_variacion.evaluar(
@@ -837,11 +845,17 @@ class Universe:
             ("Metabolismo inicial", "alcanzo_metabolismo_inicial"),
             ("Fotosíntesis microbiana", "alcanzo_fotosintesis"),
             ("Capacidad descomponedora", "alcanzo_capacidad_descomponedora"),
+            ("Colonia celular simple", "alcanzo_colonia_multicelular"),
+            ("Primera depredación", "capturas_depredacion"),
         )
         hitos_anteriores = {
             planeta.nombre: (
                 tuple(getattr(planeta, atributo) for _, atributo in hitos),
                 planeta.vida_activa,
+                (self.modelo_especies_unicelulares.especies_vivas(planeta)
+                 if planeta.vida_activa else set()),
+                planeta.estado_agua_preclima,
+                set(planeta.ancestros_con_radiacion),
             )
             for planeta in self.planetas
         }
@@ -902,8 +916,13 @@ class Universe:
 
         self.actualizar_atmosfera_biologica()
 
+        self.actualizar_colonias_celulares()
+
         for planeta in self.planetas:
-            anteriores, vida_anterior = hitos_anteriores[planeta.nombre]
+            (anteriores, vida_anterior, especies_anteriores, agua_anterior,
+             radiaciones_anteriores) = (
+                hitos_anteriores[planeta.nombre]
+            )
             for indice, (tipo, atributo) in enumerate(hitos):
                 if not anteriores[indice] and getattr(planeta, atributo):
                     self.event_manager.agregar_evento(
@@ -911,9 +930,43 @@ class Universe:
                         "planeta", planeta.nombre,
                     )
             if vida_anterior and not planeta.vida_activa:
+                perdidas = self.modelo_extinciones_masivas.registrar(
+                    planeta, especies_anteriores, anio_final
+                )
+                if perdidas:
+                    agua_actual = planeta.estado_agua_preclima
+                    detalle_agua = (
+                        f" Agua observada: {agua_anterior or 'sin dato'} → "
+                        f"{agua_actual or 'sin dato'}."
+                        if agua_anterior != agua_actual else ""
+                    )
+                    self.event_manager.agregar_evento(
+                        "Extinción masiva local", anio_final,
+                        f"En {planeta.nombre} cesó la vida activa; se perdieron "
+                        f"{len(perdidas)} especies ({', '.join(map(str, perdidas))})."
+                        + detalle_agua,
+                        "planeta", planeta.nombre,
+                    )
+                else:
+                    self.event_manager.agregar_evento(
+                        "Extinción local", anio_final,
+                        f"La vida activa cesó en {planeta.nombre}.",
+                        "planeta", planeta.nombre,
+                    )
+            radiaciones_nuevas = sorted(
+                planeta.ancestros_con_radiacion - radiaciones_anteriores
+            )
+            if radiaciones_nuevas:
+                pareja = planeta.especies_ultima_radiacion
+                unidad = ("especie ancestral" if len(radiaciones_nuevas) == 1
+                          else "especies ancestrales")
                 self.event_manager.agregar_evento(
-                    "Extinción local", anio_final,
-                    f"La vida activa cesó en {planeta.nombre}.",
+                    "Radiación evolutiva", anio_final,
+                    f"En {planeta.nombre} se reconoció radiación evolutiva "
+                    f"en {len(radiaciones_nuevas)} {unidad}: "
+                    f"{', '.join(map(str, radiaciones_nuevas))}. "
+                    f"Última pareja de especies hijas: "
+                    f"{pareja[0]} y {pareja[1]}.",
                     "planeta", planeta.nombre,
                 )
 

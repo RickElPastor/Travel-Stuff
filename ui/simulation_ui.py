@@ -2,6 +2,8 @@ import curses
 import time
 import textwrap
 
+from biology.niche_model import ModeloNichosEcologicos
+from biology.trophic_web_model import ModeloRedTrofica
 from planets.local_calendar import fecha_local, periodo_orbital_dias
 from universe.events import Event
 from universe.save_manager import SaveManager
@@ -56,6 +58,8 @@ class SimulationUI:
         pagina = {"tipo": tipo, "objeto": objeto}
         if tipo in ("estrellas", "sistemas", "planetas", "eventos"):
             pagina.update(filtro="", indice=0)
+        elif tipo == "red_trofica":
+            pagina["indice"] = 0
         self.ruta.append(pagina)
         if tipo == "planeta":
             tiempo = self.universe.time
@@ -91,14 +95,28 @@ class SimulationUI:
         pagina = self._actual()
         tipo = pagina["tipo"]
         if tecla in (ord("v"), ord("V")) and tipo in (
-            "universo", "estrella", "sistema", "planeta", "biosfera"
+            "universo", "estrella", "sistema", "planeta", "biosfera",
+            "red_trofica",
         ):
             if tipo == "universo":
                 contexto = None
             else:
-                ambito = "planeta" if tipo == "biosfera" else tipo
+                ambito = "planeta" if tipo in ("biosfera", "red_trofica") else tipo
                 contexto = (ambito, self._nombre(pagina["objeto"]))
             self._abrir("eventos", contexto)
+            return False
+        if tipo == "red_trofica":
+            enlaces = ModeloRedTrofica().enlaces(pagina["objeto"])
+            visibles = max(1, stdscr.getmaxyx()[0] - 14)
+            ultimo = max(0, len(enlaces) - visibles)
+            if tecla == curses.KEY_UP:
+                pagina["indice"] = max(0, pagina["indice"] - 1)
+            elif tecla == curses.KEY_DOWN:
+                pagina["indice"] = min(ultimo, pagina["indice"] + 1)
+            elif tecla == curses.KEY_PPAGE:
+                pagina["indice"] = max(0, pagina["indice"] - visibles)
+            elif tecla == curses.KEY_NPAGE:
+                pagina["indice"] = min(ultimo, pagina["indice"] + visibles)
             return False
         if tipo in ("estrellas", "sistemas", "planetas", "eventos"):
             items = self._items(pagina)
@@ -137,6 +155,8 @@ class SimulationUI:
                 self._abrir("estrellas", pagina["objeto"])
         elif tipo == "planeta" and tecla in (ord("m"), ord("M")):
             self._abrir("biosfera", pagina["objeto"])
+        elif tipo == "biosfera" and tecla in (ord("r"), ord("R")):
+            self._abrir("red_trofica", pagina["objeto"])
         return False
 
     def _buscar(self, stdscr):
@@ -253,6 +273,7 @@ class SimulationUI:
         self._texto(stdscr, 2, f"Año {anio} · Semilla {self.universe.seed} · "
                     f"{self.universe.time.obtener_descripcion_velocidad()}")
         self._texto(stdscr, 4, "  ›  ".join(
+            "Red trófica" if p["tipo"] == "red_trofica" else
             self._nombre(p["objeto"]) if p.get("objeto") is not None
             and p["tipo"] not in ("estrellas", "planetas", "eventos")
             else p["tipo"].capitalize() for p in self.ruta))
@@ -269,6 +290,8 @@ class SimulationUI:
             self._dibujar_evento(stdscr, pagina["objeto"])
         elif tipo == "biosfera":
             self._dibujar_biosfera(stdscr, pagina["objeto"])
+        elif tipo == "red_trofica":
+            self._dibujar_red_trofica(stdscr, pagina, alto)
         else:
             self._dibujar_planeta(stdscr, pagina["objeto"])
         self._separador(stdscr, alto - 2)
@@ -278,8 +301,10 @@ class SimulationUI:
                      if tipo in ("estrellas", "sistemas", "planetas", "eventos") else
                      "M Biosfera · V Eventos · S Guardar · +/- Tiempo · Esc Volver"
                      if tipo == "planeta" else
-                     "V Eventos · S Guardar · +/- Tiempo · Esc Volver"
+                     "R Red trófica · V Eventos · S Guardar · Esc Volver"
                      if tipo == "biosfera" else
+                     "↑↓/PgUp/PgDn · V Eventos · S Guardar · Esc Volver"
+                     if tipo == "red_trofica" else
                      "Enter Sistema · V Eventos · S Guardar · +/- · Esc Volver"
                      if tipo == "estrella" else
                      "Enter Planetas · E Estrellas · V Eventos · S Guardar · Esc"
@@ -298,6 +323,10 @@ class SimulationUI:
                     f" · con vida histórica {sum(p.alcanzo_primera_vida for p in u.planetas)}")
         self._texto(stdscr, 12, f"Mundos con protocélulas históricas "
                     f"{sum(p.alcanzo_protocelula for p in u.planetas)}")
+        self._texto(stdscr, 13, "Extinciones masivas locales "
+                    f"{sum(p.extinciones_masivas_locales for p in u.planetas)}"
+                    " · Radiaciones "
+                    f"{sum(len(p.ancestros_con_radiacion) for p in u.planetas)}")
         self._texto(stdscr, 14, "EVENTOS RECIENTES", curses.A_BOLD)
         recientes = u.event_manager.obtener_recientes(4)
         if not recientes:
@@ -428,7 +457,9 @@ class SimulationUI:
         self._texto(stdscr, 17, f"Vida: {'activa' if planeta.vida_activa else 'inactiva'}"
                     f" · población {planeta.poblacion_unicelular}")
         self._texto(stdscr, 18, f"Especies vivas {len(especies.especies_vivas(planeta))}"
-                    f" · extintas {len(especies.especies_extintas(planeta))}")
+                    f" · extintas {len(especies.especies_extintas(planeta))}"
+                    f" · ext. masivas {planeta.extinciones_masivas_locales}"
+                    f" · radiaciones {len(planeta.ancestros_con_radiacion)}")
         anio_formacion = planeta.anio_formacion
         duracion = planeta.periodo_orbital_dias
         aproximada = False
@@ -460,6 +491,11 @@ class SimulationUI:
 
     def _dibujar_biosfera(self, stdscr, planeta):
         self._texto(stdscr, 6, "BIOSFERA  ·  inicio microbiano", curses.A_BOLD)
+        nichos = ModeloNichosEcologicos().resumen(planeta)
+        self._texto(stdscr, 7,
+                    f"Nichos: org {nichos['organicos']} · luz {nichos['luz']}"
+                    f" · restos {nichos['restos']} · presas {nichos['presas']}"
+                    f" · sin ruta {nichos['sin_recurso']}")
         self._texto(stdscr, 8, planeta.nombre)
         self._texto(stdscr, 9, f"Vida: {'activa' if planeta.vida_activa else 'inactiva'}"
                     f" · población {planeta.poblacion_unicelular}")
@@ -469,6 +505,11 @@ class SimulationUI:
                     f"{planeta.total_nutrientes_aprovechados}")
         fuentes = ", ".join(planeta.fuentes_energia_potenciales) or "ninguna modelada"
         self._texto(stdscr, 11, "Fuentes ambientales: " + fuentes.replace("_", " "))
+        self._texto(stdscr, 12,
+                    f"Colonias simples: {planeta.colonias_multicelulares_activas}"
+                    f" · linajes cohesivos {len(planeta.linajes_cohesivos)}"
+                    f" · históricas "
+                    f"{'sí' if planeta.alcanzo_colonia_multicelular else 'no'}")
         ruta = planeta.ruta_metabolica_inicial or "ninguna"
         self._texto(stdscr, 13, "Ruta metabólica: " + ruta.replace("_", " "))
         self._texto(stdscr, 14, "Estado: " + planeta.estado_ecosistema.replace("_", " "))
@@ -502,4 +543,40 @@ class SimulationUI:
             self._texto(stdscr, 20, "Aporte de O₂: sin datos")
         else:
             self._texto(stdscr, 20, f"Aporte de O₂: {oxigeno:.3g} bar (diseño)")
-        self._texto(stdscr, 21, "Sin efecto aún sobre clima, vida o crecimiento")
+        ultima = ("ninguna" if planeta.ultima_especie_presa_id is None else
+                  f"especie {planeta.ultima_especie_predadora_id} → "
+                  f"especie {planeta.ultima_especie_presa_id}")
+        self._texto(stdscr, 21,
+                    f"Capturas: {planeta.capturas_depredacion} · última: {ultima}")
+
+    def _dibujar_red_trofica(self, stdscr, pagina, alto):
+        planeta = pagina["objeto"]
+        modelo = ModeloRedTrofica()
+        enlaces = modelo.enlaces(planeta)
+        resumen = modelo.resumen(planeta)
+        self._texto(stdscr, 6, "RED TRÓFICA  ·  relaciones actuales", curses.A_BOLD)
+        self._texto(stdscr, 7, planeta.nombre)
+        self._texto(stdscr, 8,
+                    f"Especies {resumen['especies']} · recursos "
+                    f"{resumen['recursos']} · presas posibles "
+                    f"{resumen['presas_posibles']}")
+        self._texto(stdscr, 9, "Flecha: fuente de energía o presa → consumidor")
+        self._separador(stdscr, 10)
+        visibles = max(1, alto - 14)
+        inicio = min(pagina["indice"], max(0, len(enlaces) - visibles))
+        pagina["indice"] = inicio
+        nombres = {"luz": "Luz", "organicos": "Orgánicos", "restos": "Restos"}
+        if not enlaces:
+            self._texto(stdscr, 12, "Sin relaciones tróficas actuales.")
+        for fila, enlace in enumerate(enlaces[inicio:inicio + visibles], start=11):
+            if enlace["tipo"] == "recurso":
+                descripcion = (f"{nombres[enlace['origen']]} → especie "
+                               f"{enlace['destino']} · {enlace['unidades']} unidades")
+            else:
+                descripcion = (f"Especie {enlace['origen']} → especie "
+                               f"{enlace['destino']} · captura posible")
+            self._texto(stdscr, fila, descripcion)
+        self._texto(stdscr, alto - 3,
+                    f"Mostrando {inicio + 1 if enlaces else 0}-"
+                    f"{min(inicio + visibles, len(enlaces))} de {len(enlaces)}"
+                    " · posible no significa realizada")

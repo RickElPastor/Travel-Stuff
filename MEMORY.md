@@ -7,6 +7,12 @@ para conocer exactamente qué quedó confirmado en un commit.
 
 ## Estado actual — 2026-09-30
 
+- `fase-3` cerró en el commit `fbaeb84` y se publicó en GitHub. La rama
+  `fase-4` se creó desde ese cierre y ya existe en `origin`. Colonias simples,
+  nichos por recurso, primera depredación, red trófica actual y extinciones
+  masivas locales, además de radiaciones evolutivas simbólicas, están validados
+  localmente. La revisión integral completó el cierre técnico de la base
+  simbólica de Fase 4; consultar Git para el commit y la publicación.
 - `change_ui` quedó publicada en GitHub con el commit `b023b31`. Se recreó
   `fase-3` desde ese commit y se actualizó `origin/fase-3`; incluye estructura,
   exploración, eventos y calendario.
@@ -16,10 +22,223 @@ para conocer exactamente qué quedó confirmado en un commit.
 - La base simbólica del paso 5, metabolismo y biosfera, quedó validada en
   `fase-3`. Incluye consumo de orgánicos, productores fotosintéticos,
   proyección atmosférica separada, descomponedores y ciclo orgánico. Consultar
-  Git para el commit y la publicación de la rama; la fase siguiente aún no
-  comenzó.
+  Git para el commit y la publicación de la rama; la fase siguiente ya comenzó.
 - Al iniciar cada fase se explica su alcance; al terminarla se revisa,
   confirma y sube su rama. La instrucción permanente está en `AGENTS.md`.
+
+## 2026-09-30 — Revisión integral y cierre técnico de Fase 4
+
+- `tests/test_phase4_integration.py` une en un planeta controlado colonias,
+  nichos, capturas, red trófica y radiación. Compara el mismo resultado al
+  avanzar con pasos de uno y trece millones, guarda/carga y provoca después
+  una extinción masiva local: la red y las colonias actuales desaparecen,
+  mientras los hitos históricos persisten. No reemplaza la corrida natural.
+- Auditoría adicional de 100 semillas controladas con entorno fijo: estados
+  iguales con pasos de uno y treinta millones, balance de muertes sin pérdidas
+  ni duplicaciones y consultas de nichos/red sin mutar el planeta. Ninguna
+  diferencia encontrada. `FASES.md` marca cerrada la base simbólica del paso 6;
+  siguen fuera del alcance tejidos, órganos, flujo energético y adaptación
+  demostrada entre nichos.
+- Pasaron 143 pruebas automáticas, la comprobación de sintaxis y
+  `git diff --check`. Se repitió la corrida natural desde cero con semilla
+  `374852300`, año 0 a 3 000 millones: pasos de 20 millones hasta 2 760
+  millones, de uno hasta 2 820 millones y luego de 20 millones. Hubo
+  protocélulas a los 2 760 millones, primera vida a los 2 763, radiación y
+  tres especies coexistentes a los 2 769 y extinción masiva local a los
+  2 783 millones. Al final había 1849 planetas, una radiación histórica,
+  cinco especies extintas y ninguna vida activa. La semilla no produjo
+  colonias ni capturas, que cubre el caso controlado. Guardado/carga y
+  continuación mantuvieron estados iguales. Próximo paso: publicar el cierre
+  de `fase-4` y comenzar el paso 7 solo en una nueva rama cuando se solicite.
+
+## 2026-09-30 — Radiaciones evolutivas simbólicas
+
+- `biology/evolutionary_radiation_model.py` reconoce una ramificación cuando
+  una especie recién aparecida sobrevive al recambio y coexiste con otra hija
+  directa del mismo ancestro, separadas por 12 nacimientos como máximo. La
+  ventana es un umbral de diseño, no una tasa biológica medida. Se registra
+  una vez por ancestro; no exige que el ancestro siga vivo ni una extinción
+  masiva previa. `biology/inheritance_variation_model.py` evalúa cada intervalo
+  reconstruido para conservar episodios transitorios en saltos largos.
+- `planets/planet.py` guarda los ancestros ya registrados y la última pareja;
+  los guardados antiguos empiezan sin radiaciones retrospectivas.
+  `universe/universe.py` crea el evento planetario, fechado al final del paso
+  observado. `ui/simulation_ui.py` muestra el total en Universo y planeta;
+  `tests/run_universe_from_zero.py` lo resume. `FASES.md`, `biology/README.md`
+  y `ui/README.md` explican el criterio y sus límites. No añade especies,
+  ventajas reproductivas, azar, cambios ecológicos ni físicos.
+- `tests/test_evolutionary_radiation.py` comprueba parentesco, ventana,
+  supervivencia, ausencia de recuento, nacimientos reales con pasos distintos,
+  evento, guardado/carga y partida antigua. `tests/test_simulation_dashboard.py`
+  comprueba los conteos visibles. Pasaron 142 pruebas automáticas, compilación
+  y `git diff --check`.
+- Universo natural con semilla `374852300`, desde año 0 hasta 3 000 millones:
+  pasos de 20 millones hasta 2 760 millones, de uno hasta 2 820 millones y
+  luego de 20 millones. Protocélulas en 2 760 millones, primera vida en
+  2 763 millones, radiación evolutiva y tres especies coexistentes en
+  2 769 millones; extinción masiva local en 2 783 millones. Al final había
+  1849 planetas, una radiación histórica, cinco especies extintas y ninguna
+  vida activa. Guardar/cargar y continuar un millón conservaron los estados.
+  La radiación ocurrió antes de la extinción masiva: el modelo no impone
+  recuperación después de un colapso ni demuestra adaptación a nichos.
+- `fase-4` sigue local sin commit ni push. Próximo bloque: revisión integral
+  de toda la fase, corrección de posibles fallos y solo entonces cierre de la
+  rama.
+
+## 2026-09-30 — Extinciones masivas locales
+
+- `biology/mass_extinction_model.py` reconoce cuando un planeta pasa de vida
+  activa a inactiva y pierde al menos dos especies vivas del inicio de esa
+  actualización. Dos es un umbral operativo de diseño. No agrega catástrofes
+  ni muertes: usa el colapso ambiental que ya calculó `ModeloPrimeraVida` y
+  ejecutó la población. `universe/universe.py` guarda la foto anterior de
+  especies y agua, registra el episodio al final y sustituye el evento genérico
+  por uno masivo, sin duplicados. Si se observó cambio de agua, el mensaje
+  indica ambos estados como observación, no como causa demostrada.
+- `planets/planet.py` persiste total de episodios, año e identidades de las
+  especies del último. Los guardados anteriores no inventan extinciones
+  retrospectivas. `ui/simulation_ui.py` muestra el total en Universo y en la
+  ficha planetaria; `tests/run_universe_from_zero.py` lo resume.
+  `FASES.md`, `biology/README.md` y `ui/README.md` explican la regla.
+- `tests/test_mass_extinction.py` comprueba episodio con dos especies, caso
+  de una sola, idempotencia, segundo episodio, guardado/carga y partida
+  antigua. `tests/test_simulation_dashboard.py` verifica los conteos visibles.
+  Pasaron 137 pruebas automáticas, compilación y `git diff --check`.
+- Universo natural con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, de un millón hasta 2 820 millones y luego
+  de 20 millones. Protocélulas en 2 760 millones, primera vida en
+  2 763 millones y coexistencia de especies desde 2 769 millones. Antes de
+  2 800 millones, al cesar esa vida, se registró un episodio masivo local.
+  Al final había 1849 planetas, cinco especies extintas y un episodio masivo
+  histórico. Guardar/cargar y continuar otro millón conservaron los estados.
+  El año del evento corresponde al final del paso que observó el cambio; no
+  se reconstruyen variaciones ambientales dentro de un salto largo.
+- `fase-4` sigue local sin commit ni push de estos cambios. Próximo bloque:
+  radiaciones evolutivas condicionadas a diversificación real; después la
+  revisión integral para decidir el cierre de fase.
+
+## 2026-09-30 — Primera red trófica actual
+
+- `biology/trophic_web_model.py` deriva enlaces dirigidos de luz, orgánicos y
+  restos a especies vivas que los aprovechan, y de cada especie presa a otra
+  capaz de depredarla. Las relaciones de presa son oportunidades, no capturas
+  realizadas. La consulta es pura y determinista; usa nichos y capacidades ya
+  guardados, sin nuevos campos ni efecto sobre población, física o recursos.
+- `ui/simulation_ui.py` añade `R` desde Biosfera para una página de red trófica
+  con leyenda, conteos y lista recorrible mediante flechas y PgUp/PgDn. `Esc`
+  vuelve a Biosfera y conserva el reloj planetario. `tests/run_universe_from_zero.py`
+  informa enlaces de recursos y presas posibles. `FASES.md`,
+  `biology/README.md` y `ui/README.md` documentan alcance y límites.
+- `tests/test_trophic_web.py` verifica dirección, orden, ausencia de
+  autoconsumo, desaparición de relaciones al extinguirse una especie, lectura
+  sin mutación y reconstrucción tras guardar/cargar.
+  `tests/test_simulation_dashboard.py` verifica red vacía, navegación y una
+  lista que excede la pantalla. Pasaron 132 pruebas automáticas, compilación
+  y `git diff --check`.
+- Universo natural con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, de un millón hasta 2 820 millones y luego
+  de 20 millones. Protocélulas en 2 760 millones, primera vida y primer enlace
+  de orgánicos a una especie en 2 763 millones; coexistieron especies desde
+  2 769 millones. No hubo enlaces de presa con esa semilla; los casos
+  controlados sí los construyen. Al final había 1849 planetas, cinco especies
+  extintas y red actual vacía. Guardar/cargar y continuar otro millón mantuvo
+  estados iguales.
+- `fase-4` sigue local sin commit ni push de estos cambios. Próximo bloque:
+  extinciones masivas condicionadas al entorno; después radiaciones y revisión
+  integral.
+
+## 2026-09-30 — Primera depredación entre especies
+
+- `biology/predation_model.py` permite que una variante con vida y al menos
+  dos unidades adquiera capacidad depredadora; sus variantes hijas la heredan
+  en `biology/inheritance_variation_model.py`. Con otra especie viva, un
+  encuentro de azar local puede elegir una de sus unidades previas como presa.
+  La captura sustituye la muerte del recambio biológico normal del intervalo:
+  cambia la abundancia por especie sin sumar muertes ni alterar el tamaño total
+  de la población. Los valores `0.0625` y `0.5` son parámetros de diseño.
+  `biology/material_cycle_model.py` contabiliza la muerte sin duplicar una
+  presa consumida como restos. El modelo no da aún ventaja reproductiva.
+- `planets/planet.py` persiste linajes capaces, capturas y especies de la última
+  pareja; los guardados antiguos empiezan vacíos. `biology/niche_model.py`
+  reconoce presas como recurso posible solo entre especies distintas.
+  `universe/universe.py` registra el primer hito de depredación.
+  `ui/simulation_ui.py` muestra el nicho de presas, capturas y última pareja;
+  `tests/run_universe_from_zero.py` informa los totales. `FASES.md`,
+  `biology/README.md` y `ui/README.md` explican la regla y sus límites.
+- `tests/test_predation.py` comprueba captura, abundancia, muerte y restos,
+  ausencia de presa dentro de una misma especie, encuentro fallido, herencia,
+  pasos temporales, guardado/carga y compatibilidad anterior.
+  `tests/test_simulation_dashboard.py` comprueba la pantalla. Pasaron 126
+  pruebas automáticas, compilación y `git diff --check`. Además, 100 semillas
+  controladas con variación y encuentros compararon pasos de uno y diez
+  millones de años y produjeron los mismos estados finales.
+- Corrida natural con semilla `374852300`, año 0 a 3 000 millones: pasos de
+  20 millones hasta 2 760 millones, de un millón hasta 2 820 millones y luego
+  de 20 millones. Protocélulas en 2 760 millones, primera vida en
+  2 763 millones y tres especies coexistentes en 2 769 millones. No apareció
+  capacidad depredadora activa ni capturas; al final había 1849 planetas y
+  cinco especies extintas, sin vida activa. Los casos controlados sí ejercitan
+  depredación. Guardar/cargar y avanzar otro millón dio estados iguales.
+- `fase-4` sigue local sin commit ni push de estos cambios. Próximo bloque:
+  primera red trófica como consulta de relaciones activas; después extinciones
+  masivas, radiaciones y revisión integral.
+
+## 2026-09-30 — Nichos ecológicos iniciales
+
+- `biology/niche_model.py` consulta por especie viva cuántas unidades pueden
+  usar orgánicos ambientales, luz o restos según los recursos y las capacidades
+  activas ya modelados. Una misma especie puede ocupar varios nichos. La
+  consulta no usa azar ni modifica el planeta, la población o la física; sin
+  recurso modelado no declara extinción. No añade campos guardados: reconstruye
+  la ocupación desde los linajes, especies y rutas persistidos.
+- `ui/simulation_ui.py` muestra en Biosfera el número de especies por recurso
+  y sin ruta; `tests/run_universe_from_zero.py` añade esos conteos a la corrida.
+  `tests/test_ecological_niches.py` verifica asignación, solapamiento, pérdida
+  de recursos sin extinción, pureza de la consulta y guardado/carga.
+  `tests/test_simulation_dashboard.py` verifica la línea visible.
+  `biology/README.md`, `ui/README.md` y `FASES.md` explican el alcance.
+- Pasaron 119 pruebas automáticas, compilación y `git diff --check`. Universo
+  natural con semilla `374852300`, año 0 a 3 000 millones: pasos de 20 millones
+  hasta 2 760 millones, de un millón hasta 2 820 millones, luego de 20
+  millones. Protocélulas en 2 760 millones, primera vida y una especie en
+  nicho de orgánicos en 2 763 millones, tres especies en ese nicho en
+  2 769 millones. A 3 000 millones había 1849 planetas y cinco especies
+  extintas, sin vida ni nichos activos. Luz y restos no se ejercitaron en esta
+  semilla; los casos controlados sí. Guardar/cargar y continuar otro millón
+  mantuvo los estados iguales.
+- `fase-4` sigue local sin commit ni push de estos cambios. Próximo bloque:
+  depredación simple condicionada a una relación trófica explícita; después
+  redes, extinciones masivas, radiaciones y revisión integral.
+
+## 2026-09-30 — Inicio de Fase 4 y colonias celulares simples
+
+- Se creó y publicó `fase-4` desde el cierre de `fase-3`. El primer bloque
+  añade `biology/colony_model.py`: una variante puede adquirir cohesión con
+  vida, agua líquida y orgánicos; dos unidades del mismo linaje cohesivo
+  cuentan como colonia simbólica. `biology/inheritance_variation_model.py`
+  hereda la capacidad en variantes hijas y registra colonias en cada intervalo
+  biológico reconstruido, para no perder un hito transitorio en un salto largo.
+  Es una regla de diseño, sin tejidos, órganos ni efecto sobre población o
+  física. `planets/planet.py` guarda capacidad, colonias activas e hito; los
+  guardados anteriores empiezan sin esos datos.
+- `universe/universe.py` recalcula el estado y registra el hito planetario.
+  `ui/simulation_ui.py` muestra activos e históricos en Biosfera.
+  `tests/run_universe_from_zero.py` incluye ambos conteos en el resumen.
+  `biology/README.md`, `ui/README.md` y `FASES.md` describen alcance y límites.
+  `tests/test_cellular_colonies.py` verifica condiciones, herencia, pares,
+  extinción, tamaño de paso y guardados; `tests/test_simulation_dashboard.py`
+  verifica la pantalla. Pasaron 115 pruebas automáticas, compilación y
+  comprobación del diff.
+- Corrida natural con semilla `374852300`, desde el año 0 hasta
+  3 000 000 000: pasos de 20 millones hasta 2 760 millones, de un millón
+  hasta 2 820 millones y luego de 20 millones. Hubo protocélulas en
+  2 760 millones, primera vida en 2 763 millones y especies coexistentes en
+  2 769 millones. No apareció una colonia: al final había 1849 planetas,
+  cinco especies extintas y cero vida activa. Es un resultado natural válido;
+  los casos controlados sí probaron formación y pérdida de colonias.
+  Guardar/cargar y avanzar otro millón mantuvo los estados iguales.
+- La fase sigue abierta y local sin commit de sus cambios. Próximo bloque:
+  nichos ecológicos iniciales, antes de depredación y redes tróficas.
 
 ## 2026-09-30 — Revisión integral y cierre técnico de Fase 3
 

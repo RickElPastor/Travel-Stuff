@@ -20,17 +20,36 @@ solas. Una variante capaz puede abrir la ruta fotosintética cuando también hay
 agua líquida y CO₂; se muestran sus unidades productoras activas y el hito
 histórico. Debajo aparece una proyección del CO₂ con vida y del aporte de O₂
 actual, separados del CO₂ físico. No modifica todavía el clima ni la
-habitabilidad. Si un linaje descomponedor vivo coincide con muertes del paso,
+habitabilidad. La línea **Nichos** cuenta especies vivas que usan orgánicos,
+luz, restos o presas de otra especie; una especie puede figurar en varias
+columnas. «Presas» significa oportunidad, no captura garantizada; la línea
+**Capturas** muestra el total histórico y la última pareja de especies.
+«Sin ruta» no implica extinción. Si un linaje descomponedor vivo coincide con muertes del paso,
 la vista enseña el enlace de restos a descomponedores. La línea **Ciclo**
 muestra unidades simbólicas
 de restos y nutrientes pendientes, más el total histórico aprovechado por
-microbios consumidores. `Esc`
+microbios consumidores. **Colonias simples** muestra cuántos pares del mismo
+linaje cohesivo permanecen agrupados, cuántos linajes adquirieron cohesión y
+si alguna colonia existió antes. Es una señal inicial de multicelularidad, no
+un organismo con tejidos. Desde Biosfera, `R` abre la **Red trófica** del
+planeta. Cada flecha va del alimento o la presa al consumidor. Las flechas de
+presa indican capturas posibles, no eventos realizados. `↑/↓` y `PgUp/PgDn`
+recorren la lista cuando hay más enlaces que filas; `Esc` vuelve a Biosfera.
+La red vacía se explica en pantalla y no cambia los datos de la partida. `Esc`
 vuelve al planeta sin cambiar la velocidad ni el reloj compartido.
 
 `V` abre el historial de eventos desde Universo, una estrella, un sistema o
 un planeta. El resumen universal muestra los últimos eventos; las fichas de
 estrella y sistema muestran sus eventos recientes. El historial universal
 incluye todos los ámbitos, mientras que una ficha filtra su propio objeto.
+El resumen universal y la ficha del planeta muestran el número de extinciones
+masivas **locales** y radiaciones evolutivas simbólicas. En eventos, el detalle
+indica cuándo se perdieron dos o
+más especies al cesar la vida activa y cuáles eran. Si se observó un cambio
+de agua en ese paso, aparece como dato concomitante, no como causa probada.
+Una radiación registra dos especies hijas del mismo ancestro que coexistieron
+al surgir la segunda dentro de la ventana de nacimientos del modelo; no
+garantiza adaptación a nichos diferentes ni resurgimiento tras una extinción.
 Los eventos nuevos registran formación de sistemas, estrellas y planetas,
 evolución estelar, los pasos de química prebiótica, protocélulas, primera vida
 y extinción local. Un nacimiento estelar fuera del modelo también conserva su

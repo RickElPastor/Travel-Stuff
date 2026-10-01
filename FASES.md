@@ -68,7 +68,7 @@ La selección prebiótica de `abiogenesis/` es otra capa.
 | 3. Primera vida | Criterio operativo para reconocer una línea viva simple, sin asumir que toda protocélula lo logra. | Hecho en `fase-1` |
 | 4. Evolución biológica | Reproducción, herencia, mutación, selección, adaptación, linajes, especies, extinción y diversificación. La vida puede permanecer microbiana. | Base simbólica terminada en `fase-2`; modelos biológicos más profundos quedan para etapas posteriores |
 | 5. Metabolismos y biosfera | Fuentes de energía, rutas metabólicas, posible fotosíntesis, efectos sobre la atmósfera, productores, consumidores, descomponedores y ecosistemas. | Base simbólica terminada y validada en `fase-3` |
-| 6. Vida compleja | Multicelularidad, nichos, depredación, redes tróficas, extinciones masivas y radiaciones evolutivas, sin fecha obligatoria. | Pendiente |
+| 6. Vida compleja | Multicelularidad, nichos, depredación, redes tróficas, extinciones masivas y radiaciones evolutivas, sin fecha obligatoria. | Base simbólica terminada y validada en `fase-4`; organismos complejos con tejidos quedan para más adelante |
 | 7. Inteligencia | Inteligencia no garantizada, herramientas, aprendizaje social, comunicación, cultura, lenguaje y tecnología inicial. | Pendiente |
 | 8. Civilizaciones | Asentamientos, culturas, territorios, gobiernos, recursos, comercio y tecnologías. Ninguna civilización es obligatoria. | Pendiente |
 | 9. Historia dinámica | Guerras, alianzas, migraciones, revoluciones, descubrimientos, catástrofes y otros eventos emergentes; nunca una cronología fija. | Pendiente |
@@ -176,16 +176,117 @@ controladas con entorno fijo, los estados finales coincidieron con pasos
 cortos y largos. Un cambio ambiental no observado dentro de un salto sigue
 fuera de la resolución temporal del simulador. La base de Fase 3 queda
 terminada; aún no incluye crecimiento dependiente de nutrientes, depósitos
-geoquímicos realistas ni vida compleja. El paso 6 empieza en la siguiente
-fase, después de publicar el cierre de `fase-3`.
+geoquímicos realistas ni vida compleja. El paso 6 empieza en `fase-4`, después
+de publicar el cierre de `fase-3`.
 
 Explicar primero al usuario el alcance y trabajar por bloques pequeños:
 fuentes de energía y metabolismo simbólico; rutas metabólicas como posible
 fotosíntesis si las condiciones lo permiten; efectos biológicos sobre la
 atmósfera; roles de productores, consumidores y descomponedores; y primeras
 relaciones de ecosistema. Mantener el surgimiento contingente, el determinismo,
-la persistencia y la física normal. No añadir aún multicelularidad, nichos
-profundos, depredación ni vida compleja: eso corresponde al paso 6.
+la persistencia y la física normal. La multicelularidad, los nichos, la
+depredación y las redes tróficas corresponden al paso 6, no a esta base.
+
+### Inicio de Fase 4 — Vida compleja
+
+La rama `fase-4` nace del cierre de `fase-3`. El primer bloque modela
+**colonias celulares simples**, una etapa inicial y simbólica de
+multicelularidad. Una variante puede adquirir cohesión en un entorno con vida,
+agua líquida y orgánicos; sus descendientes heredan esa capacidad. Dos unidades
+vivas del mismo linaje cohesivo forman una colonia simbólica. El número actual
+depende de las unidades y del entorno; el hito histórico permanece aunque la
+colonia se disuelva o la vida se extinga. La probabilidad de adquirir cohesión
+es un parámetro de diseño, no una tasa observada. Cada nacimiento usa azar local
+para preservar el determinismo. El estado se guarda y los archivos anteriores
+empiezan sin esa capacidad ni colonias inventadas.
+
+La colonia todavía no tiene tejidos, órganos, reproducción propia ni ventajas
+ecológicas. No consume unidades, altera el crecimiento ni cambia la física, el
+clima o la atmósfera.
+
+El segundo bloque consulta **nichos de recursos por especie viva**. Cuenta
+unidades capaces de aprovechar orgánicos ambientales, luz o restos según las
+rutas activas ya calculadas. Una especie puede ocupar varios nichos y otra
+quedar sin recurso modelado; esto último no provoca automáticamente su muerte.
+No son hábitats espaciales ni especializaciones nuevas. Es una consulta del
+estado actual, sin azar ni campos nuevos: el guardado conserva los datos de
+origen y al cargar se reconstruye la misma ocupación. La vista Biosfera resume
+cuántas especies ocupan cada recurso; los conteos pueden solaparse. En ese
+bloque no se añadieron competencia ni depredación.
+
+El tercer bloque añade una **primera depredación simbólica**. Una variante con
+vida y al menos dos unidades puede adquirir capacidad depredadora; sus hijas
+la heredan. Si hay unidades de otra especie viva en el mismo planeta, un
+encuentro puede elegir una de ellas como presa. Los parámetros de adquisición
+y encuentro (`0.0625` y `0.5`) son elecciones de diseño, no tasas medidas.
+El encuentro se decide con azar local ligado a la semilla y al nacimiento del
+intervalo. La captura determina cuál unidad muere en el recambio que ya
+existía: cambia la composición de especies, pero no añade una muerte ni
+aumenta la población. La presa consumida no se duplica como resto orgánico.
+El número acumulado y la última relación depredador-presa se guardan. Los
+guardados anteriores empiezan sin depredadores ni capturas.
+
+El nicho de presas señala capacidad y presencia de otra especie; no garantiza
+una captura en cada intervalo. Todavía no hay ventaja reproductiva por comer
+ni competencia explícita por recursos.
+
+El cuarto bloque construye una **red trófica actual** a partir de los nichos
+vivos: luz, orgánicos y restos apuntan a las especies que los aprovechan;
+una especie presa apunta a otra capaz de depredarla. El sentido de la flecha
+es «fuente de energía o presa → consumidor». Los enlaces de presas son
+**posibilidades**, no capturas realizadas. La red no inventa interacciones,
+no altera población ni recursos y no añade campos de guardado; al cargar se
+reconstruye desde capacidades y especies persistidas. La vista `R` desde
+Biosfera permite recorrer todos los enlaces de un planeta, incluso cuando no
+caben en una sola pantalla. Un planeta sin vida puede tener una red vacía.
+
+El quinto bloque reconoce una **extinción masiva local** cuando un planeta
+pasa de vida activa a inactiva y pierde al menos dos especies que estaban
+vivas al comenzar la actualización. El umbral de dos es operativo y de diseño,
+no una definición paleontológica. Se guardan el número de episodios, el año y
+las especies del último episodio. El evento sustituye a la extinción local
+genérica para no duplicarlo y, si cambió el estado del agua, muestra ambos
+valores como observación, sin declarar que ese cambio fue la causa única.
+No añade una catástrofe ni muertes: usa la pérdida de viabilidad ya calculada
+por el simulador. Tampoco implica que se extinguió la vida de todo el universo.
+Un salto temporal solo observa las condiciones en sus extremos; no puede
+reconstruir episodios que nacieron y terminaron dentro del salto. Los guardados
+anteriores empiezan sin episodios retrospectivos.
+
+El sexto bloque reconoce una **radiación evolutiva simbólica** cuando aparece
+una nueva especie y coexiste con otra especie hija directa del mismo ancestro.
+Los nacimientos de las dos especies deben distar como máximo 12 nacimientos
+biológicos; la ventana es un parámetro de diseño para expresar cercanía en
+la historia de reproducción, no una tasa real en años. Se cuenta una vez por
+especie ancestral, aun si esta ya se extinguió. La detección ocurre después
+del recambio de cada intervalo biológico, por lo que un salto temporal largo
+no oculta una coexistencia que luego termine. No se cuentan dos especies
+distintas sin parentesco conocido ni la mera coexistencia de progenitora e
+hija. La lista de ancestros y la última pareja se guardan; un guardado antiguo
+comienza sin radiaciones retrospectivas. El evento se fecha al final del paso
+que la observó, igual que otros hitos planetarios.
+
+El nombre no implica adaptación comprobada a nichos diferentes ni una
+recuperación obligatoria después de una extinción masiva. Esta primera regla
+solo reconoce ramificación y cercanía de nacimientos; no añade especies,
+ventajas reproductivas, azar, consumo de recursos ni cambios físicos.
+
+### Cierre de la base de Fase 4
+
+- [x] Colonias celulares simples y capacidad de cohesión heredable.
+- [x] Nichos de recursos por especie viva.
+- [x] Depredación simbólica entre especies sin muertes adicionales.
+- [x] Red trófica actual de recursos y presas posibles.
+- [x] Extinciones masivas locales observadas.
+- [x] Radiaciones evolutivas por ramificación real de especies.
+- [x] Revisión integral: caso controlado que une los seis sistemas, pasos
+  cortos/largos, guardado/carga, extinción, pantalla y universo desde el año 0.
+
+La base simbólica de Fase 4 queda terminada. La red trófica no calcula flujo
+de energía, cantidades consumidas ni fuerza de competencia. Las colonias no
+tienen tejidos ni órganos; «radiación» no demuestra adaptación a nichos.
+Tampoco hay inteligencia o civilizaciones, que pertenecen a pasos posteriores.
+La revisión integral no amplía estas reglas más allá de lo comprobado.
 
 ## Horizontes posteriores, todavía sin paso inmediato
 
